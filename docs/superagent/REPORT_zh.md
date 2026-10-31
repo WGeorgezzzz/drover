@@ -2,7 +2,7 @@
 
 更新时间：2026-10-31T20:13:02.826Z（UTC；本地日期 2026-11-01）。
 
-实现、接线和相关检查已完成；真实端到端 **5/6 通过，1/6 被微信登录状态阻塞**。尚不能声明全部验收通过。已 fetch、合入并推送最新 main（1233751cd3831edc8f32c09fad25bc21be380da7），官方 release 已暂存且 prepared 预检通过。**没有激活正式 3001。**
+补充 3 已覆盖微信验收：**5/6 passed + 1 skipped_by_user（用户决定关闭微信）**，其余五条真实通过即视为 E2E 完成。微信默认 disabled，独立副本配置也已关闭；保留代码、迁移与配置重新开启能力，不再要求用户登录。关闭后的全量测试/typecheck/lint/build 正在重跑，随后重新 fetch 合 main、只 stage release。**没有激活正式 3001。**
 
 ## 实现与迁移数字
 
@@ -19,7 +19,7 @@
 | 项 | 结果 | 可核验事实 |
 |---|---|---|
 | 飞书 | 通过 | 本人 user 给 bot 私聊点名→Trigger/Eval/Ticket→Codex 写入并读回 SA_FEISHU_OK→原 chat 两条原文回复；平台读回发送者为本人 user |
-| 微信 filehelper | **外部阻塞** | 实际发送预检及最终 readiness 均 exit 2 ambiguous_window，发现 mmui::LoginWindow + mmui::XDialog；没有发送，也没有伪造 Ticket/回复 |
+| 微信 filehelper | **skipped_by_user** | 用户决定关闭微信；不登录、不轮询、不发送。早前 ambiguous_window 阻塞证据保留为历史，不作为失败或通过 |
 | 监测 | 通过（修复后重跑） | a2a6d587-b596-464b-803b-1ec9dbed60e2 的 probe→原订阅 Ticket 4ea19fa45e67e141afd6770e0a450150→worker 唤醒→写入并读回 SA_MONITOR_FIXED_OK；新增 legacy Ticket=0 |
 | 非白名单 | 通过（修复后重跑） | 已订阅 GitHub 线程上构造 human=true/false 两条真实 HTTP Trigger，均 filtered/not_a_member、fanout=[]；Ticket 与 Assignment 数不变 |
 | 进行中重启 | 通过 | STARTED 写出后关闭 3014，再启动；旧 Assignment endedReason=hostRestarted，新 Assignment ready；STARTED mtime 保留，Outbox 六条发送记录保持，未重发 |
@@ -54,7 +54,7 @@ Outbox 先落库、按会话有序发送，成功写回平台 ID；微信记录�
 
 飞书本轮实际接收/历史读取及 user 发送成功，没有经核验必须新增的后台权限或事件订阅，因此无待办后台操作。独立 bot 配置在 copy-home/feishu-bot；不操作用户浏览器、不删除共享 keychain 凭据。旧 InboxAgentFeishuBridge 本轮未停用：3014 独立 bot 配置未发现抢流需停的实际冲突。正式切换前若与旧桥接发生冲突，应暂停旧计划任务并记录原配置；恢复时先停 superagent bot 消费，再恢复旧任务，避免并发消费。
 
-GitHub 不需要新 agent 账号、gh-agent 配置或登录步骤。测试 issue #1 已关闭。唯一必须由用户完成的外部步骤：**在当前微信客户端完成本人登录，并处理遮挡/歧义弹窗，使 filehelper 可用**。不替用户扫码、不切账号、不重启微信。数据库历史可读不代表 UIA 实时收发可用。
+GitHub 不需要新 agent 账号、gh-agent 配置或登录步骤。测试 issue #1 已关闭。用户已决定关闭微信，无需登录或处理弹窗。需要恢复时，在来源配置中将 sources.wechat.enabled 设为 true，并自行确认已登录客户端和读取/发送参数；默认保持 false。
 
 ## 回滚与继续
 
@@ -66,7 +66,7 @@ GitHub 不需要新 agent 账号、gh-agent 配置或登录步骤。测试 issue
 - 合并和暂存均已完成，见下一节；不运行 --activate，不更改正式后台任务或桌面壳。
 
 
-## main、暂存与收尾结果
+## 补充 3 之前的 main 与暂存记录（历史）
 
 - main 已推送 1233751cd3831edc8f32c09fad25bc21be380da7，包含 runtime、四 Sources/Outbox、迁移回滚、执行器/提示词/面板及真实 E2E 修复。origin/main 上游三项并发更新均保留，无 force push。feature 分支 feat/droversuperagent-20261101 另保留最终报告/状态提交；原始脏 main 工作区未修改。
 - 从独立且干净的 release-source（detached origin/main）执行 **官方** node scripts/deploy/stage-release.cjs D:/embodied/droversuperagent-20261101/release-1。未安装大型依赖；node_modules 复用现有 junction，task-local build-bin 只提供缺失的 npm .bin 启动入口，不跳过官方构建或守卫。
@@ -76,10 +76,20 @@ GitHub 不需要新 agent 账号、gh-agent 配置或登录步骤。测试 issue
 - 正式配置在预检前后 SHA256 相同。本任务未激活/切换 3001，也未更新正式桌面壳。同期其他任务已将正式 runtime 更新到 drover-mobile-download-20261101/release-28，这是观测到的外部状态，不宣称本任务让整个机器保持静止。
 - 仍未满足的内容：微信真实 filehelper 端到端（登录阻塞），以及合并后全 src/server lint 的六条上游错误。后者没有被隐瞒或擅自修改；本任务 59 个变更文件 lint 和 253 项相关测试通过。
 
-## 登录后的最小续做范围
+## 旧登录续做计划（已被补充 3 取消，仅保留历史）
 
 1. 用户完成当前微信本人登录并处理 XDialog，先确认 readiness --backend uia 能定位已登录主窗口。不得替用户扫码或换账号。
 2. 通过 conhost --headless 启动 launch-staged-test.cjs，等待认证 /api/superagent 返回快照；复用现有独立 copy-home，不能重置 DB/Outbox。
 3. 仅执行真实微信 filehelper 点名请求（e2e-control.cjs wechat），等待 Trigger→Eval accept→Ticket→Codex 写入并读回 SA_WECHAT.txt。确认原会话本人原文的 ack/result，包含“驭手”的回复不会新建 Ticket；保存平台/数据库回读和新截图。不得用构造 Trigger 代替本项。
 4. 跟进 main 下载功能的六条 lint 错误；若 main 有上游修复，fetch/合入后重跑合并后检查，并从干净当前 main 重新官方 stage，仍不 activate。不可将 exit 1 改记成通过。
 5. 仅在全部六项真实链路和约定检查达标后更新 STATUS/REPORT/DONE；原失败、跳过、检查器错误和外部阻塞证据继续保留。
+
+
+## 补充 3：微信关闭与重新验收
+
+微信设置默认 enabled=false；独立 copy-home/auth.db 已以版本化设置保存 false。Source 快照对关闭来源返回 disabled，不展示旧 ready/setup 错误；面板来源列表中英文分别显示“微信: 已关闭”和“WeChat: Disabled”，关闭不会占用待处理错误区。轮询与 Outbox 原有 enabled gate 保留。新增测试证明关闭时队列回复保持 pending、sending=0，配置显式开启后才发送。适配器、内部出站账本和迁移完整保留。
+
+真实 E2E 按用户新口径 5 passed、1 skipped_by_user。旧微信发送预检失败和其他修复前失败均保留，不改写成通过。本次完成判定不再依赖微信登录。重新全量检查、3014 截图、main 和 release 的最终结果在收尾时补齐。
+
+
+3014 关闭验证已通过：16 秒内微信游标与六条 Outbox 均未变化，active=[]；中英截图正确显示“已关闭/Disabled”，pageerror=0。首次验证脚本遇到初始化 503，补足 readiness 等待后重跑通过，原错误保留。全量检查发现进程启动静态声明缺失，已为两个非 Windows 分支显式补 windowsHide；窗口检查 3/3 通过，正在进行最终完整重跑。额外 taskmaster 失败在干净 main 复现，不混入题述四项旧失败中隐瞒。

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-31T20:13:02.826Z",
+  "updatedAt": "2026-10-31T20:39:58.590Z",
   "port": 3014,
   "passed": 5,
   "required": 6,
@@ -25,13 +25,16 @@
     {
       "id": 2,
       "name": "WeChat filehelper",
-      "status": "blocked_external",
-      "reason": "WeChat UIA reports ambiguous_window: mmui::LoginWindow and mmui::XDialog; no message was sent",
+      "status": "skipped_by_user",
+      "reason": "用户决定关闭微信",
       "evidence": [
         "wechat-send.json",
         "wechat-readiness-final.json",
-        "wechat.png"
-      ]
+        "wechat.png",
+        "wechat-disabled-config.json"
+      ],
+      "previousStatus": "blocked_external",
+      "previousReason": "WeChat UIA reports ambiguous_window: mmui::LoginWindow and mmui::XDialog; no message was sent"
     },
     {
       "id": 3,
@@ -280,5 +283,10 @@
     "receiptsPreserved": 6,
     "githubTestIssueClosed": true
   },
-  "wechatReadinessAt": "2026-10-31T20:04:38.082Z"
+  "wechatReadinessAt": "2026-10-31T20:04:38.082Z",
+  "skipped": 1,
+  "skippedByUser": 1,
+  "failed": 0,
+  "complete": true,
+  "e2eSummary": "5/6 passed + 1 skipped_by_user"
 }

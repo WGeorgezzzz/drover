@@ -69,3 +69,21 @@
 - 官方预检前后正式 primary-service.json 哈希相同；未修改正式运行配置、服务或桌面壳。其他任务独立部署的 runtime 为 drover-mobile-download-20261101/release-28，不将其变更计作本任务行为。
 - 再次检查微信仍为 LoginWindow + XDialog / ambiguous_window（exit 2）。真实 E2E 5/6，微信不伪报通过；DONE.json=blocked_external，列出仅需登录后的续做链路，并保留 main 的 6 条继承 lint 错误。
 - 最终报告 REPORT_zh.md、DONE.json 与 evidence/acceptance.json 已更新。最终文档记录继续提交 feature 分支，release 对应的 main 保持 1233751cd3831edc8f32c09fad25bc21be380da7，避免文档记账使已验证 release 与 main 不一致。
+2026-11-01T04:32:17 nudge: resume 01a192d1-2feb-7b31-94be-ce7a89adc798 ：用户决定关闭微信：读 PROMPT.md 末尾补充 3 照做，然后合 main 并 stage release（不激活 3001）
+
+
+## 2026-10-31T20:36:21.904Z — 补充 3：用户关闭微信
+
+已按追加要求关闭微信默认配置，保留适配器/迁移与可重新启用配置；来源快照明确 disabled，面板来源列表显示“已关闭”，不把关闭当作错误。全量后端、前端、superagent 测试已通过 conhost --headless 启动，随后执行 typecheck/lint/build。微信真实 E2E 将记录 skipped_by_user（用户决定关闭微信）；其余五条真实通过证据保留。正式 3001 不激活。
+
+
+## 2026-10-31T20:48:48.895Z — 全量检查进度与既有失败复现
+
+全量前端 169 文件/1021 测试通过，superagent 7 文件/254 测试通过。全量后端仍在执行，出现 4 个既有 provider 用例失败；已在干净 origin/main=1233751c 上分别重跑 deepseek-harness-runtime.test.ts 与 provider-survival.test.ts，完全复现这 4 项失败（1 缺失预期异常、2 Condition timeout、1 隔离 HOME 下 Claude CLI 不存在）。日志 supplement3-main-baseline.log 和 supplement3-main-survival-baseline.log；未修改无关 provider 代码。后续自动执行前后端类型检查、全仓 lint、完整 build，之后继续 3014 关闭验证和 main/release。
+
+
+## 2026-10-31T20:55:05.471Z — 微信关闭运行验证完成
+
+3014 独立副本认证读回 sources.wechat.enabled=false/state=disabled，16 秒观察微信游标与六条 Outbox 完全不变，active=[]。中英文 headless 面板分别显示“微信: 已关闭”和“WeChat: Disabled”，pageerror=0；截图 evidence/wechat-disabled-{zh-CN,en}.png，证据 wechat-disabled-runtime.json。检查脚本首次认证早于 runtime 就绪返回 503，已增加 readiness 等待，原错误保留。
+
+首轮全量结果：前端 1021/1021、相关 254/254、前后端类型检查、完整 build 通过；全后端 1055 项中 1042 通过、6 失败、7 跳过。其中隐藏窗口静态检查发现两个非 Windows 分支未显式声明 windowsHide（superagent/process-command 与 provider/headless-output），已补齐；该检查 3/3 重跑通过。其余 5 失败已在干净 main=1233751c 复现，包括题述 4 provider 用例与另一个 taskmaster 矛盾证据用例；源码与 main 一致。全仓 lint 六条下载功能既有错误仍保留。为确认最终代码，正在重新执行全量测试/types/lint/build，首轮原日志不覆盖。正式 3001 未激活。

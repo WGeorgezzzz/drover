@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 // File descriptors preserve exact provider NDJSON; a pseudoterminal would add terminal control bytes.
 export function spawnHeadlessOutput(file:string,args:string[],options:SpawnOptions){
- if(process.platform!=='win32')return spawn(file,args,options);
+ if(process.platform!=='win32')return spawn(file,args,{...options,windowsHide:true});
  const root=mkdtempSync(join(tmpdir(),'drover-headless-'));
  writeFileSync(join(root,'job.json'),JSON.stringify({file,args,cwd:options.cwd}));
  const script=join(root,'run.cjs');

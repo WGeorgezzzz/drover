@@ -13,7 +13,8 @@ export const superagentSettingsSchema=z.object({
   rules:z.array(z.object({id:z.string().min(1),enabled:z.boolean(),instruction:z.string().min(1)}).strict()).default([]),
   sources:z.object({
     feishu:source.extend({cli:z.string().default('lark-cli'),configDir:z.string().default(''),botId:z.string().default(''),userId:z.string().default('')}).prefault({}),
-    wechat:source.extend({python:z.string().default(''),script:z.string().default(''),account:z.string().default('wangqiaozhi123')}).prefault({}),
+    // Disabled by user decision; explicit configuration can enable the retained adapter.
+    wechat:source.extend({python:z.string().default(''),script:z.string().default(''),account:z.string().default('wangqiaozhi123')}).prefault({enabled:false}),
     github:source.extend({cli:z.string().default('gh'),configDir:z.string().default(''),repository:z.string().default('WGeorgezzzz/drover'),account:z.string().default('WGeorgezzzz')}).prefault({}),
     monitor:source.prefault({}),
     conversation:source.prefault({enabled:true,allow:['1']}), infohub:source.prefault({enabled:true,allow:['1']}),

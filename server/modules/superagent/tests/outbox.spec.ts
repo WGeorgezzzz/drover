@@ -29,6 +29,15 @@ function queue(h:ReturnType<typeof harness>,id='a',source='github',text='\u9a6d\
  h.store.send({id,kind:'reply',channel:{source,thread,address:{}},text});
 }
 describe('durable source identity and outbox',()=>{
+ it('defaults WeChat off, holds queued replies while disabled, and allows explicit re-enabling',async()=>{
+  const db=new Database(':memory:');connections.push(db);
+  const store=new SuperagentStore(db),settings=new SuperagentSettings(store),ledger=new OutboundLedger(store);
+  const config=settings.current();expect(config.sources.wechat.enabled).toBe(false);config.enabled=true;settings.save(config,0);
+  store.send({id:'disabled-wechat',kind:'reply',channel:{source:'wechat',thread:'filehelper',address:{chat:'filehelper'}},text:'retained reply'});
+  let sends=0;const dispatcher=new OutboxDispatcher(store,ledger,{enabled:source=>settings.current().enabled&&settings.current().sources[source as 'wechat'].enabled,actor:()=> 'wangqiaozhi123',send:async()=>{sends++;return {};}});
+  await dispatcher.pass();await dispatcher.pass();expect(sends).toBe(0);expect(store.receipt('disabled-wechat')?.sending).toBe(0);expect(store.status('disabled-wechat')).toBe('pending');
+  const enabled=settings.current();enabled.sources.wechat.enabled=true;settings.save(enabled,1);await dispatcher.pass();expect(sends).toBe(1);expect(store.status('disabled-wechat')).toBe('sent');
+ });
  it('sends the exact body without a prefix or hidden marker and ignores its platform ID even when it mentions the agent',async()=>{
   const h=harness(),text='\u9a6d\u624b result';queue(h,'a','github',text);
   const bodies:string[]=[];

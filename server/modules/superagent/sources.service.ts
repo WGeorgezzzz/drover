@@ -31,7 +31,7 @@ export class SuperagentSources {
     this.timer=setInterval(()=>this.pass(),5000);this.timer.unref();this.pass();
   }
   private ownsMonitor(id:string):boolean{const scope=this.host.settings.current().sources.monitor.conversations;return this.enabled('monitor')&&(!scope.length||scope.includes(id))&&!!this.host.store.get('migration:monitor:'+id);}
-  snapshot():Record<string,unknown>{return Object.fromEntries(this.status);}
+  snapshot():Record<string,unknown>{return {...Object.fromEntries(this.status),...Object.fromEntries((['github','feishu','wechat','monitor'] as const).map(source=>[source,this.enabled(source)?this.status.get(source)??{state:'starting'}:{state:'disabled'}]))};}
   pass():void {
     if(this.closing)return;
     for(const source of ['github','feishu','wechat','monitor'] as const){if(!this.enabled(source)||this.busy.has(source))continue;if(!this.host.store.get('cursor:initial:'+source))this.host.store.set('cursor:initial:'+source,new Date(Date.now()-60000).toISOString());const operation=(async()=>{try{await (source==='github'?this.github():source==='feishu'?this.feishu():source==='wechat'?this.wechat():this.monitor());this.status.set(source,{state:'ready',at:new Date().toISOString()});}catch(error){this.status.set(source,{state:'setup_or_error',error:String(error),at:new Date().toISOString()});}})().finally(()=>this.busy.delete(source));this.busy.set(source,operation);}
