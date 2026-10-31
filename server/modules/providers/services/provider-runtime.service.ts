@@ -148,7 +148,7 @@ export function createProviderRuntimeService(
       const user = getCurrentUserContext();
       // TaskMaster stores this server-owned marker when creating a Codex session. Subsequent turns keep its relay profile.
       if (providerName === 'codex' && user?.role === 'admin' && typeof runtimeOptions.sessionId === 'string'
-        && userPreferencesDb.getPreferences(userId)[`taskmasterCodexSession:${runtimeOptions.sessionId}`] === true) {
+        && (runtimeOptions.cloudcliSuperagent || userPreferencesDb.getPreferences(userId)[`taskmasterCodexSession:${runtimeOptions.sessionId}`] === true)) {
         const codexHome = process.env.TASKMASTER_CODEX_HOME || path.join(os.homedir(), '.codex-qz');
         return userContextStorage.run({ ...user, codexHome, env: { ...user.env, CODEX_HOME: codexHome } }, async () => {
           const startedAt = new Date(Date.now() - 1000);

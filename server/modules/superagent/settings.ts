@@ -8,6 +8,7 @@ export const superagentSettingsSchema=z.object({
   enabled:z.boolean().default(false), paused:z.boolean().default(false), mode:z.enum(['off','observe','auto']).default('observe'),
   workers:z.number().int().min(1).max(32).default(4), workerProvider:z.enum(['codex','claude','deepseek-harness']).default('codex'),
   workerModel:z.string().min(1).default('gpt-6.1-sol'), effort:z.string().default('high'), assessorModel:z.string().min(1).default('gpt-6-luna'),
+  repositories:z.record(z.string(),z.object({path:z.string().min(1),baseBranch:z.string().optional()}).strict()).default({}),
   evalTimeoutSeconds:z.number().int().min(10).max(3600).default(180),
   rules:z.array(z.object({id:z.string().min(1),enabled:z.boolean(),instruction:z.string().min(1)}).strict()).default([]),
   sources:z.object({
@@ -42,7 +43,7 @@ export class SuperagentSettings {
   }};
   policy():Policy {
     const settings=this.current();
-    const version=createHash('sha256').update(JSON.stringify({mode:settings.mode,rules:settings.rules,sources:Object.fromEntries(Object.entries(settings.sources).map(([name,config])=>[name,config.allow]))})).digest('hex').slice(0,16);
+    const version=createHash('sha256').update(JSON.stringify({mode:settings.mode,rules:settings.rules,sources:Object.fromEntries(Object.entries(settings.sources).map(([name,config])=>[name,{allow:config.allow,enabled:config.enabled,conversations:config.conversations}]))})).digest('hex').slice(0,16);
     return {version,paused:settings.paused||!settings.enabled,evalTimeoutMs:settings.evalTimeoutSeconds*1000,
       gate:(trigger,thread,tickets)=>{
         const config=settings.sources[trigger.source as keyof typeof settings.sources];

@@ -1,7 +1,8 @@
 import { resolveDeepSeekHarnessModel } from './deepseek-harness-models.js';
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawnHeadlessOutput } from '../../services/headless-output.service.js';
+import { type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { appendFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, appendFileSync, mkdirSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import readline from 'node:readline';
@@ -52,6 +53,7 @@ export const deepSeekHarnessRuntime: IProviderRuntime = {
     let nativeId = previous;
     try {
     if(selection){const effort=typeof options.effort==='string'?options.effort:'off';const nativeEffort=effort==='off'&&selection.model.reasoningEfforts&&!Object.hasOwn(selection.model.reasoningEfforts,'off')?'false':effort;if(selection.model.reasoningEfforts&&!Object.hasOwn(selection.model.reasoningEfforts,nativeEffort))throw new Error('Unsupported native Harness reasoning effort.');selectionPatch=path.join(scratch,'selection.json');writeFileSync(selectionPatch,JSON.stringify([{id:'agent-default-model',config:{provider:selection.provider,model:selection.model.id,...(selection.model.reasoningEfforts?{reasoningEffort:nativeEffort}:{})}}]));persist({type:'model_selection',provider:selection.provider,model:selection.model.id,effort});}
+      if(options.cloudcliSuperagent){const capability=options.cloudcliSuperagent as {endpoint:string;token:string;role:string};const tools=(await import('@/modules/superagent/index.js')).createSuperagentProviderTools(capability);if(!tools.length)throw new Error('Invalid superagent capability');selectionPatch??=path.join(scratch,'selection.json');const patches=existsSync(selectionPatch)?JSON.parse(readFileSync(selectionPatch,'utf8')):[];patches.push({insert:[{id:'drover-superagent-mcp',name:'@deepseek-ai/dsh-mcp-client',config:{transport:'streamable-http',serverName:'superagent',url:capability.endpoint.replace(/\/tool$/,'/mcp'),headers:{Authorization:'Bearer '+capability.token},failOnStartupError:true}}]});writeFileSync(selectionPatch,JSON.stringify(patches),{mode:0o600});}
       await new Promise<void>((resolve, reject) => {
         let stderr = '';
         let errorMessage = '';
@@ -59,7 +61,7 @@ export const deepSeekHarnessRuntime: IProviderRuntime = {
         let completed = false;
         let announced = false;
         let lastToolFailure = '';
-        const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', install.bridge,
+        const child = spawnHeadlessOutput('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', install.bridge,
           '-Launcher', install.launcher, '-TaskFile', taskFile, '-Workspace', options.cwd || options.projectPath || process.cwd(),'-Provider',selection?.provider||install.selectedProvider,
           ...(previous ? ['-SessionId', previous] : []),...(selectionPatch?['-SelectionPatch',selectionPatch]:[])], {
           cwd: options.cwd || options.projectPath || process.cwd(), windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],

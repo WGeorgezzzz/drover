@@ -5,6 +5,10 @@ import type { ProviderRuntimeContext } from '@/shared/types.js';
 const capabilitySchema=z.object({endpoint:z.string().url(),token:z.string().min(32),role:z.enum(['orchestrator','worker'])}).strict();
 const shapes={
   orchestrator_read:{resource:z.string().optional()},
+  orchestrator_ticket_attach:{ticketId:z.string(),triggerId:z.string(),note:z.string().optional()},
+  orchestrator_ticket_note:{ticketId:z.string(),text:z.string()},
+  orchestrator_ticket_request_status:{ticketId:z.string()},
+  orchestrator_unsubscribe:{thread:z.string()},
   orchestrator_eval_decide:{triggerId:z.string(),evalId:z.string(),kind:z.enum(['accept','ignore','stop','unavailable']),reason:z.string(),title:z.string().optional(),scope:z.string().optional(),acknowledgement:z.string().optional(),ticketId:z.string().optional(),rules:z.array(z.string()).optional()},
   orchestrator_reply:{ticketId:z.string(),purpose:z.enum(['acknowledgement','answer','result','attention']),triggerId:z.string().optional(),question:z.string().optional(),text:z.string()},
   orchestrator_report:{state:z.enum(['progress','waiting','ready','blocked','failed','dropped']),summary:z.string(),question:z.string().nullable().optional(),askedBy:z.string().optional(),answers:z.string().optional()},
@@ -14,6 +18,10 @@ const shapes={
   orchestrator_trigger_handback:{triggerId:z.string(),reason:z.string()},
 };
 const descriptions:Record<string,string>={
+  orchestrator_ticket_attach:'Attach an original human trigger to an existing ticket without widening its mandate.',
+  orchestrator_ticket_note:'Add an internal note to a ticket.',
+  orchestrator_ticket_request_status:'Ask an idle worker for its actual status.',
+  orchestrator_unsubscribe:'Stop following a thread.',
   orchestrator_read:'Read bounded facts for the current role. Workers can only read their own Ticket and Inputs.',
   orchestrator_eval_decide:'Submit the semantic judgement of a delivered Eval under its current policy. Host enforces the gate and observe mode.',
   orchestrator_reply:'Send one useful acknowledgement, result, answer or structured question through the originating Channel Outbox.',
@@ -30,7 +38,7 @@ export function createSuperagentProviderTools(input:unknown) {
   const capability=parsed.data;
   const endpoint=new URL(capability.endpoint);
   if(!['127.0.0.1','localhost','[::1]'].includes(endpoint.hostname)||endpoint.protocol!=='http:')throw new Error('Superagent tools require loopback HTTP');
-  const names=capability.role==='orchestrator'?['orchestrator_read','orchestrator_eval_decide','orchestrator_reply']:['orchestrator_read','orchestrator_report','orchestrator_ack','orchestrator_thread_follow','orchestrator_thread_unrelated','orchestrator_trigger_handback'];
+  const names=capability.role==='orchestrator'?['orchestrator_read','orchestrator_eval_decide','orchestrator_reply','orchestrator_ticket_attach','orchestrator_ticket_note','orchestrator_ticket_request_status','orchestrator_unsubscribe']:['orchestrator_read','orchestrator_report','orchestrator_ack','orchestrator_thread_follow','orchestrator_thread_unrelated','orchestrator_trigger_handback'];
   return names.map(name=>{
     const schema=z.object(shapes[name as keyof typeof shapes]).strict();
     return {name,shape:shapes[name as keyof typeof shapes],specification:{name,description:descriptions[name],inputSchema:z.toJSONSchema(schema)},

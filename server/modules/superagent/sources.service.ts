@@ -27,10 +27,10 @@ export class SuperagentSources {
   private actor(source:string):string {const sources=this.host.settings.current().sources;return source==='github'?sources.github.account:source==='feishu'?sources.feishu.userId:source==='wechat'?sources.wechat.account:'monitor';}
   start():void {
     setMonitorSourceRegistration((id,sessionId)=>{if(!this.host.settings.current().enabled)return;const ticketId=this.host.ticketForSession(sessionId);if(ticketId){this.host.store.set('migration:monitor:'+id,{ticketId,at:new Date().toISOString()});this.host.engine.followForContext(ticketId,{source:'monitor',id});}else new SuperagentMigration(this.host.store,this.host.ownerId,this.host.root).apply([]);});
-    setMonitorSourceHandler((id,event)=>{if(!this.ownsMonitor(id))return;const at=String(event.at??new Date().toISOString());this.receive({id:'monitor:'+id+':'+digest(JSON.stringify(event)),source:'monitor',threads:[{source:'monitor',id}],actor:{source:'monitor',id:'probe'},human:false,at,text:JSON.stringify(event),meta:{monitorId:id,probe:true}});},id=>this.ownsMonitor(id));
+    setMonitorSourceHandler((id,event)=>{if(!this.ownsMonitor(id))return;const at=String(event.at??new Date().toISOString());this.receive({id:'monitor:'+id+':'+digest(JSON.stringify([event.at,event.signature,event.type])),source:'monitor',threads:[{source:'monitor',id}],actor:{source:'monitor',id:'probe'},human:false,at,text:JSON.stringify(event),meta:{monitorId:id,probe:true}});},id=>this.ownsMonitor(id));
     this.timer=setInterval(()=>this.pass(),5000);this.timer.unref();this.pass();
   }
-  private ownsMonitor(id:string):boolean{return this.enabled('monitor')&&!!this.host.store.get('migration:monitor:'+id);}
+  private ownsMonitor(id:string):boolean{const scope=this.host.settings.current().sources.monitor.conversations;return this.enabled('monitor')&&(!scope.length||scope.includes(id))&&!!this.host.store.get('migration:monitor:'+id);}
   snapshot():Record<string,unknown>{return Object.fromEntries(this.status);}
   pass():void {
     if(this.closing)return;
@@ -84,7 +84,7 @@ export class SuperagentSources {
   private async monitor():Promise<void> {
     const db=this.host.store.database,now=new Date();
     for(const row of db.prepare("SELECT * FROM monitors WHERE user_id=? AND status='active' AND running_id IS NULL").all(this.host.ownerId) as Record<string,any>[]){if(!this.ownsMonitor(row.id))continue;
-      if(row.last_event_json){const event=JSON.parse(row.last_event_json),at=String(event.at??now.toISOString());this.receive({id:'monitor:'+row.id+':'+digest(JSON.stringify(event)),source:'monitor',threads:[{source:'monitor',id:row.id}],actor:{source:'monitor',id:'probe'},human:false,at,text:JSON.stringify(event),meta:{monitorId:row.id,probe:true}});db.prepare('UPDATE monitors SET last_event_json=NULL WHERE id=? AND last_event_json=?').run(row.id,row.last_event_json);}
+      if(row.last_event_json){const event=JSON.parse(row.last_event_json),at=String(event.at??now.toISOString());this.receive({id:'monitor:'+row.id+':'+digest(JSON.stringify([event.at,event.signature,event.type])),source:'monitor',threads:[{source:'monitor',id:row.id}],actor:{source:'monitor',id:'probe'},human:false,at,text:JSON.stringify(event),meta:{monitorId:row.id,probe:true}});db.prepare('UPDATE monitors SET last_event_json=NULL WHERE id=? AND last_event_json=?').run(row.id,row.last_event_json);}
       if(row.monitor_mode!=='event'){const key='monitor-clock:'+row.id,next=this.host.store.get<string>(key)??row.next_run_at;if(next>now.toISOString())continue;this.host.store.atomic(()=>{this.receive({id:'monitor:'+row.id+':clock:'+next,source:'monitor',threads:[{source:'monitor',id:row.id}],actor:{source:'monitor',id:'clock'},human:false,at:now.toISOString(),text:row.content,meta:{monitorId:row.id,scheduledAt:next}});this.host.store.set(key,row.schedule_json?nextMonitorCalendarRun(JSON.parse(row.schedule_json),now).toISOString():new Date(now.getTime()+row.interval_minutes*60000).toISOString());});}
     }
     const {pollMonitorProbes}=await import('@/modules/monitors/index.js');await pollMonitorProbes(now,true);

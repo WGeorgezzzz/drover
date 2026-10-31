@@ -32,3 +32,9 @@
 - 迁移不写 tasks.json；回读时 27/28 个源文件哈希一致，ras-realign-crlb 的文件在本轮读回时已发生漂移，保留该差异，不把它伪报为一致。隔离测试验证迁移与回滚均保留原始字节。
 - 增加数据库备份、迁移 API / 离线 CLI、旧任务只读、聊天和 info-hub Source 入口、cloudcli_monitor 兼容订阅及探针恢复/时钟 Trigger。服务端 typecheck、构建与 249/249 测试通过。
 - 下一步：执行器隔离、版本化提示词、中英面板及六条真实 E2E。
+2026-11-01T02:50:06 nudge: resume 01a192d1-2feb-7b31-94be-ce7a89adc798 ：继续按 PROMPT.md 和 DONE.json 未完成项做完，不要中途退出
+
+## 2026-10-31T18:57:08.730Z — 步骤 4：执行器、提示词与面板
+- 已接线 Codex、Claude SDK、DeepSeek Harness 的受限主会话/执行器工具；默认 gpt-6-luna 研判、gpt-6.1-sol 执行，支持逐 Ticket 模型和独立 worktree。
+- 提示词 CAS 版本与恢复、中英任务面板、来源/准入/执行配置、attention 优先展示、Outbox 不确定发送人工核对已实现。
+- 验证：相关测试 251/251，前后端 typecheck、lint、客户端 build 成功；lint 保留既有 warning。开始 3014 六条真实 E2E，尚不声明验收通过。

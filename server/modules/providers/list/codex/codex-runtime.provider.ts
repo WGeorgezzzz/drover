@@ -368,7 +368,7 @@ async function queryCodex(
     const bridge = ws.userId != null && sessionId ? (await import('@/modules/session-bridge/index.js')).createCodexSessionTool({userId:Number(ws.userId),sessionId,userMessageId:options.cloudcliUserMessageId,userMessage:options.cloudcliUserMessage,autonomous:Boolean(options.cloudcliMonitorId || options.cloudcliBridgeSourceSessionId || options.bridgeCompact),planMode:permissionMode==='plan',permissionMode}) : null;
     const monitor=ws.userId!=null&&sessionId?(await import('@/modules/monitors/index.js')).createCodexMonitorTool({userId:Number(ws.userId),sessionId,monitorId:options.cloudcliMonitorId,permissionMode,readOnly:(Boolean(options.cloudcliBridgeSourceSessionId)&&!options.cloudcliBridgeUserAuthorization)||permissionMode==='plan',authorization:options.cloudcliBridgeUserAuthorization}):null;
     const superagentTools=options.cloudcliSuperagent?(await import('@/modules/superagent/index.js')).createSuperagentProviderTools(options.cloudcliSuperagent):[];
-    const events: AsyncIterable<AnyRecord> = process.env.CLAUDEX_CODEX_TRANSPORT === 'exec' && !/^\/compact(?:\s|$)/.test(command.trim())
+    const events: AsyncIterable<AnyRecord> = !options.cloudcliSuperagent && process.env.CLAUDEX_CODEX_TRANSPORT === 'exec' && !/^\/compact(?:\s|$)/.test(command.trim())
       ? (await thread.runStreamed(turnInput, { signal: abortController.signal })).events as AsyncIterable<AnyRecord>
       : runCodexAppServerTurn({
         env,

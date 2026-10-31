@@ -1,3 +1,5 @@
+import { SuperagentPanel, SuperagentNavigation } from './SuperagentPanel';
+import { authenticatedFetch } from '@/shared/api';
 import { IntelligentTasksPanel } from '@/modules/task-master/IntelligentTasksPanel';
 import { TaskExecutionPanel,prefetchTaskExecutionModels } from '@/modules/task-master/TaskExecutionPanel';
 import type { LLMProvider } from '@/shared/types';
@@ -50,7 +52,7 @@ function useGlobalTasks(enabled = true) {
 }
 
 /** SidebarHeader uses the same global task collection to navigate and display open/high counts. */
-export function TasksNavigation() {
+function LegacyTasksNavigation() {
   // The sidebar uses the same default visibility and attention predicate as the unified task page.
   const [counts,setCounts]=useState<{attention:number;open:number}|null>(null);
   // The intelligence snapshot already includes the global task collection.
@@ -73,7 +75,7 @@ export function InfoHubNavigation() {
 }
 
 /** ProjectMainRegion shows broad workstreams first and expands the original task records on demand. */
-export function GlobalTasksPage({ onMenuClick }: { onMenuClick: () => void }) {
+function LegacyGlobalTasksPage({ onMenuClick }: { onMenuClick: () => void }) {
   const { projects, error, loading, load, setError,infohub } = useGlobalTasks(), navigate = useNavigate();
   const [searchParams] = useSearchParams();
   useEffect(()=>{prefetchTaskExecutionModels();},[]);
@@ -258,3 +260,8 @@ function TaskRow({ project, task, busy, act }: { project: ProjectTasks; task: Ta
 }
 
 function TopicPicker({label,options,selected,disabled,onChange}:{label:string;options:Topic[];selected:string[];disabled:boolean;onChange:(ids:string[])=>void}){const [query,setQuery]=useState('');return <fieldset className="rounded-lg border p-3"><legend className="px-1 text-xs text-muted-foreground">{label}</legend><input aria-label={label+'筛选'} placeholder="搜索来源标签或主题" value={query} onChange={e=>setQuery(e.target.value)} className={control+' mb-2 w-full text-xs'}/><div className="flex max-h-40 flex-wrap gap-2 overflow-auto">{options.filter(t=>t.title.toLocaleLowerCase().includes(query.toLocaleLowerCase())).map(t=><button key={t.id} type="button" aria-pressed={selected.includes(t.id)} disabled={disabled} onClick={()=>onChange(selected.includes(t.id)?selected.filter(id=>id!==t.id):[...selected,t.id])} className={'min-h-10 rounded-full border px-3 text-xs '+(selected.includes(t.id)?'border-primary bg-primary/10 text-primary':'bg-background')}>{selected.includes(t.id)?'✓ ':''}{t.title}</button>)}</div></fieldset>;}
+
+// Keep legacy views available until the administrator enables the migrated runtime.
+function useSuperagentEnabled(){const [enabled,setEnabled]=useState<boolean>();useEffect(()=>startVisiblePolling(async()=>{try{const response=await authenticatedFetch('/api/superagent');if(!response.ok){setEnabled(false);return;}const value=await response.json();setEnabled(value.settings.enabled);}catch{setEnabled(false);}},15000),[]);return enabled;}
+export function TasksNavigation(){const enabled=useSuperagentEnabled();return enabled===undefined?null:enabled?<SuperagentNavigation/>:<LegacyTasksNavigation/>;}
+export function GlobalTasksPage(props:{onMenuClick:()=>void}){const enabled=useSuperagentEnabled(),[params]=useSearchParams();if(enabled===undefined)return <p className="p-4">…</p>;return enabled||params.get('view')==='superagent'?<SuperagentPanel {...props}/>:<><a className="block px-4 py-2 text-sm underline" href="/tasks?view=superagent">Superagent</a><LegacyGlobalTasksPage {...props}/></>;}
