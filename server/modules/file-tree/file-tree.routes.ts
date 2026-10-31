@@ -1,3 +1,4 @@
+import { issueDownload } from './downloads.js';
 import path from 'node:path';
 import { projectsDb } from '@/modules/database/index.js';
 import { userContextMiddleware, authorizePaths, authorizeProjectParameter } from '@/modules/access-control/index.js';
@@ -120,6 +121,16 @@ export function createFileTreeRouter(
   router.use(userContextMiddleware);
   router.param('projectId', authorizeProjectParameter(id => projectsDb.getProjectPathById(id)));
   router.use(authorizePaths(req => [req.query.path,req.query.workspacePath, req.body?.path].filter((value): value is string => typeof value === 'string' && path.isAbsolute(value))));
+
+  router.post('/projects/:projectId/download-ticket', createRouteHandler(async (req, res) => {
+    const target = readRequiredString(req.body?.path, 'path');
+    if (!services.resolveDownloadPath) throw new AppError('Downloads unavailable', {statusCode:503});
+    const resolved = await services.resolveDownloadPath(readProjectId(req), target);
+    res.set('Cache-Control', 'no-store').json(await issueDownload(resolved, req.body?.directory === true, async p => {
+      if (!services.resolveDownloadPath) throw new Error('Downloads unavailable');
+      return services.resolveDownloadPath(readProjectId(req), p);
+    }));
+  }, logger));
 
   router.get('/browse-filesystem', createRouteHandler(async (request, response) => {
     response.json(await services.browseWorkspace(readOptionalString(request.query.path)));

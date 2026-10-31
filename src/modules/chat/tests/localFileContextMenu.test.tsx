@@ -5,6 +5,8 @@ import { afterEach, test, vi } from 'vitest';
 import { Markdown } from '@/modules/chat/transcript/Markdown';
 import { MarkdownWorkspaceContext } from '@/modules/chat/context/MarkdownWorkspaceContext';
 
+const downloadFile = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+vi.mock('@/shared/download', () => ({ downloadFile }));
 const preview = vi.hoisted(() => vi.fn());
 const readFileBlob = vi.hoisted(() => vi.fn());
 vi.mock('@/shared/api', () => ({ api: { readFileBlob } }));
@@ -40,9 +42,9 @@ test('keyboard menu navigation and Escape restore the link without launching', (
   const link = screen.getByRole('link');
   fireEvent.keyDown(link, { key: 'F10', shiftKey: true });
   const menu = screen.getByRole('menu');
-  assert.equal(document.activeElement, screen.getByRole('menuitem', { name: /Open locally|本地打开/ }));
+  assert.equal(document.activeElement, screen.getByRole('menuitem', { name: '下载' }));
   fireEvent.keyDown(menu, { key: 'ArrowDown' });
-  assert.equal(document.activeElement, screen.getByRole('menuitem', { name: /Preview in Drover|在 Drover 中预览/ }));
+  assert.equal(document.activeElement, screen.getByRole('menuitem', { name: /Open locally|本地打开/ }));
   fireEvent.keyDown(menu, { key: 'Escape' });
   assert.equal(screen.queryByRole('menu'), null);
   assert.equal(document.activeElement, link);
@@ -124,4 +126,12 @@ test('ambiguous filenames never open an arbitrary matching file', async () => {
   fireEvent.click(screen.getByRole('menuitem', {name: /Open locally|本地打开/}));
   await waitFor(() => assert.match(screen.getByRole('group').textContent || '', /多个同名文件/));
   assert.equal(desktop.cloudcliDesktop?.openLocalPath.mock.calls.length, 0);
+});
+
+test('download menu resolves the session file and comes first', async()=>{
+  render(<MarkdownWorkspaceContext.Provider value={{projectId:'one',projectPath:'D:/work'}}><Markdown>{'[中文](D:/work/中文.txt)'}</Markdown></MarkdownWorkspaceContext.Provider>);
+  fireEvent.contextMenu(screen.getByRole('link'));
+  assert.equal(screen.getAllByRole('menuitem')[0].textContent,'下载');
+  fireEvent.click(screen.getByRole('menuitem',{name:'下载'}));
+  await waitFor(()=>assert.deepEqual(downloadFile.mock.calls.at(-1),['one','D:/work/中文.txt']));
 });

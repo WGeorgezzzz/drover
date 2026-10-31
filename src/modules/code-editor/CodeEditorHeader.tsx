@@ -122,7 +122,7 @@ export default function CodeEditorHeader({
         </div>
       </div>
 
-      <LocalFileActions path={file.path} />
+      <span className="hidden sm:contents"><LocalFileActions path={file.path} /></span>
       {/* Buttons - don't shrink, always visible */}
       <div className="flex shrink-0 items-center gap-0.5">
         {isMarkdownFile && (
@@ -164,6 +164,7 @@ export default function CodeEditorHeader({
           type="button"
           onClick={onDownload}
           className="flex items-center justify-center rounded-md p-1.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+          aria-label={labels.download}
           title={labels.download}
         >
           <Download className="h-4 w-4" />

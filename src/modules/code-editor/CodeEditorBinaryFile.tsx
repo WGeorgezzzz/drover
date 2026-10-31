@@ -1,9 +1,11 @@
+import DownloadButton from '@/shared/ui/DownloadButton';
 import FileMetadata from '@/modules/code-editor/FileMetadata';
 import LocalFileActions from '@/shared/ui/LocalFileActions';
 import type { CodeEditorFile } from '@/shared/types';
 
 type CodeEditorBinaryFileProps = {
   file: CodeEditorFile;
+  projectId?: string;
   isSidebar: boolean;
   isFullscreen: boolean;
   onClose: () => void;
@@ -15,6 +17,7 @@ type CodeEditorBinaryFileProps = {
 /** Rendered by CodeEditor inside the code-editor module when the opened file is binary and cannot be edited as text. */
 export default function CodeEditorBinaryFile({
   file,
+  projectId,
   isSidebar,
   isFullscreen,
   onClose,
@@ -30,7 +33,7 @@ export default function CodeEditorBinaryFile({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <FileMetadata path={file.path} projectId={file.projectId} /><LocalFileActions path={file.path} compact={false} />
+        <FileMetadata path={file.path} projectId={projectId ?? file.projectId} /><LocalFileActions path={file.path} compact={false} />
         <div>
           <h3 className="mb-2 text-lg font-medium text-foreground">{title}</h3>
           <p className="text-sm text-muted-foreground">{message}</p>
@@ -52,7 +55,7 @@ export default function CodeEditorBinaryFile({
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <h3 className="truncate text-sm font-medium text-gray-900 dark:text-white">{file.name}</h3>
           </div>
-          <button
+          <DownloadButton projectId={projectId ?? file.projectId} path={file.path} /><button
             type="button"
             onClick={onClose}
             className="flex items-center justify-center rounded-md p-1.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
@@ -83,7 +86,7 @@ export default function CodeEditorBinaryFile({
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <h3 className="truncate text-sm font-medium text-gray-900 dark:text-white">{file.name}</h3>
           </div>
-          <div className="flex shrink-0 items-center gap-0.5">
+          <div className="flex shrink-0 items-center gap-0.5"><DownloadButton projectId={projectId ?? file.projectId} path={file.path} />
             <button
               type="button"
               onClick={onToggleFullscreen}

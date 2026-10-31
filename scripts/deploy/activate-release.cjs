@@ -107,7 +107,7 @@ async function activate(){
  await idle(c);let stopped=false,changed=false;
  try{
   // SQLite online backup includes supervised workers, which retain their DB connections.
-  check();await interruptManaged(c);stopped=true;await stop(c);const db=new DB(c.database,{readonly:true});let ids;try{ids=recordIds(db);await db.backup(path.join(backup,'database.db'));}finally{db.close();}write(path.join(backup,'record-ids.json'),ids);
+  check();await interruptManaged(c);stopped=true;await stop(c);{/* A stopped writer can leave a hot journal; only a writable handle may roll it back. */const r=new DB(c.database,{fileMustExist:true});try{assert.equal(r.pragma('quick_check',{simple:true}),'ok');}finally{r.close();}}const db=new DB(c.database,{readonly:true});let ids;try{ids=recordIds(db);await db.backup(path.join(backup,'database.db'));}finally{db.close();}write(path.join(backup,'record-ids.json'),ids);
   replaceLink(target);changed=true;write(cfgPath,{...c,runtime:target});const current=await start(),checks=await verify(current,ids);desktopUpdate(backup);
   const result={commit:read(path.join(target,'release-manifest.json')).git,status:'active',runtime:target,pid:current.pid,previousRuntime:c.runtime,backup,checks,at:new Date().toISOString()};write(path.join(path.dirname(cfgPath),'active-release.json'),result);write(path.join(root,'deployment-status.json'),result);console.log(JSON.stringify(result));
  }catch(error){

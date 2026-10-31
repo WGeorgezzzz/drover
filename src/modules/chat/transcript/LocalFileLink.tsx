@@ -1,3 +1,4 @@
+import { downloadFile } from '@/shared/download';
 import { useContext, useEffect, useRef, useState } from 'react';
 import type { AnchorHTMLAttributes } from 'react';
 import { createPortal } from 'react-dom';
@@ -145,9 +146,14 @@ export function LocalFileLink({ fileReference, directories = [], onPreview, chil
   const touchTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const cancelTouch=()=>{if(touchTimer.current)clearTimeout(touchTimer.current);touchTimer.current=null;};
   useEffect(()=>cancelTouch,[]);
+  const download = async () => {
+    setPosition(null); setError(null);
+    try { if (!projectId) throw new Error('会话项目不可用'); await withResolvedPath(p => downloadFile(projectId, p)); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
+  };
   const menuClass = 'flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm hover:bg-accent focus:bg-accent focus:outline-none disabled:opacity-50';
   return <>
-    <a {...props} onTouchStart={event=>{const touch=event.touches[0];cancelTouch();touchHeld.current=false;touchTimer.current=setTimeout(()=>{touchHeld.current=true;openMenuAt(touch.clientX,touch.clientY);},550);}} onTouchEnd={cancelTouch} onTouchMove={cancelTouch} onTouchCancel={cancelTouch} title={resolvedTitle ?? title} ref={linkRef} onMouseEnter={() => {
+    <a {...props} style={{...props.style,WebkitTouchCallout:'none'}} onTouchStart={event=>{const touch=event.touches[0];cancelTouch();touchHeld.current=false;touchTimer.current=setTimeout(()=>{touchHeld.current=true;openMenuAt(touch.clientX,touch.clientY);},550);}} onTouchEnd={cancelTouch} onTouchMove={cancelTouch} onTouchCancel={cancelTouch} title={resolvedTitle ?? title} ref={linkRef} onMouseEnter={() => {
       if (!abbreviated || resolvedTitle || hoverResolving.current || !projectId) return;
       hoverResolving.current = true;
       void resolveAbbreviated().catch(() => { hoverResolving.current = false; });
@@ -199,6 +205,7 @@ export function LocalFileLink({ fileReference, directories = [], onPreview, chil
         const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (current + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
         buttons[next]?.focus();
       }}>
+      <button type="button" role="menuitem" className={menuClass} onClick={() => void download()}>下载</button>
       <button type="button" role="menuitem" className={menuClass} disabled={opening} onClick={() => void openLocally()}><ExternalLink size={15}/>{t('fileLink.openLocally', 'Open locally')}</button>
       <button type="button" role="menuitem" className={menuClass} onClick={() => { setPosition(null); linkRef.current?.click(); }}><FileText size={15}/>{t('fileLink.preview', 'Preview in Drover')}</button>
       <button type="button" role="menuitem" className={menuClass} onClick={() => void reveal()}>打开所在文件夹</button>

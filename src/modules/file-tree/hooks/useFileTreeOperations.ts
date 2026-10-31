@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import JSZip from 'jszip';
+import { downloadFile } from '@/shared/download';
 
 import { api } from '@/shared/api';
 import type { FileTreeNode,Project } from '@/shared/types';
@@ -247,75 +247,12 @@ export function useFileTreeOperations({
     showToast(t('fileTree.toast.pathCopied', 'Path copied to clipboard'), 'success');
   }, [showToast, t]);
 
-  const triggerBrowserDownload = useCallback((blob: Blob, fileName: string) => {
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-
-    anchor.href = url;
-    anchor.download = fileName;
-
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-
-    URL.revokeObjectURL(url);
-  }, []);
-
-  // Download a single file
   const downloadSingleFile = useCallback(async (item: FileTreeNode) => {
-    if (!selectedProject) return;
-
-    // Use the binary streaming endpoint so downloads preserve raw bytes.
-    const response = await api.readFileBlob(selectedProject.projectId, item.path);
-
-    if (!response.ok) {
-      throw new Error('Failed to download file');
-    }
-
-    const blob = await response.blob();
-    triggerBrowserDownload(blob, item.name);
-  }, [selectedProject, triggerBrowserDownload]);
-
-  // Download folder as ZIP
-  const downloadFolderAsZip = useCallback(async (folder: FileTreeNode) => {
-    if (!selectedProject) return;
-
-    const zip = new JSZip();
-
-    // Recursively get all files in the folder
-    const collectFiles = async (node: FileTreeNode, currentPath: string) => {
-      const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
-
-      if (node.type === 'file') {
-        const response = await api.readFileBlob(selectedProject.projectId, node.path);
-        if (!response.ok) {
-          throw new Error(`Failed to download "${node.name}" for ZIP export`);
-        }
-
-        // Store raw bytes in the archive so binary files stay intact.
-        const fileBytes = await response.arrayBuffer();
-        zip.file(fullPath, fileBytes);
-      } else if (node.type === 'directory' && node.children) {
-        // Recursively process children
-        for (const child of node.children) {
-          await collectFiles(child, fullPath);
-        }
-      }
-    };
-
-    // If the folder has children, process them
-    if (folder.children && folder.children.length > 0) {
-      for (const child of folder.children) {
-        await collectFiles(child, '');
-      }
-    }
-
-    // Generate ZIP file
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    triggerBrowserDownload(zipBlob, `${folder.name}.zip`);
-
-    showToast(t('fileTree.toast.folderDownloaded', 'Folder downloaded as ZIP'), 'success');
-  }, [selectedProject, showToast, t, triggerBrowserDownload]);
+    if (selectedProject) await downloadFile(selectedProject.projectId, item.path);
+  }, [selectedProject]);
+  const downloadFolderAsZip = useCallback(async (item: FileTreeNode) => {
+    if (selectedProject) await downloadFile(selectedProject.projectId, item.path, true);
+  }, [selectedProject]);
 
   // Download file or folder. Declared after the two helpers it dispatches to so
   // it does not read them before initialization; both are memoized on
