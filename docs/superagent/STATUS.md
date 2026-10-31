@@ -94,3 +94,8 @@
 最终完整重跑：前端 169 文件/1021 项通过；superagent 254 项通过；后端 1055 项中 1043 通过、5 失败、7 跳过。5 个失败均在干净 origin/main=1233751c 复现：deepseek 缺少预期异常 1 项、provider 生存性/隔离 CLI 3 项、taskmaster 矛盾证据 1 项。后一项的测试、证据服务及 run() 方法与原始 ae49154a 也完全一致；不把新增发现含糊算进题述 4 项。两个非 Windows 分支的 windowsHide 静态声明已修复，隐藏窗口检查通过。前后端 typecheck、完整 npm run build 通过；全仓 lint 仍有 6 条 main 下载功能既有错误，56 个本任务代码文件 lint 为 0 错误。所有失败与初次检查日志保留，未记成通过。
 
 微信真实项明确 skipped_by_user（用户决定关闭微信），其余五条真实链路通过，因此按补充 3 完成 E2E。3014 关闭验证、双语截图与 6 条 Outbox 保留通过，测试实例已优雅停止。将再次 fetch/合 main 并只执行官方 stage release-2，不激活 3001。
+
+
+## 2026-10-31T21:09:26.109Z — 已 fetch 合 main 并推送
+
+最终全量验证与微信关闭改动已提交 5339e8f5；再次 fetch/merge origin/main 显示 Already up to date，随后正常 fast-forward 推送 HEAD→main 和 feature 分支，origin/main=5339e8f5830fed3d3b2efb92d96edcfdf68d575f。未 force push，未 checkout/修改原始脏 main 工作区。独立 release-source 已 detached 到干净 current origin/main，下一步只调用官方 stage-release 创建 release-2，不 activate。
