@@ -104,3 +104,12 @@
 ## 2026-10-31T21:11:27.575Z — 官方 stage/prepared 完成
 
 release-2 已从干净 current origin/main=5339e8f5830fed3d3b2efb92d96edcfdf68d575f 官方构建；1258 项哈希、provenance、祖先、功能与桌面壳守卫通过。官方 activate-release.cjs 未带 --activate，结果 prepared、activationPreflight.ready=true、productionChanged=false；primary-service.json 哈希前后一致。只暂存，没有激活或重启正式 3001。接着从 release-2 在独立 3014/copy-home 做最后运行读回，再优雅停止。
+
+
+## 2026-10-31T21:12:53.215Z — 官方 release-2 暂存与最终验收完成
+
+从干净 current origin/main=5339e8f5830fed3d3b2efb92d96edcfdf68d575f 执行官方 stage-release.cjs，release-2 的 1258 项哈希、provenance、祖先与桌面壳完整性通过；官方 activate-release.cjs 不带 --activate，返回 prepared/productionChanged=false，正式配置预检前后 SHA256 相同。
+
+release-2 在独立 3014/copy-home 实际启动，微信 disabled 且中英“已关闭/Disabled”展示正确。16 秒内微信游标、六条 Outbox 和六条平台收据完全不变，1196 Ticket/1199 Assignment，active=[]、pageerror=0；随后优雅关闭，端口已不监听。测试监测 stopped、GitHub 测试 issue 已关闭。
+
+按补充 3 完成：5/6 passed + 1 skipped_by_user（用户决定关闭微信）。全量前端 1021、相关 254、类型检查和构建通过；后端 5 项基线失败、lint 六条 main 既有错误有独立复现/源码对照，不记作通过。本任务 56 个代码文件 lint 通过。DONE.json=done:true、resumeNext=[]；没有激活 3001。

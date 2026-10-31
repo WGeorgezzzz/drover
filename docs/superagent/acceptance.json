@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-31T21:08:51.492Z",
+  "updatedAt": "2026-10-31T21:12:53.215Z",
   "port": 3014,
   "passed": 5,
   "required": 6,
@@ -311,27 +311,26 @@
   "main": {
     "merged": true,
     "pushed": true,
-    "git": "1233751cd3831edc8f32c09fad25bc21be380da7"
+    "head": "5339e8f5830fed3d3b2efb92d96edcfdf68d575f"
   },
   "release": {
     "passed": true,
-    "at": "2026-10-31T20:05:06.512Z",
-    "officialCommand": "node scripts/deploy/stage-release.cjs D:\\embodied\\droversuperagent-20261101/release-1",
+    "at": "2026-10-31T21:10:34.177Z",
+    "officialCommand": "node scripts/deploy/stage-release.cjs D:\\embodied\\droversuperagent-20261101/release-2",
     "source": "D:\\embodied\\droversuperagent-20261101/release-source",
-    "target": "D:\\embodied\\droversuperagent-20261101/release-1",
-    "git": "1233751cd3831edc8f32c09fad25bc21be380da7",
+    "target": "D:\\embodied\\droversuperagent-20261101/release-2",
+    "git": "5339e8f5830fed3d3b2efb92d96edcfdf68d575f",
     "hashesVerified": 1258,
     "sourceClean": true,
     "currentOriginMain": true,
     "productionActivated": false
   },
   "prepared": {
-    "at": "2026-10-31T20:07:12.428Z",
-    "command": "node scripts/deploy/activate-release.cjs --source D:/embodied/droversuperagent-20261101/release-source --release D:/embodied/droversuperagent-20261101/release-1",
+    "at": "2026-10-31T21:10:34.175Z",
     "status": "prepared",
-    "target": "D:/embodied/droversuperagent-20261101/release-1",
-    "git": "1233751cd3831edc8f32c09fad25bc21be380da7",
-    "currentRuntime": "D:/embodied/drover-mobile-download-20261101/release-28",
+    "target": "D:\\embodied\\droversuperagent-20261101\\release-2",
+    "git": "5339e8f5830fed3d3b2efb92d96edcfdf68d575f",
+    "currentRuntime": "D:\\embodied\\drover-mobile-download-20261101\\release-28",
     "port": 3001,
     "requiresRestart": true,
     "productionChanged": false,
@@ -342,27 +341,39 @@
         59456
       ],
       "reason": null
-    }
+    },
+    "productionConfigHashBefore": "10103922bdaaaab656d263059e076becbeb5969490decfee00f590d92a91f07c",
+    "productionConfigHashAfter": "10103922bdaaaab656d263059e076becbeb5969490decfee00f590d92a91f07c"
   },
   "packagedStart": {
     "passed": true,
-    "at": "2026-10-31T20:08:20.807Z",
+    "at": "2026-10-31T21:11:59.266Z",
     "port": 3014,
-    "release": "release-1",
-    "git": "1233751cd3831edc8f32c09fad25bc21be380da7",
+    "enabled": false,
+    "state": "disabled",
+    "noWechatCursorChanges": true,
+    "noOutboxChanges": true,
+    "observationMs": 16000,
+    "outboxCount": 6,
+    "platformReceiptsUnchanged": true,
+    "receiptCount": 6,
     "tickets": 1196,
     "assignments": 1199,
-    "outboxBefore": 6,
-    "outboxAfter": 6,
     "active": [],
-    "productionConfigUnchanged": true
+    "chinese": "微信: 已关闭",
+    "english": "WeChat: Disabled",
+    "browserErrors": [],
+    "productionChanged": false,
+    "release": "release-2",
+    "releasePath": "D:\\embodied\\droversuperagent-20261101/release-2",
+    "git": "5339e8f5830fed3d3b2efb92d96edcfdf68d575f",
+    "hashesVerified": 1258,
+    "productionActivated": false,
+    "stoppedAfterValidation": true
   },
   "cleanup": {
-    "at": "2026-10-31T20:10:17.697Z",
-    "shutdown": {
-      "closed": true
-    },
-    "activeBefore": [],
+    "at": "2026-10-31T21:12:53.215Z",
+    "test3014Stopped": true,
     "testMonitors": [
       {
         "id": "1c2731ba-1590-4332-b563-691d7ab51111",
@@ -373,8 +384,10 @@
         "status": "stopped"
       }
     ],
+    "githubTestIssueClosed": true,
     "receiptsPreserved": 6,
-    "githubTestIssueClosed": true
+    "productionActivated": false,
+    "productionConfigHashAtFinish": "10103922bdaaaab656d263059e076becbeb5969490decfee00f590d92a91f07c"
   },
   "wechatReadinessAt": "2026-10-31T20:04:38.082Z",
   "skipped": 1,
@@ -384,7 +397,7 @@
   "e2eSummary": "5/6 passed + 1 skipped_by_user",
   "wechatDisabled": {
     "passed": true,
-    "at": "2026-10-31T20:54:25.831Z",
+    "at": "2026-10-31T21:11:59.266Z",
     "port": 3014,
     "enabled": false,
     "state": "disabled",
@@ -392,6 +405,10 @@
     "noOutboxChanges": true,
     "observationMs": 16000,
     "outboxCount": 6,
+    "platformReceiptsUnchanged": true,
+    "receiptCount": 6,
+    "tickets": 1196,
+    "assignments": 1199,
     "active": [],
     "chinese": "微信: 已关闭",
     "english": "WeChat: Disabled",

@@ -1,8 +1,8 @@
 # Drover Superagent 实施与验收报告
 
-更新时间：2026-10-31T21:08:51.492Z（UTC；本地日期 2026-11-01）。
+更新时间：2026-10-31T21:12:53.215Z（UTC；本地日期 2026-11-01）。
 
-补充 3 已完成微信关闭与重新验收：**5/6 passed + 1 skipped_by_user（用户决定关闭微信）**。微信默认 disabled，独立副本也已关闭，保留代码、迁移与配置重新开启能力；不再要求微信登录。关闭后的全量测试/typecheck/lint/build 已重跑，相关测试、类型检查、构建通过；全量检查中的基线失败逐项保留并复现。接下来 fetch 合 main、只 stage release-2。**没有激活正式 3001。**
+补充 3 已完成微信关闭与重新验收：**5/6 passed + 1 skipped_by_user（用户决定关闭微信）**。微信默认 disabled，独立副本也已关闭，保留代码、迁移与配置重新开启能力；不再要求微信登录。关闭后的全量测试/typecheck/lint/build 已重跑，相关测试、类型检查、构建通过；全量检查中的基线失败逐项保留并复现。已 fetch 合 main、推送，并从干净 current origin/main 官方 stage release-2，prepared 预检与暂存产物 3014 验证均通过。**没有激活正式 3001。**
 
 ## 实现与迁移数字
 
@@ -59,7 +59,7 @@ GitHub 不需要新 agent 账号、gh-agent 配置或登录步骤。测试 issue
 ## 回滚与继续
 
 - 本轮只操作测试副本、feature 分支及 release 暂存；3001 未激活，所以正式服务无需回滚。
-- 测试恢复入口：以 conhost.exe --headless node.exe D:/embodied/droversuperagent-20261101/launch-staged-test.cjs 启动暂存产物的 3014，等待 /api/superagent 完成初始化。保留 copy-home/auth.db、Outbox、配置、会话和备份；不得清空账本后重发已完成的测试。
+- 测试恢复入口：以 conhost.exe --headless node.exe D:/embodied/droversuperagent-20261101/launch-staged-test2.cjs 启动 release-2 暂存产物的 3014，等待 /api/superagent 完成初始化。保留 copy-home/auth.db、Outbox、配置、会话和备份；不得清空账本后重发已完成的测试。
 - 在线迁移 API：owner/admin 认证后 POST /api/superagent/migration/preview、/apply、/rollback，body={roots:[...] }；apply/rollback 先创建 .superagent-*.bak。rollback 只撤销未被执行/修改的导入记录，保留已有活动记录，恢复兼容监测所有权；不恢复或删除 tasks.json。
 - 离线 CLI（必须先排空并停止目标实例，显式给数据库）：node scripts/superagent-migrate.mjs --database <copy/auth.db> --root <原任务根目录>；先 preview，再追加 --apply；回滚用 --rollback。活 writer 锁会拒绝离线操作。备份恢复仅在停服务后针对明确目标副本执行。
 - 正式启用后的业务回滚：先暂停来源/主会话并排空，核对不确定 Outbox，运行迁移 rollback；需要保留的已执行 Ticket 留档。程序版本回切必须使用仓库部署守卫和已验证备份，不能盲目删除新表或旧任务。
@@ -94,3 +94,12 @@ GitHub 不需要新 agent 账号、gh-agent 配置或登录步骤。测试 issue
 最终完整重跑：前端 169 文件/1021 项通过；superagent 254 项通过；后端 1055 项中 1043 通过、5 失败、7 跳过。5 个失败均在干净 origin/main=1233751c 复现：deepseek 缺少预期异常 1 项、provider 生存性/隔离 CLI 3 项、taskmaster 矛盾证据 1 项。后一项的测试、证据服务及 run() 方法与原始 ae49154a 也完全一致；不把新增发现含糊算进题述 4 项。两个非 Windows 分支的 windowsHide 静态声明已修复，隐藏窗口检查通过。前后端 typecheck、完整 npm run build 通过；全仓 lint 仍有 6 条 main 下载功能既有错误，56 个本任务代码文件 lint 为 0 错误。所有失败与初次检查日志保留，未记成通过。
 
 最终检查记录 verification-supplement3-final.json、evidence/verification-supplement3-summary.json；完整日志 supplement3-final-*.log。首轮日志 supplement3-*.log 保留，包括已修复的窗口静态检查失败。干净 main 复现日志 supplement3-main-{baseline,survival-baseline,taskmaster-baseline}.log；原基线代码对照 evidence/taskmaster-original-baseline-comparison.json；本任务 lint 清单 evidence/lint-owned-supplement3.json。
+
+
+## 补充 3 最终 main 与 release-2
+
+- main 已 fetch/合并并推送 **5339e8f5830fed3d3b2efb92d96edcfdf68d575f**；微信关闭、窗口启动修正及检查报告均已包含。没有 force push，也未修改原始脏 main 工作区。最终部署记录单独提交 feature 分支。
+- 官方 stage 路径 **D:\embodied\droversuperagent-20261101/release-2**，来源干净 current origin/main。release-manifest、build-provenance、frontend-release 指向同一提交；1258 项产物哈希通过，含前端、server 和桌面壳清单。旧 release-1 保留。
+- 官方 activate-release.cjs --source <release-source> --release <release-2> **没有 --activate**，返回 prepared、productionChanged=false；全局锁、current-main、祖先、provenance、哈希、功能和桌面壳守卫通过，正式 primary-service.json 预检前后哈希相同。
+- 暂存产物在 3014/原独立副本实际启动，1196 Ticket、1199 Assignment；微信关闭、中英展示、无微信游标变化、六条 Outbox/平台收据均不变、active=[]、pageerror=0。随后排空并关闭，3014 不再监听。证据 evidence/packaged-start-supplement3.json、evidence/release-prepared-supplement3.json、stage-result-supplement3.json。
+- **验收完成：5/6 passed + 1 skipped_by_user；微信无登录待办，3001 未激活。** 基线检查失败仍如实保留：后端 5 个用例、全仓 lint 六条错误。全部实现/测试修复及状态记录已提交 feature 分支，DONE.json 的 resumeNext 为空。
