@@ -87,3 +87,10 @@
 3014 独立副本认证读回 sources.wechat.enabled=false/state=disabled，16 秒观察微信游标与六条 Outbox 完全不变，active=[]。中英文 headless 面板分别显示“微信: 已关闭”和“WeChat: Disabled”，pageerror=0；截图 evidence/wechat-disabled-{zh-CN,en}.png，证据 wechat-disabled-runtime.json。检查脚本首次认证早于 runtime 就绪返回 503，已增加 readiness 等待，原错误保留。
 
 首轮全量结果：前端 1021/1021、相关 254/254、前后端类型检查、完整 build 通过；全后端 1055 项中 1042 通过、6 失败、7 跳过。其中隐藏窗口静态检查发现两个非 Windows 分支未显式声明 windowsHide（superagent/process-command 与 provider/headless-output），已补齐；该检查 3/3 重跑通过。其余 5 失败已在干净 main=1233751c 复现，包括题述 4 provider 用例与另一个 taskmaster 矛盾证据用例；源码与 main 一致。全仓 lint 六条下载功能既有错误仍保留。为确认最终代码，正在重新执行全量测试/types/lint/build，首轮原日志不覆盖。正式 3001 未激活。
+
+
+## 2026-10-31T21:08:51.492Z — 补充 3 最终全量检查完成
+
+最终完整重跑：前端 169 文件/1021 项通过；superagent 254 项通过；后端 1055 项中 1043 通过、5 失败、7 跳过。5 个失败均在干净 origin/main=1233751c 复现：deepseek 缺少预期异常 1 项、provider 生存性/隔离 CLI 3 项、taskmaster 矛盾证据 1 项。后一项的测试、证据服务及 run() 方法与原始 ae49154a 也完全一致；不把新增发现含糊算进题述 4 项。两个非 Windows 分支的 windowsHide 静态声明已修复，隐藏窗口检查通过。前后端 typecheck、完整 npm run build 通过；全仓 lint 仍有 6 条 main 下载功能既有错误，56 个本任务代码文件 lint 为 0 错误。所有失败与初次检查日志保留，未记成通过。
+
+微信真实项明确 skipped_by_user（用户决定关闭微信），其余五条真实链路通过，因此按补充 3 完成 E2E。3014 关闭验证、双语截图与 6 条 Outbox 保留通过，测试实例已优雅停止。将再次 fetch/合 main 并只执行官方 stage release-2，不激活 3001。

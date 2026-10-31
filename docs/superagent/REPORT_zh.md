@@ -1,8 +1,8 @@
 # Drover Superagent 实施与验收报告
 
-更新时间：2026-10-31T20:13:02.826Z（UTC；本地日期 2026-11-01）。
+更新时间：2026-10-31T21:08:51.492Z（UTC；本地日期 2026-11-01）。
 
-补充 3 已覆盖微信验收：**5/6 passed + 1 skipped_by_user（用户决定关闭微信）**，其余五条真实通过即视为 E2E 完成。微信默认 disabled，独立副本配置也已关闭；保留代码、迁移与配置重新开启能力，不再要求用户登录。关闭后的全量测试/typecheck/lint/build 正在重跑，随后重新 fetch 合 main、只 stage release。**没有激活正式 3001。**
+补充 3 已完成微信关闭与重新验收：**5/6 passed + 1 skipped_by_user（用户决定关闭微信）**。微信默认 disabled，独立副本也已关闭，保留代码、迁移与配置重新开启能力；不再要求微信登录。关闭后的全量测试/typecheck/lint/build 已重跑，相关测试、类型检查、构建通过；全量检查中的基线失败逐项保留并复现。接下来 fetch 合 main、只 stage release-2。**没有激活正式 3001。**
 
 ## 实现与迁移数字
 
@@ -74,7 +74,7 @@ GitHub 不需要新 agent 账号、gh-agent 配置或登录步骤。测试 issue
 - 执行官方 activate-release.cjs --source <release-source> --release <release-1>，**没有 --activate 或 --rollback**。prepared 检查通过：全局锁、当前 main 相等、干净源、祖先关系、provenance、全部哈希、功能标志和桌面壳核对；productionChanged=false。这只是准备检查，不代表用户授权切换正式服务。
 - 暂存产物还在 3014/原独立副本实际启动：1196 Ticket=1189 导入+7 个保留的测试历史，Assignment 1199，active=[]，Outbox 6→6，平台收据 ID 不变。更新全部六张截图，pageerror=0，再优雅关闭并排空。测试实例已停；resume 时使用 launch-staged-test.cjs。两个测试监测 stopped；GitHub 测试 issue 已关闭。
 - 正式配置在预检前后 SHA256 相同。本任务未激活/切换 3001，也未更新正式桌面壳。同期其他任务已将正式 runtime 更新到 drover-mobile-download-20261101/release-28，这是观测到的外部状态，不宣称本任务让整个机器保持静止。
-- 仍未满足的内容：微信真实 filehelper 端到端（登录阻塞），以及合并后全 src/server lint 的六条上游错误。后者没有被隐瞒或擅自修改；本任务 59 个变更文件 lint 和 253 项相关测试通过。
+- 当时未满足的内容（微信登录要求已被补充 3 取消）：微信真实 filehelper 端到端（登录阻塞），以及合并后全 src/server lint 的六条上游错误。后者没有被隐瞒或擅自修改；本任务 59 个变更文件 lint 和 253 项相关测试通过。
 
 ## 旧登录续做计划（已被补充 3 取消，仅保留历史）
 
@@ -87,9 +87,10 @@ GitHub 不需要新 agent 账号、gh-agent 配置或登录步骤。测试 issue
 
 ## 补充 3：微信关闭与重新验收
 
-微信设置默认 enabled=false；独立 copy-home/auth.db 已以版本化设置保存 false。Source 快照对关闭来源返回 disabled，不展示旧 ready/setup 错误；面板来源列表中英文分别显示“微信: 已关闭”和“WeChat: Disabled”，关闭不会占用待处理错误区。轮询与 Outbox 原有 enabled gate 保留。新增测试证明关闭时队列回复保持 pending、sending=0，配置显式开启后才发送。适配器、内部出站账本和迁移完整保留。
+微信默认 enabled=false；独立 copy-home/auth.db 已以版本化设置保存 false。关闭时不启动微信轮询和 Outbox 发送；Source 快照明确 disabled，面板中英文显示“微信: 已关闭 / WeChat: Disabled”，关闭不占待处理错误区。保留全部适配器、迁移与内部账本；配置显式开启后仍可使用。新用例证明关闭时队列 pending/sending=0，重新开启后才发送。
 
-真实 E2E 按用户新口径 5 passed、1 skipped_by_user。旧微信发送预检失败和其他修复前失败均保留，不改写成通过。本次完成判定不再依赖微信登录。重新全量检查、3014 截图、main 和 release 的最终结果在收尾时补齐。
+3014 独立副本真实读回配置与状态，16 秒内微信游标、六条 Outbox 及发送状态完全不变，active=[]；中英 headless 截图均正确，pageerror=0。证据 evidence/wechat-disabled-runtime.json、wechat-disabled-{zh-CN,en}.png。检查脚本首次早于初始化完成返回 503，增加 readiness 等待后通过；原错误保留。未登录或向微信发送任何新消息。
 
+最终完整重跑：前端 169 文件/1021 项通过；superagent 254 项通过；后端 1055 项中 1043 通过、5 失败、7 跳过。5 个失败均在干净 origin/main=1233751c 复现：deepseek 缺少预期异常 1 项、provider 生存性/隔离 CLI 3 项、taskmaster 矛盾证据 1 项。后一项的测试、证据服务及 run() 方法与原始 ae49154a 也完全一致；不把新增发现含糊算进题述 4 项。两个非 Windows 分支的 windowsHide 静态声明已修复，隐藏窗口检查通过。前后端 typecheck、完整 npm run build 通过；全仓 lint 仍有 6 条 main 下载功能既有错误，56 个本任务代码文件 lint 为 0 错误。所有失败与初次检查日志保留，未记成通过。
 
-3014 关闭验证已通过：16 秒内微信游标与六条 Outbox 均未变化，active=[]；中英截图正确显示“已关闭/Disabled”，pageerror=0。首次验证脚本遇到初始化 503，补足 readiness 等待后重跑通过，原错误保留。全量检查发现进程启动静态声明缺失，已为两个非 Windows 分支显式补 windowsHide；窗口检查 3/3 通过，正在进行最终完整重跑。额外 taskmaster 失败在干净 main 复现，不混入题述四项旧失败中隐瞒。
+最终检查记录 verification-supplement3-final.json、evidence/verification-supplement3-summary.json；完整日志 supplement3-final-*.log。首轮日志 supplement3-*.log 保留，包括已修复的窗口静态检查失败。干净 main 复现日志 supplement3-main-{baseline,survival-baseline,taskmaster-baseline}.log；原基线代码对照 evidence/taskmaster-original-baseline-comparison.json；本任务 lint 清单 evidence/lint-owned-supplement3.json。

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-31T20:39:58.590Z",
+  "updatedAt": "2026-10-31T21:08:51.492Z",
   "port": 3014,
   "passed": 5,
   "required": 6,
@@ -108,85 +108,178 @@
     "reimported": 1189
   },
   "verification": {
-    "testsPassed": 253,
-    "testsFailed": 0,
+    "at": "2026-10-31T21:08:51.421Z",
     "checks": [
       {
+        "name": "superagent",
+        "startedAt": "2026-10-31T20:53:04.031Z",
+        "endedAt": "2026-10-31T20:53:09.697Z",
+        "exitCode": 0
+      },
+      {
+        "name": "full-client",
+        "startedAt": "2026-10-31T20:53:04.026Z",
+        "endedAt": "2026-10-31T20:59:31.591Z",
+        "exitCode": 0
+      },
+      {
+        "name": "full-backend",
+        "startedAt": "2026-10-31T20:53:04.019Z",
+        "endedAt": "2026-10-31T21:06:18.451Z",
+        "exitCode": 1
+      },
+      {
         "name": "typecheck-client",
-        "startedAt": "2026-10-31T19:59:24.835Z",
-        "endedAt": "2026-10-31T19:59:58.999Z",
-        "exitCode": 0,
-        "error": null
+        "startedAt": "2026-10-31T21:06:18.452Z",
+        "endedAt": "2026-10-31T21:06:47.227Z",
+        "exitCode": 0
       },
       {
         "name": "typecheck-server",
-        "startedAt": "2026-10-31T19:59:59.002Z",
-        "endedAt": "2026-10-31T20:00:15.959Z",
-        "exitCode": 0,
-        "error": null
+        "startedAt": "2026-10-31T21:06:47.228Z",
+        "endedAt": "2026-10-31T21:07:01.884Z",
+        "exitCode": 0
       },
       {
         "name": "lint",
-        "startedAt": "2026-10-31T20:00:15.960Z",
-        "endedAt": "2026-10-31T20:00:44.462Z",
-        "exitCode": 1,
-        "error": null
+        "startedAt": "2026-10-31T21:07:01.884Z",
+        "endedAt": "2026-10-31T21:07:27.242Z",
+        "exitCode": 1
       },
       {
-        "name": "build-client",
-        "startedAt": "2026-10-31T20:00:44.463Z",
-        "endedAt": "2026-10-31T20:01:28.518Z",
-        "exitCode": 0,
-        "error": null
-      },
-      {
-        "name": "tests",
-        "startedAt": "2026-10-31T20:01:28.519Z",
-        "endedAt": "2026-10-31T20:01:43.580Z",
-        "exitCode": 0,
-        "error": null
+        "name": "build",
+        "startedAt": "2026-10-31T21:07:27.243Z",
+        "endedAt": "2026-10-31T21:08:19.263Z",
+        "exitCode": 0
       }
     ],
-    "ownedLint": {
-      "at": "2026-10-31T20:02:42.062Z",
-      "exitCode": 0,
-      "files": 59,
-      "inheritedErrors": [
-        "src/shared/ui/DownloadButton.tsx:3:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
-        "src/modules/code-editor/hooks/useCodeEditorDocument.ts:1:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
-        "src/modules/chat/transcript/LocalFileLink.tsx:1:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
-        "src/modules/chat/transcript/ChatMessageFiles.tsx:4:36: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
-        "src/modules/file-tree/hooks/useFileTreeOperations.ts:3:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
-        "server/modules/assets/assets.routes.ts:1:31: error boundaries(dependencies): Cross-module imports must go through that module's barrel file (server/modules/<module>/index.ts or index.js)."
-      ],
-      "inheritedFilesEqualOriginMain": true,
-      "inheritedFileChecks": [
-        {
-          "file": "src/shared/ui/DownloadButton.tsx",
-          "identicalToOriginMain": true
-        },
-        {
-          "file": "src/modules/code-editor/hooks/useCodeEditorDocument.ts",
-          "identicalToOriginMain": true
-        },
-        {
-          "file": "src/modules/chat/transcript/LocalFileLink.tsx",
-          "identicalToOriginMain": true
-        },
-        {
-          "file": "src/modules/chat/transcript/ChatMessageFiles.tsx",
-          "identicalToOriginMain": true
-        },
-        {
-          "file": "src/modules/file-tree/hooks/useFileTreeOperations.ts",
-          "identicalToOriginMain": true
-        },
-        {
-          "file": "server/modules/assets/assets.routes.ts",
-          "identicalToOriginMain": true
-        }
+    "backend": {
+      "total": 1055,
+      "passed": 1043,
+      "failed": 5,
+      "skipped": 7,
+      "failures": [
+        "✖ native completion remains successful after a reported tool failure; fatal exits still fail",
+        "✖ abrupt client death preserves independent worker, byte-exact stdout/stderr, EOF and durable replay",
+        "✖ real Claude CLI streaming initialize remains connected across client replacement",
+        "✖ Windows Stop-ScheduledTask preserves supervisor and output outside the stopped task job",
+        "✖ contradictory failure evidence cannot automatically close a task"
       ]
-    }
+    },
+    "client": {
+      "files": 169,
+      "passed": 1021,
+      "failed": 0
+    },
+    "superagent": {
+      "passed": 254,
+      "failed": 0
+    },
+    "lintErrors": [
+      "src/shared/ui/DownloadButton.tsx:3:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+      "src/modules/code-editor/hooks/useCodeEditorDocument.ts:1:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+      "src/modules/chat/transcript/LocalFileLink.tsx:1:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+      "src/modules/chat/transcript/ChatMessageFiles.tsx:4:36: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+      "src/modules/file-tree/hooks/useFileTreeOperations.ts:3:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+      "server/modules/assets/assets.routes.ts:1:31: error boundaries(dependencies): Cross-module imports must go through that module's barrel file (server/modules/<module>/index.ts or index.js)."
+    ],
+    "baselineReproductions": [
+      {
+        "at": "2026-10-31T20:43:59.965Z",
+        "git": "1233751cd3831edc8f32c09fad25bc21be380da7",
+        "currentOriginMain": "1233751cd3831edc8f32c09fad25bc21be380da7",
+        "sourceClean": true,
+        "files": [
+          "server/modules/providers/tests/deepseek-harness-runtime.test.ts"
+        ],
+        "exitCode": 1,
+        "log": "supplement3-main-baseline.log"
+      },
+      {
+        "at": "2026-10-31T20:46:57.830Z",
+        "git": "1233751cd3831edc8f32c09fad25bc21be380da7",
+        "currentOriginMain": "1233751cd3831edc8f32c09fad25bc21be380da7",
+        "sourceClean": true,
+        "files": [
+          "server/modules/providers/tests/provider-survival.test.ts"
+        ],
+        "exitCode": 1,
+        "log": "supplement3-main-survival-baseline.log"
+      },
+      {
+        "at": "2026-10-31T20:50:04.200Z",
+        "git": "1233751cd3831edc8f32c09fad25bc21be380da7",
+        "currentOriginMain": "1233751cd3831edc8f32c09fad25bc21be380da7",
+        "sourceClean": true,
+        "files": [
+          "server/modules/taskmaster/tests/taskmaster-intelligence.test.ts"
+        ],
+        "exitCode": 1,
+        "log": "supplement3-main-taskmaster-baseline.log"
+      }
+    ],
+    "inheritedFiles": [
+      {
+        "file": "server/modules/taskmaster/tests/taskmaster-intelligence.test.ts",
+        "identicalToOriginMain": true,
+        "sha256": "1cdd7623d0bfe59e04909c472f5d9006864c10351e9e2a53bef17805b9c0f2ae"
+      },
+      {
+        "file": "server/modules/taskmaster/taskmaster-intelligence.service.ts",
+        "identicalToOriginMain": true,
+        "sha256": "c540d0b877d403b8892ddaa350a31f41be580a23a6661c7aadc47cc033987afb"
+      },
+      {
+        "file": "server/modules/taskmaster/taskmaster-evidence.service.ts",
+        "identicalToOriginMain": true,
+        "sha256": "1403845abc3eabd17bb916e9fd9f24dba32ed09a7838f190238f140c1df5b399"
+      },
+      {
+        "file": "server/modules/providers/tests/deepseek-harness-runtime.test.ts",
+        "identicalToOriginMain": true,
+        "sha256": "106c3e2c3ccb84dccfb8ee81a00f9c50a46f329a13f4da9a55ac0e4abe1559c9"
+      },
+      {
+        "file": "server/modules/providers/list/deepseek-harness/deepseek-harness-runtime.provider.ts",
+        "identicalToOriginMain": true,
+        "sha256": "338ac92922c15a1da88837a0d32ae9a3943d3246e04e366c43051df4549d324b"
+      },
+      {
+        "file": "server/modules/providers/tests/provider-survival.test.ts",
+        "identicalToOriginMain": true,
+        "sha256": "f72d5d6e838f3c01dbedc84876adc8a7399faa623df1385bec5aeee9bf0cd5bd"
+      },
+      {
+        "file": "src/shared/ui/DownloadButton.tsx",
+        "identicalToOriginMain": true,
+        "sha256": "77637f589eaa47d8b1b301d5946890cfd734791592b1708d874d48e6a4bbf394"
+      },
+      {
+        "file": "src/modules/code-editor/hooks/useCodeEditorDocument.ts",
+        "identicalToOriginMain": true,
+        "sha256": "4c3ab500369b284f423937a2105130761d4dec27007d9122e1efc068f4a59f2b"
+      },
+      {
+        "file": "src/modules/chat/transcript/LocalFileLink.tsx",
+        "identicalToOriginMain": true,
+        "sha256": "400adb059de5f49db98d3321b15e96d0e7b9def0310c595f5e4c29ef0f04b3c7"
+      },
+      {
+        "file": "src/modules/chat/transcript/ChatMessageFiles.tsx",
+        "identicalToOriginMain": true,
+        "sha256": "dc4bdaa44d0c61ce87e0d699c8046f81f0d2029d2b0cee773eefefb433c97c8c"
+      },
+      {
+        "file": "src/modules/file-tree/hooks/useFileTreeOperations.ts",
+        "identicalToOriginMain": true,
+        "sha256": "a0dea34c451aab99785443904f959de9c177f1e819d42b7f0503851ce23b719a"
+      },
+      {
+        "file": "server/modules/assets/assets.routes.ts",
+        "identicalToOriginMain": true,
+        "sha256": "ffb436e69c9cf9a9b54e933479ec8c510049ed741d506c28937144292340c9ce"
+      }
+    ]
   },
   "browserErrors": [],
   "artifacts": {
@@ -288,5 +381,84 @@
   "skippedByUser": 1,
   "failed": 0,
   "complete": true,
-  "e2eSummary": "5/6 passed + 1 skipped_by_user"
+  "e2eSummary": "5/6 passed + 1 skipped_by_user",
+  "wechatDisabled": {
+    "passed": true,
+    "at": "2026-10-31T20:54:25.831Z",
+    "port": 3014,
+    "enabled": false,
+    "state": "disabled",
+    "noWechatCursorChanges": true,
+    "noOutboxChanges": true,
+    "observationMs": 16000,
+    "outboxCount": 6,
+    "active": [],
+    "chinese": "微信: 已关闭",
+    "english": "WeChat: Disabled",
+    "browserErrors": [],
+    "productionChanged": false
+  },
+  "ownedLint": {
+    "at": "2026-10-31T20:56:48.552Z",
+    "exitCode": 0,
+    "files": 56,
+    "fileList": [
+      "server/index.ts",
+      "server/modules/providers/list/codex/codex-runtime.provider.ts",
+      "server/modules/providers/services/provider-runtime.service.ts",
+      "server/modules/superagent/core/assignments.ts",
+      "server/modules/superagent/core/engine.ts",
+      "server/modules/superagent/core/errors.ts",
+      "server/modules/superagent/core/evals.ts",
+      "server/modules/superagent/core/ids.ts",
+      "server/modules/superagent/core/index.ts",
+      "server/modules/superagent/core/intake.ts",
+      "server/modules/superagent/core/memory.ts",
+      "server/modules/superagent/core/model.ts",
+      "server/modules/superagent/core/part.ts",
+      "server/modules/superagent/core/ports.ts",
+      "server/modules/superagent/core/reasons.ts",
+      "server/modules/superagent/core/replies.ts",
+      "server/modules/superagent/core/stage.ts",
+      "server/modules/superagent/core/tickets.ts",
+      "server/modules/superagent/index.ts",
+      "server/modules/superagent/outbound-ledger.ts",
+      "server/modules/superagent/outbox-dispatcher.ts",
+      "server/modules/superagent/provider-tools.ts",
+      "server/modules/superagent/runtime.ts",
+      "server/modules/superagent/settings.ts",
+      "server/modules/superagent/source-ingress.ts",
+      "server/modules/superagent/store.ts",
+      "server/modules/superagent/superagent.module.ts",
+      "server/modules/superagent/tests/core-engine.spec.ts",
+      "server/modules/superagent/tests/outbox.spec.ts",
+      "server/modules/superagent/tests/sqlite-engine.spec.ts",
+      "server/modules/monitors/index.ts",
+      "server/modules/monitors/monitor-probe.service.ts",
+      "server/modules/monitors/monitor-source.ts",
+      "server/modules/monitors/monitors.dispatcher.ts",
+      "server/modules/superagent/process-command.ts",
+      "server/modules/superagent/process-worker.ts",
+      "server/modules/superagent/source-normalizers.ts",
+      "server/modules/superagent/sources.service.ts",
+      "server/modules/superagent/tests/sources.spec.ts",
+      "server/modules/monitors/monitors.tools.ts",
+      "server/modules/superagent/compatibility.ts",
+      "server/modules/superagent/migration.ts",
+      "server/modules/superagent/tests/migration.spec.ts",
+      "server/modules/taskmaster/taskmaster-auto.service.ts",
+      "server/modules/taskmaster/taskmaster-infohub.service.ts",
+      "server/modules/taskmaster/taskmaster-intelligence.service.ts",
+      "server/modules/taskmaster/taskmaster-native.routes.ts",
+      "server/modules/taskmaster/taskmaster-workspace.service.ts",
+      "server/modules/providers/list/deepseek-harness/deepseek-harness-runtime.provider.ts",
+      "server/modules/providers/services/headless-output.service.ts",
+      "server/modules/superagent/prompts.ts",
+      "server/modules/superagent/tests/prompts.spec.ts",
+      "server/modules/worktrees/index.ts",
+      "src/modules/task-master/GlobalTasksPage.tsx",
+      "src/modules/task-master/SuperagentPanel.tsx",
+      "server/modules/superagent/tests/admission.spec.ts"
+    ]
+  }
 }
