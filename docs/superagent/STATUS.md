@@ -99,3 +99,8 @@
 ## 2026-10-31T21:09:26.109Z — 已 fetch 合 main 并推送
 
 最终全量验证与微信关闭改动已提交 5339e8f5；再次 fetch/merge origin/main 显示 Already up to date，随后正常 fast-forward 推送 HEAD→main 和 feature 分支，origin/main=5339e8f5830fed3d3b2efb92d96edcfdf68d575f。未 force push，未 checkout/修改原始脏 main 工作区。独立 release-source 已 detached 到干净 current origin/main，下一步只调用官方 stage-release 创建 release-2，不 activate。
+
+
+## 2026-10-31T21:11:27.575Z — 官方 stage/prepared 完成
+
+release-2 已从干净 current origin/main=5339e8f5830fed3d3b2efb92d96edcfdf68d575f 官方构建；1258 项哈希、provenance、祖先、功能与桌面壳守卫通过。官方 activate-release.cjs 未带 --activate，结果 prepared、activationPreflight.ready=true、productionChanged=false；primary-service.json 哈希前后一致。只暂存，没有激活或重启正式 3001。接着从 release-2 在独立 3014/copy-home 做最后运行读回，再优雅停止。
