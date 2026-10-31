@@ -58,3 +58,14 @@
 - 合并后前后端 typecheck、客户端 build、253/253 相关测试通过。本任务 59 个变更文件 lint 退出 0。
 - 合并后的全 src/server lint 退出 1，共 6 条 error，全部来自刚合入的下载功能，6 个文件均逐字等于 origin/main；不是题述旧四个测试失败，不将它们算作通过，不在本任务修改无关代码。见 lint-owned-result.json。
 - 准备推送 main 并从干净的当前 origin/main 调官方 stage-release；仅暂存，不激活。微信仍为唯一未跑通的真实 E2E，外部登录阻塞保留。
+
+
+## 2026-10-31T20:13:02.826Z — 步骤 6b：main 已推送，release 仅暂存，最终外部阻塞
+
+- 实现及合并提交已推送 main：1233751cd3831edc8f32c09fad25bc21be380da7；feature 分支保留每步提交。原 claudecodeui 脏工作区未切换/清理。
+- 干净 detached origin/main 工作树 release-source，经官方 scripts/deploy/stage-release.cjs 生成 release-1；1258 个清单哈希全部验证，desktop shell 清单和 provenance 完整。
+- 官方 activate-release.cjs 在不带 --activate/--rollback 时完成 prepared 预检：全局锁、current-main/provenance/祖先、内容哈希、功能标志和桌面壳检查通过；productionChanged=false。没有激活 3001。
+- release-1 实际在 3014/独立副本启动，1196 Ticket（1189 导入 + 7 测试历史）、1199 Assignment、active=[]；六条 Outbox 与平台收据保持，未重发。更新六张 headless 截图，pageerror=0，随后优雅排空并关闭 3014。两个测试监测 stopped，GitHub issue #1 closed。
+- 官方预检前后正式 primary-service.json 哈希相同；未修改正式运行配置、服务或桌面壳。其他任务独立部署的 runtime 为 drover-mobile-download-20261101/release-28，不将其变更计作本任务行为。
+- 再次检查微信仍为 LoginWindow + XDialog / ambiguous_window（exit 2）。真实 E2E 5/6，微信不伪报通过；DONE.json=blocked_external，列出仅需登录后的续做链路，并保留 main 的 6 条继承 lint 错误。
+- 最终报告 REPORT_zh.md、DONE.json 与 evidence/acceptance.json 已更新。最终文档记录继续提交 feature 分支，release 对应的 main 保持 1233751cd3831edc8f32c09fad25bc21be380da7，避免文档记账使已验证 release 与 main 不一致。

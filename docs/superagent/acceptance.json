@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-31T20:03:31.173Z",
+  "updatedAt": "2026-10-31T20:13:02.826Z",
   "port": 3014,
   "passed": 5,
   "required": 6,
@@ -211,5 +211,74 @@
       "bytes": 7,
       "sha256": "4d010bf1455a94f0574ddcdc78112ec5943e8f278e9a66eddb3da470b7b4f7d6"
     }
-  }
+  },
+  "main": {
+    "merged": true,
+    "pushed": true,
+    "git": "1233751cd3831edc8f32c09fad25bc21be380da7"
+  },
+  "release": {
+    "passed": true,
+    "at": "2026-10-31T20:05:06.512Z",
+    "officialCommand": "node scripts/deploy/stage-release.cjs D:\\embodied\\droversuperagent-20261101/release-1",
+    "source": "D:\\embodied\\droversuperagent-20261101/release-source",
+    "target": "D:\\embodied\\droversuperagent-20261101/release-1",
+    "git": "1233751cd3831edc8f32c09fad25bc21be380da7",
+    "hashesVerified": 1258,
+    "sourceClean": true,
+    "currentOriginMain": true,
+    "productionActivated": false
+  },
+  "prepared": {
+    "at": "2026-10-31T20:07:12.428Z",
+    "command": "node scripts/deploy/activate-release.cjs --source D:/embodied/droversuperagent-20261101/release-source --release D:/embodied/droversuperagent-20261101/release-1",
+    "status": "prepared",
+    "target": "D:/embodied/droversuperagent-20261101/release-1",
+    "git": "1233751cd3831edc8f32c09fad25bc21be380da7",
+    "currentRuntime": "D:/embodied/drover-mobile-download-20261101/release-28",
+    "port": 3001,
+    "requiresRestart": true,
+    "productionChanged": false,
+    "activationPreflight": {
+      "ready": true,
+      "configuredPid": 59456,
+      "listeningPids": [
+        59456
+      ],
+      "reason": null
+    }
+  },
+  "packagedStart": {
+    "passed": true,
+    "at": "2026-10-31T20:08:20.807Z",
+    "port": 3014,
+    "release": "release-1",
+    "git": "1233751cd3831edc8f32c09fad25bc21be380da7",
+    "tickets": 1196,
+    "assignments": 1199,
+    "outboxBefore": 6,
+    "outboxAfter": 6,
+    "active": [],
+    "productionConfigUnchanged": true
+  },
+  "cleanup": {
+    "at": "2026-10-31T20:10:17.697Z",
+    "shutdown": {
+      "closed": true
+    },
+    "activeBefore": [],
+    "testMonitors": [
+      {
+        "id": "1c2731ba-1590-4332-b563-691d7ab51111",
+        "status": "stopped"
+      },
+      {
+        "id": "a2a6d587-b596-464b-803b-1ec9dbed60e2",
+        "status": "stopped"
+      }
+    ],
+    "receiptsPreserved": 6,
+    "githubTestIssueClosed": true
+  },
+  "wechatReadinessAt": "2026-10-31T20:04:38.082Z"
 }
