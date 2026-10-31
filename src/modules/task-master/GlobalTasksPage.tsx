@@ -1,4 +1,4 @@
-import { SuperagentPanel, SuperagentNavigation } from './SuperagentPanel';
+import { SuperagentPanel, SuperagentNavigation } from '@/modules/task-master/SuperagentPanel';
 import { authenticatedFetch } from '@/shared/api';
 import { IntelligentTasksPanel } from '@/modules/task-master/IntelligentTasksPanel';
 import { TaskExecutionPanel,prefetchTaskExecutionModels } from '@/modules/task-master/TaskExecutionPanel';

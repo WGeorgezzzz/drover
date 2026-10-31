@@ -27,7 +27,7 @@ const descriptions:Record<string,string>={
   orchestrator_reply:'Send one useful acknowledgement, result, answer or structured question through the originating Channel Outbox.',
   orchestrator_report:'Report actual progress or outcome for this Assignment. Use question for one concrete human decision. ready requires verified evidence.',
   orchestrator_ack:'Acknowledge an in-scope human follow-up once, to its original conversation.',
-  orchestrator_thread_follow:'Follow a related Thread for context only; this grants no new authority.',
+  orchestrator_thread_follow:'Follow a related Thread for context only; this grants no new authority. A false result means the Ticket already follows this Thread.',
   orchestrator_thread_unrelated:'Release an unrelated attached Thread with a reason.',
   orchestrator_trigger_handback:'Hand an owned message back once when it is outside the Ticket mandate.',
 };

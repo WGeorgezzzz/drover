@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import type { Policy, SourceScope } from './core/index.ts';
+import type { Policy, SourceScope, Trigger } from './core/index.ts';
 import type { SuperagentStore } from './store.js';
 
 const source = z.object({ enabled:z.boolean().default(false), allow:z.array(z.string().min(1)).default([]), conversations:z.array(z.string()).default([]) }).strict();
@@ -27,6 +27,7 @@ export class SuperagentSettings {
     if(saved)return superagentSettingsSchema.parse(saved);
     return superagentSettingsSchema.parse({sources:{github:{allow:['WGeorgezzzz'],conversations:['WGeorgezzzz/drover']},feishu:{allow:['ou_6d5c3f4bef3510b36049813bf38848d1'],userId:'ou_6d5c3f4bef3510b36049813bf38848d1'},wechat:{allow:['wangqiaozhi123']}}});
   }
+  admitted(trigger:Trigger):boolean{return trigger.source==='monitor'&&!trigger.human||(trigger.human||trigger.source==='infohub')&&!!this.current().sources[trigger.source as keyof ReturnType<SuperagentSettings['current']>['sources']]?.allow.includes(trigger.actor.id);}
   revision():number {return this.store.get<number>('superagent-settings-revision')??0;}
   save(input:unknown,revision:number) {
     const settings=superagentSettingsSchema.parse(input);
@@ -35,6 +36,7 @@ export class SuperagentSettings {
     return settings;
   }
   scope:SourceScope={scope:({source,meta})=>{
+    if(meta.admissionDenied===true)return {listened:false,reason:'not_a_member'};
     const settings=this.current(),config=settings.sources[source as keyof typeof settings.sources];
     if(!config?.enabled)return {listened:false,reason:'source_disabled'};
     const conversation=String(meta.conversation??meta.chatId??meta.repository??meta.monitorId??'');
@@ -47,9 +49,10 @@ export class SuperagentSettings {
     return {version,paused:settings.paused||!settings.enabled,evalTimeoutMs:settings.evalTimeoutSeconds*1000,
       gate:(trigger,thread,tickets)=>{
         const config=settings.sources[trigger.source as keyof typeof settings.sources];
-        if(!trigger.human)return {admissible:false,reason:'not_human'};
+        if(!trigger.human&&trigger.source!=='infohub')return {admissible:false,reason:'not_human'};
         if(!config?.allow.includes(trigger.actor.id))return {admissible:false,reason:'not_a_member'};
         const recorded={source:trigger.source,scope:trigger.meta,sender:trigger.actor.id};
+        if(trigger.source==='infohub'){if(settings.mode!=='off'&&settings.rules.some(rule=>rule.enabled))return {admissible:true,strength:'inferred',basis:{...recorded,via:'admission',cell:'listedUnaddressed',observation:{mode:settings.mode}}};return {admissible:false,reason:'no_enabled_rule'};}
         if(trigger.addressed)return {admissible:true,strength:'explicit',basis:{...recorded,via:'addressed',addressed:trigger.addressed}};
         if(thread.subscriptions.some(id=>tickets.some(ticket=>ticket.id===id)))return {admissible:true,strength:'explicit',basis:{...recorded,via:'followup'}};
         if(settings.mode!=='off'&&settings.rules.some(rule=>rule.enabled))return {admissible:true,strength:'inferred',basis:{...recorded,via:'admission',cell:'listedUnaddressed',observation:{mode:settings.mode}}};
@@ -58,7 +61,6 @@ export class SuperagentSettings {
       admitsInferred:rules=>settings.mode==='auto'&&rules.length>0&&rules.every(id=>settings.rules.some(rule=>rule.enabled&&rule.id===id)),
       revalidate:mandate=>{
         if(mandate.basis.source&&mandate.basis.scope&&!this.scope.scope({source:mandate.basis.source,meta:mandate.basis.scope}).listened)return false;
-        if(mandate.basis.via==='followup'&&mandate.strength==='explicit')return true;
         const config=settings.sources[mandate.actor.source as keyof typeof settings.sources];
         return !!config?.allow.includes(mandate.actor.id)&&(mandate.strength==='explicit'||settings.mode==='auto'&&(mandate.basis.rules??[]).length>0&&(mandate.basis.rules??[]).every(id=>settings.rules.some(rule=>rule.enabled&&rule.id===id)));
       },

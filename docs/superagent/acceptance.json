@@ -1,0 +1,175 @@
+{
+  "updatedAt": "2026-10-31T19:58:29.588Z",
+  "port": 3014,
+  "passed": 5,
+  "required": 6,
+  "productionActivated": false,
+  "cases": [
+    {
+      "id": 1,
+      "name": "Feishu",
+      "status": "passed",
+      "ticket": "4311eabb8da92a5dcef1933f76cc93c8",
+      "output": "SA_FEISHU.txt",
+      "evidence": [
+        "feishu-send.json",
+        "feishu-readback.json",
+        "feishu.png"
+      ],
+      "identity": "user",
+      "outboundReceipts": [
+        "om_x100b6157817024a0c48ad6887c8fd6b",
+        "om_x100b61579abf18a4dfd6fb78c38a50c"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "WeChat filehelper",
+      "status": "blocked_external",
+      "reason": "WeChat UIA reports ambiguous_window: mmui::LoginWindow and mmui::XDialog; no message was sent",
+      "evidence": [
+        "wechat-send.json",
+        "wechat-readiness-final.json",
+        "wechat.png"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Monitor wakes original subscribed Ticket",
+      "status": "passed",
+      "ticket": "4ea19fa45e67e141afd6770e0a450150",
+      "monitor": "a2a6d587-b596-464b-803b-1ec9dbed60e2",
+      "output": "SA_MONITOR_FIXED.txt",
+      "newLegacyTickets": 0,
+      "evidence": [
+        "monitor-fixed-fire.json",
+        "monitor-fixed-result.json",
+        "monitor.png"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Non-allowlisted Trigger",
+      "status": "passed",
+      "humanAndNonhuman": true,
+      "disposition": "not_a_member",
+      "noAssignmentsCreated": true,
+      "evidence": [
+        "denied.json",
+        "denied.png"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Restart recovery",
+      "status": "passed",
+      "ticket": "d0bef500f0dbde7bda8f07742c34b2c7",
+      "reason": "hostRestarted",
+      "startedMtimePreserved": true,
+      "outboxBefore": 6,
+      "outboxAfter": 6,
+      "evidence": [
+        "restart-before.json",
+        "restart-shutdown.json",
+        "restart-result.json",
+        "restart.png"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Real own-account GitHub issue",
+      "status": "passed",
+      "repository": "WGeorgezzzz/drover",
+      "issue": 1,
+      "state": "closed",
+      "ticket": "8d0eea761a325a891b7f35dde5c16a5a",
+      "ownOutboundIgnored": true,
+      "humanFollowupAccepted": true,
+      "output": "SA_GITHUB.txt",
+      "evidence": [
+        "github-issue.json",
+        "github-readback.json",
+        "github-close.json",
+        "identity-proof.json",
+        "github.png"
+      ]
+    }
+  ],
+  "migration": {
+    "tasks": 1182,
+    "monitors": 7,
+    "repeatImported": 0,
+    "repeatSkipped": 1189,
+    "rollbackRemoved": 1189,
+    "rollbackRetained": 0,
+    "reimported": 1189
+  },
+  "verification": {
+    "testsPassed": 253,
+    "testsFailed": 0,
+    "checks": [
+      {
+        "name": "typecheck-client",
+        "startedAt": "2026-10-31T19:44:44.525Z",
+        "endedAt": "2026-10-31T19:45:17.624Z",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "name": "typecheck-server",
+        "startedAt": "2026-10-31T19:45:17.628Z",
+        "endedAt": "2026-10-31T19:45:29.938Z",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "name": "lint",
+        "startedAt": "2026-10-31T19:45:29.939Z",
+        "endedAt": "2026-10-31T19:45:55.851Z",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "name": "build-client",
+        "startedAt": "2026-10-31T19:45:55.853Z",
+        "endedAt": "2026-10-31T19:46:35.243Z",
+        "exitCode": 0,
+        "error": null
+      },
+      {
+        "name": "tests",
+        "startedAt": "2026-10-31T19:46:35.243Z",
+        "endedAt": "2026-10-31T19:46:41.194Z",
+        "exitCode": 0,
+        "error": null
+      }
+    ]
+  },
+  "browserErrors": [],
+  "artifacts": {
+    "SA_FEISHU.txt": {
+      "bytes": 12,
+      "sha256": "53195c25fc1a9c6ca12afd8be3b1803016b5f140036a1b2b7c43dcd5bfbe9f81"
+    },
+    "SA_GITHUB.txt": {
+      "bytes": 12,
+      "sha256": "e51d15e79a6194969bc522b15d97be93951c83ac12f377492c06f6e158aba6de"
+    },
+    "SA_GITHUB_FOLLOWUP.txt": {
+      "bytes": 21,
+      "sha256": "29c61bb638a4c1519572e3e0b919918c95f881e33b03d4f8e796fc1d599521c7"
+    },
+    "SA_MONITOR_FIXED.txt": {
+      "bytes": 20,
+      "sha256": "8060cbaed29ba995cd81e0a672d49afa3bb928d88a710d5108c67057c585ae64"
+    },
+    "SA_RESTART.txt": {
+      "bytes": 13,
+      "sha256": "07a00fc36aa83b56e32e57e5c8119d36b5bc45e4cb2e81ba71dbefc39fa20811"
+    },
+    "SA_RESTART_STARTED.txt": {
+      "bytes": 7,
+      "sha256": "4d010bf1455a94f0574ddcdc78112ec5943e8f278e9a66eddb3da470b7b4f7d6"
+    }
+  }
+}

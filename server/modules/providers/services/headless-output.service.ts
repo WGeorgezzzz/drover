@@ -13,6 +13,6 @@ export function spawnHeadlessOutput(file:string,args:string[],options:SpawnOptio
  const outFile=join(root,'stdout'),errFile=join(root,'stderr');writeFileSync(outFile,'');writeFileSync(errFile,'');
  const out=new PassThrough(),err=new PassThrough();const handles=[openSync(outFile,'r'),openSync(errFile,'r')],positions=[0,0];
  const flush=()=>{for(let index=0;index<2;index++){const buffer=Buffer.alloc(65536);let count;while((count=readSync(handles[index],buffer,0,buffer.length,positions[index]))>0){positions[index]+=count;(index?err:out).write(buffer.subarray(0,count));}}};
- const child=spawn('conhost.exe',['--headless',process.execPath,script],{...options,stdio:'ignore',windowsHide:true});Object.defineProperty(child,'stdout',{value:out});Object.defineProperty(child,'stderr',{value:err});
+ const child=spawn('conhost.exe',['--headless','node.exe',script],{...options,stdio:'pipe',windowsHide:true});child.stdout?.resume();child.stderr?.resume();Object.defineProperty(child,'stdout',{value:out});Object.defineProperty(child,'stderr',{value:err});
  const timer=setInterval(flush,100);let cleaned=false;const cleanup=()=>{if(cleaned)return;cleaned=true;clearInterval(timer);flush();out.end();err.end();handles.forEach(closeSync);rmSync(root,{recursive:true,force:true});};child.prependOnceListener('close',cleanup);return child;
 }

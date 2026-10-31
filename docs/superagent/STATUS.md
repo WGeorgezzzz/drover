@@ -38,3 +38,15 @@
 - 已接线 Codex、Claude SDK、DeepSeek Harness 的受限主会话/执行器工具；默认 gpt-6-luna 研判、gpt-6.1-sol 执行，支持逐 Ticket 模型和独立 worktree。
 - 提示词 CAS 版本与恢复、中英任务面板、来源/准入/执行配置、attention 优先展示、Outbox 不确定发送人工核对已实现。
 - 验证：相关测试 251/251，前后端 typecheck、lint、客户端 build 成功；lint 保留既有 warning。开始 3014 六条真实 E2E，尚不声明验收通过。
+
+
+## 2026-10-31T19:58:29.588Z — 步骤 5：真实 E2E 5/6，微信外部阻塞
+
+- 飞书本人 user 私聊、真实 Codex 文件写入/读回、原会话确认与结果均已完成；平台读回验证两条出站均为 user 身份。
+- GitHub 本人账号真实测试 issue #1 完成确认、文件写入/读回、结果和真人追加；回复包含“驭手”仍被内部账本识别，未自触发，测试 issue 已关闭。
+- 监测修复后由真实 probe 唤醒原订阅 Ticket、真实 worker 写入读回；无新增 legacy Ticket，测试监测已停止。非白名单 human/nonhuman Trigger 均过滤，任务/Assignment 不变。
+- 真实进行中 Ticket 在 STARTED 后关闭/重启 3014，旧 Assignment 标为 hostRestarted，新 Assignment ready；STARTED mtime 不变，六条已发送 Outbox 未重发。
+- 微信实际发送预检与再次 UIA 检查均返回 ambiguous_window，含 LoginWindow/XDialog；未发送，不把历史数据库可读冒充通过。需要用户完成微信登录并解除弹窗。
+- 修复 conhost stdio=ignore 无声不执行、订阅线程准入绕过、master 误建监测/会话、session 归属与资源读取等实测问题。内核 15 文件保持 LF 归一化后相同。
+- 最终检查：253/253 测试，前后端 typecheck、lint、客户端构建退出码均为 0；六张 headless 截图、浏览器异常 0。证据 evidence/acceptance.json。
+- 下一步 fetch/合入 main，按官方守卫仅 stage release；3014 最终构建已更新，3001 未激活。

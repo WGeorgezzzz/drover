@@ -44,7 +44,7 @@ export class SuperagentRuntime {
       executor:{start:(t,a)=>this.store.enqueue('launch',a.id,{ticketId:t.id,assignmentId:a.id}),deliver:(t,a)=>this.store.enqueue('delivery',a.id+':'+t.undelivered.join(','),{ticketId:t.id,assignmentId:a.id}),stop:(t,a,reason)=>this.store.enqueue('stop',a.id,{ticketId:t.id,reason})},
       prepareTicket:(t,o)=>({...t,execution:{name:t.id,directory:join(this.root,'work',t.id),assignment:o.scope}}),
       emit:event=>this.store.enqueue('notice',event.type+':'+event.at+':'+JSON.stringify(event.data),event)});
-    this.ingress=new SourceIngress(this.engine,this.ledger);
+    this.ingress=new SourceIngress(this.engine,this.ledger,trigger=>this.settings.admitted(trigger));
     this.sources=new SuperagentSources(this);
   }
   start():void {
@@ -100,7 +100,7 @@ export class SuperagentRuntime {
       }
     }
   }
-  ticketForSession(sessionId:string):string|undefined {return [...this.active].find(([,value])=>value.sessionId===sessionId)?.[0];}
+  ticketForSession(sessionId:string):string|undefined {const active=[...this.active].find(([,value])=>value.sessionId===sessionId)?.[0];if(active)return active;return this.store.tickets.open().find(ticket=>{const assignment=latestAssignment(ticket);return assignment?.state==='running'&&this.store.get('worker-session:'+assignment.id)===sessionId;})?.id;}
   configureExecutor(ticketId:string,input:unknown){const ticket=this.store.tickets.get(ticketId);if(!ticket)throw new Error('Ticket not found');if(this.active.has(ticketId))throw new Error('Stop or wait for the current turn first');const value=z.object({provider:z.enum(['codex','claude','deepseek-harness']),model:z.string().min(1),effort:z.string().default('high')}).strict().parse(input);this.store.set('executor:'+ticketId,value);return value;}
   snapshot() {return {prompts:{orchestrator:this.prompts.read('orchestrator'),worker:this.prompts.read('worker')},sources:this.sources.snapshot(),settings:this.settings.current(),revision:this.settings.revision(),tickets:this.store.tickets.list().map(ticket=>({...ticket,stage:ticketStage(ticket),executor:this.store.get('executor:'+ticket.id)})),threads:this.store.threads.list(),decisions:this.store.list('decision'),outbox:this.store.outbox(),effects:this.store.effects(),active:[...this.active.keys()]};}
   mcpTools(token:string){const capability=this.capabilities.get(token);if(!capability)throw new Error('Expired capability');return createSuperagentProviderTools({endpoint:this.endpoint,token,role:capability.role});}
@@ -109,7 +109,7 @@ export class SuperagentRuntime {
     const args=parseSuperagentTool(name,input) as AnyRecord;
     this.store.set('tool:last:'+name,{at:new Date().toISOString(),role:capability.role,ticketId:capability.ticketId,arguments:args});
     if(capability.role==='orchestrator') {
-      if(name==='orchestrator_read')return args.resource&&this.store.tickets.get(args.resource)?{ticket:this.store.tickets.get(args.resource)}:this.snapshot();
+      if(name==='orchestrator_read'){const resource=String(args.resource??''),ticket=this.store.tickets.get(resource.replace(/^ticket:/,'')),thread=this.store.threads.get(resource.replace(/^thread:/,'')),trigger=this.store.triggers.get(resource)||this.store.triggers.get(resource.replace(/^trigger:/,''));if(ticket)return {ticket,origin:this.store.triggers.get(ticket.origin.triggerId)};if(thread)return {thread,triggers:this.store.list<import('./core/index.ts').Trigger>('trigger').filter(trigger=>trigger.threads.some(ref=>ref.source+':'+ref.id===thread.key)).slice(-30)};if(trigger)return {trigger};return {tickets:this.store.tickets.list().filter(ticket=>!ticket.id.startsWith('legacy-')).slice(0,50),threads:this.store.threads.active().slice(0,30),decisions:this.store.list('decision').slice(-20)};}
       if(name==='orchestrator_ticket_attach')return this.engine.attach(args.ticketId,args.triggerId,args.note);
       if(name==='orchestrator_ticket_note')return this.engine.note(args.ticketId,args.text);
       if(name==='orchestrator_ticket_request_status')return this.engine.requestStatus(args.ticketId);
@@ -126,7 +126,7 @@ export class SuperagentRuntime {
     }
     const ticketId=capability.ticketId!,ticket=this.store.tickets.get(ticketId),assignment=ticket&&latestAssignment(ticket);
     if(!ticket||!assignment||ticket.ended||assignment.id!==capability.assignmentId||assignment.state!=='running')throw new Error('Assignment ended');
-    if(name==='orchestrator_read'){this.engine.inputsRead(ticketId,ticket.inputs.map(input=>input.id));return {ticket,triggers:ticket.inputs.filter(i=>i.kind==='trigger').map(i=>this.store.triggers.get(i.triggerId))};}
+    if(name==='orchestrator_read'){this.engine.inputsRead(ticketId,ticket.inputs.map(input=>input.id));return {ticket,origin:this.store.triggers.get(ticket.origin.triggerId),triggers:ticket.inputs.filter(i=>i.kind==='trigger').map(i=>this.store.triggers.get(i.triggerId))};}
     if(name==='orchestrator_report') {
       const result=this.engine.report(ticketId,args as WorkerReport);
       if(args.state!=='progress')this.store.enqueue('relay',assignment.id+':'+result.updatedAt,{ticketId,report:args});
@@ -171,10 +171,11 @@ export class SuperagentRuntime {
 
     try {
       const prompt=this.prompts.read('worker').text;
-      await this.run(provider,sessionId,cwd,configuration?.model??this.settings.current().workerModel,prompt+'\nTicket and Inputs:\n'+JSON.stringify({ticket:current,triggers:current.inputs.filter(i=>i.kind==='trigger').map(i=>this.store.triggers.get(i.triggerId))}),this.capability('worker',ticketId,assignmentId),()=>{this.engine.inputsDelivered(ticketId,assignmentId,ids);},configuration?.effort??this.settings.current().effort);
+      await this.run(provider,sessionId,cwd,configuration?.model??this.settings.current().workerModel,prompt+'\nTicket and Inputs:\n'+JSON.stringify({ticket:current,origin:this.store.triggers.get(current.origin.triggerId),triggers:current.inputs.filter(i=>i.kind==='trigger').map(i=>this.store.triggers.get(i.triggerId))}),this.capability('worker',ticketId,assignmentId),()=>{this.engine.inputsDelivered(ticketId,assignmentId,ids);},configuration?.effort??this.settings.current().effort);
       this.engine.turnEnded(ticketId,assignmentId);
       this.store.complete(position);
     }catch(error) {
+      if(this.stopped)return;
       const latest=this.store.tickets.get(ticketId)!;
       if(!latest.ended){this.engine.report(ticketId,{state:'failed',summary:String(error),question:'Execution failed. Inspect the provider error and choose retry.'});this.store.enqueue('relay',assignmentId+':failed',{ticketId,report:{state:'failed',summary:String(error)}});}
       this.store.complete(position);
