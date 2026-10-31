@@ -1,3 +1,4 @@
+import { SuperagentSources } from './sources.service.js';
 import { randomBytes } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -19,6 +20,7 @@ export class SuperagentRuntime {
   readonly ledger=new OutboundLedger(this.store);
   readonly engine:Engine;
   readonly ingress:SourceIngress;
+  readonly sources:SuperagentSources;
   private readonly capabilities=new Map<string,{role:'worker'|'orchestrator';ticketId?:string;assignmentId?:string}>();
   private readonly active=new Map<string,{sessionId:string;provider:LLMProvider}>();
   private timer:ReturnType<typeof setInterval>|undefined;
@@ -36,8 +38,10 @@ export class SuperagentRuntime {
       prepareTicket:(t,o)=>({...t,execution:{name:t.id,directory:join(this.root,'work',t.id),assignment:o.scope}}),
       emit:event=>this.store.enqueue('notice',event.type+':'+event.at+':'+JSON.stringify(event.data),event)});
     this.ingress=new SourceIngress(this.engine,this.ledger);
+    this.sources=new SuperagentSources(this);
   }
   start():void {
+    this.sources.start();
     for(const ticket of this.store.tickets.list().reverse()) {
       const assignment=latestAssignment(ticket);
       if(assignment?.state==='running')this.engine.assignmentInterrupted(ticket.id,assignment.id);
@@ -88,7 +92,7 @@ export class SuperagentRuntime {
       }
     }
   }
-  snapshot() {return {settings:this.settings.current(),revision:this.settings.revision(),tickets:this.store.tickets.list().map(ticket=>({...ticket,stage:ticketStage(ticket)})),threads:this.store.threads.list(),decisions:this.store.list('decision'),outbox:this.store.outbox(),effects:this.store.effects(),active:[...this.active.keys()]};}
+  snapshot() {return {sources:this.sources.snapshot(),settings:this.settings.current(),revision:this.settings.revision(),tickets:this.store.tickets.list().map(ticket=>({...ticket,stage:ticketStage(ticket)})),threads:this.store.threads.list(),decisions:this.store.list('decision'),outbox:this.store.outbox(),effects:this.store.effects(),active:[...this.active.keys()]};}
   async tool(token:string,name:string,input:unknown):Promise<unknown> {
     const capability=this.capabilities.get(token);if(!capability)throw new Error('Expired capability');
     const args=parseSuperagentTool(name,input) as AnyRecord;
@@ -168,6 +172,7 @@ export class SuperagentRuntime {
   async close():Promise<void> {
     this.stopped=true;if(this.timer)clearInterval(this.timer);
     await Promise.allSettled([...this.active.values(),...(this.masterBusy&&this.masterSessionId?[{provider:'codex' as const,sessionId:this.masterSessionId}]:[])].map(active=>withUserContext(this.ownerId,()=>providerRuntimeService.abort(active.provider,active.sessionId))));
+    await this.sources.close();
     await Promise.allSettled([...this.inFlight]);this.capabilities.clear();
   }
 }

@@ -1,3 +1,4 @@
+import { monitorSourceOwns } from './monitor-source.js';
 import { withUserContext } from '@/modules/auth/index.js';
 import { assertOwnedSession } from '@/modules/access-control/index.js';
 import { monitorsDb } from '@/modules/database/index.js';
@@ -22,6 +23,7 @@ export async function dispatchMonitors(runtime: ProviderRuntimeGateway,now=new D
   const busySessions=new Set((await sessionsService.listRunningSessions()).map(session=>session.sessionId));
   const jobs: Promise<void>[]=[];
   for(const row of due) {
+    if(monitorSourceOwns(row.id))continue;
     if(busySessions.has(row.session_id)||chatRunRegistry.isProcessing(row.session_id)||runtime.hasBackgroundWork(row.session_id)) {
       monitorsDb.defer(row.id,now);
       continue;

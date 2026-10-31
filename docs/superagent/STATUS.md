@@ -17,3 +17,12 @@
 - Backed up production database read-only to copy-home/auth.db; 3014 passive instance launched through conhost --headless. Default disabled, no copied jobs replayed.
 - Server typecheck/build passed; live API defaults disabled; unauthenticated API and missing capability both rejected with 401. See runtime-evidence.json.
 - Next: four Sources and durable Outbox transports.
+
+
+## 2026-10-31T18:25:01.704Z four Sources and Outbox
+
+- Added GitHub issue/comment incremental ingestion, Feishu bot-only event/history/topic intake, WeChat database intake and owned monitor probe routing. Each adapter retains cursors on incomplete reads.
+- Outbox sends raw content as the human identity on all three messaging platforms; internal returned IDs / WeChat scoped hashes prevent same-account self loops. Uncertain sends are held rather than resent; per-conversation ordering and backoff retained.
+- Monitor Source only probes explicitly migrated rows; legacy dispatcher skips owned rows. Source shutdown drains active sends.
+- Server typecheck passed; 245 tests passed including same-account invocation-containing outbound regressions. Real Feishu consumer ready and clean bounded timeout recorded in feishu-consumer-probe.json; 5s consumption took 13.9s including startup/shutdown.
+- Next: idempotent migration and rollback, then executor/panel and six real acceptance flows.

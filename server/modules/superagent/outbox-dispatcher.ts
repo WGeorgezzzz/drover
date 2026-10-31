@@ -6,6 +6,7 @@ export class OutboxDispatcher {
   private running=false;
   constructor(private readonly store:SuperagentStore,private readonly ledger:OutboundLedger,
     private readonly transport:{enabled(source:string):boolean;actor(source:string):string;send(message:OutboundMessage):Promise<{platformId?:string}>}) {}
+  async drain():Promise<void> {while(this.running)await new Promise(resolve=>setTimeout(resolve,50));}
   async pass():Promise<void> {
     if(this.running)return;
     this.running=true;

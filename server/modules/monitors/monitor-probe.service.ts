@@ -1,3 +1,4 @@
+import { monitorSourceOwns, publishMonitorSourceEvent } from './monitor-source.js';
 import { open, readFile, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -219,19 +220,21 @@ export async function runProbe(row:MonitorRecord, now=new Date()):Promise<Monito
     event.delta=await hydrateProbeDelta({...row,probe_state_json:JSON.stringify(state)});
   } else { state.lastEventKey=String(previous.lastEventKey||''); state.lastAlertAt=previous.lastAlertAt; if(!state.pendingCounts&&Object.keys(pendingCounts).length)state.pendingCounts=pendingCounts; }
   monitorsDb.saveProbeObservation(row.id,state,event,new Date(now.getTime()+Number(spec.intervalMinutes)*60_000),scriptError||commandError||null,now);
+  if(event)publishMonitorSourceEvent(row.id,event);
   if(!event)monitorsDb.recordHeartbeat(row.id,now,`进度 ${JSON.stringify(previousProgress)??'未知'}→${JSON.stringify(progress)??'未知'}，无新事件，未调用模型。`);
   return event;
 }
 
 
 let probePollInFlight:Promise<number>|null=null;
-export async function pollMonitorProbes(now=new Date()):Promise<number> {
+export async function pollMonitorProbes(now=new Date(), ownedOnly=false):Promise<number> {
+  if(ownedOnly)return pollDueProbes(now,true);
   if(probePollInFlight)return probePollInFlight;
   probePollInFlight=pollDueProbes(now).finally(()=>{probePollInFlight=null;});
   return probePollInFlight;
 }
-async function pollDueProbes(now:Date):Promise<number> {
-  const rows=monitorsDb.probeDue(now); let count=0;
+async function pollDueProbes(now:Date,ownedOnly=false):Promise<number> {
+  const rows=monitorsDb.probeDue(now).filter(row=>!ownedOnly||monitorSourceOwns(row.id)); let count=0;
   for(let index=0;index<rows.length;index+=4){const batch=rows.slice(index,index+4);await Promise.all(batch.map(async row=>{await runProbe(row,now);count++;}));}
   return count;
 }

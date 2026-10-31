@@ -5,3 +5,5 @@ export { initializeMonitors, closeMonitors, dispatchMonitors } from './monitors.
 export { createMonitorQuery, createCodexMonitorTool } from './monitors.tools.js';
 // Providers owns the durable SDK loop and calls this idempotent monitor receipt finalizer.
 export { finishSupervisedMonitorRound } from './monitor-supervision.service.js';
+export { setMonitorSourceHandler } from './monitor-source.js';
+export { pollMonitorProbes } from './monitor-probe.service.js';
