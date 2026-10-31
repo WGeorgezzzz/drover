@@ -128,7 +128,7 @@ const agentRoutes = createAgentModule({
 chatRunRegistry.setRetentionGuard((sessionId) => providerRuntimeService.hasBackgroundWork(sessionId));
 chatRunRegistry.setCompletionListener((sessionId, userId) => {
     if (userId === null || monitorsDb.isMonitorSession(Number(userId),sessionId)) return;
-    if (!superagentEnabled()) taskmasterAutoService.schedule(sessionId, Number(userId));
+    taskmasterAutoService.schedule(sessionId, Number(userId));
     try { withUserContext(userId, () => sessionTitlesService.automatic(sessionId, 'completed')); }
     catch (error) { console.warn('[SessionTitles] Owner context unavailable:', String(error)); }
 });
@@ -515,7 +515,7 @@ async function startServer() {
             if (!passiveInstance) {
                 initializeScheduledMessageDispatcher(providerRuntimeService);
                 initializeMonitors(providerRuntimeService, protectedProviderSessions);
-                if (!superagentEnabled()) initializeInfohubTaskSync();
+                initializeInfohubTaskSync();
                 if (!superagentEnabled()) initializeTaskIntelligence();
                 sideChatsDb.recover();
                 initializeMessageQueue(providerRuntimeService, protectedProviderSessions);

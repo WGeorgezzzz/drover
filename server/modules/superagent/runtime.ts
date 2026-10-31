@@ -1,3 +1,4 @@
+import { setCompatibilityReceiver } from './compatibility.js';
 import { SuperagentSources } from './sources.service.js';
 import { randomBytes } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
@@ -41,6 +42,7 @@ export class SuperagentRuntime {
     this.sources=new SuperagentSources(this);
   }
   start():void {
+    setCompatibilityReceiver(trigger=>this.ingress.receive(trigger));
     this.sources.start();
     for(const ticket of this.store.tickets.list().reverse()) {
       const assignment=latestAssignment(ticket);
@@ -92,6 +94,7 @@ export class SuperagentRuntime {
       }
     }
   }
+  ticketForSession(sessionId:string):string|undefined {return [...this.active].find(([,value])=>value.sessionId===sessionId)?.[0];}
   snapshot() {return {sources:this.sources.snapshot(),settings:this.settings.current(),revision:this.settings.revision(),tickets:this.store.tickets.list().map(ticket=>({...ticket,stage:ticketStage(ticket)})),threads:this.store.threads.list(),decisions:this.store.list('decision'),outbox:this.store.outbox(),effects:this.store.effects(),active:[...this.active.keys()]};}
   async tool(token:string,name:string,input:unknown):Promise<unknown> {
     const capability=this.capabilities.get(token);if(!capability)throw new Error('Expired capability');
@@ -170,6 +173,7 @@ export class SuperagentRuntime {
   }
   private track(promise:Promise<unknown>):void{this.inFlight.add(promise);void promise.finally(()=>this.inFlight.delete(promise)).catch(()=>{});}
   async close():Promise<void> {
+    setCompatibilityReceiver(undefined);
     this.stopped=true;if(this.timer)clearInterval(this.timer);
     await Promise.allSettled([...this.active.values(),...(this.masterBusy&&this.masterSessionId?[{provider:'codex' as const,sessionId:this.masterSessionId}]:[])].map(active=>withUserContext(this.ownerId,()=>providerRuntimeService.abort(active.provider,active.sessionId))));
     await this.sources.close();

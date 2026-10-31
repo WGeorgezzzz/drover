@@ -7,3 +7,7 @@ export function setMonitorSourceHandler(handler?:typeof sink,ownership?:typeof o
 export function monitorSourceOwns(id:string):boolean{return owns?.(id)??false;}
 // Probe publication happens after its durable observation; Source IDs deduplicate recovered observations.
 export function publishMonitorSourceEvent(id:string,event:MonitorProbeEvent):void{if(monitorSourceOwns(id))sink?.(id,event);}
+
+let register:((id:string,sessionId:string)=>void)|undefined;
+export function setMonitorSourceRegistration(callback?:typeof register):void{register=callback;}
+export function registerMonitorSource(id:string,sessionId:string):void{register?.(id,sessionId);}

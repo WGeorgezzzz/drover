@@ -2,7 +2,9 @@ import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { z } from 'zod';
-import { setMonitorSourceHandler } from '@/modules/monitors/index.js';
+import { SuperagentMigration } from './migration.js';
+import { nextMonitorCalendarRun } from '@/shared/index.js';
+import { setMonitorSourceRegistration, setMonitorSourceHandler } from '@/modules/monitors/index.js';
 import type { OutboundMessage, Trigger } from './core/index.ts';
 import type { SuperagentRuntime } from './runtime.js';
 import { OutboxDispatcher } from './outbox-dispatcher.js';
@@ -24,6 +26,7 @@ export class SuperagentSources {
   private enabled(source:string):boolean {const settings=this.host.settings.current();return settings.enabled&&!settings.paused&&!!settings.sources[source as SourceName]?.enabled;}
   private actor(source:string):string {const sources=this.host.settings.current().sources;return source==='github'?sources.github.account:source==='feishu'?sources.feishu.userId:source==='wechat'?sources.wechat.account:'monitor';}
   start():void {
+    setMonitorSourceRegistration((id,sessionId)=>{if(!this.host.settings.current().enabled)return;const ticketId=this.host.ticketForSession(sessionId);if(ticketId){this.host.store.set('migration:monitor:'+id,{ticketId,at:new Date().toISOString()});this.host.engine.followForContext(ticketId,{source:'monitor',id});}else new SuperagentMigration(this.host.store,this.host.ownerId,this.host.root).apply([]);});
     setMonitorSourceHandler((id,event)=>{if(!this.ownsMonitor(id))return;const at=String(event.at??new Date().toISOString());this.receive({id:'monitor:'+id+':'+digest(JSON.stringify(event)),source:'monitor',threads:[{source:'monitor',id}],actor:{source:'monitor',id:'probe'},human:false,at,text:JSON.stringify(event),meta:{monitorId:id,probe:true}});},id=>this.ownsMonitor(id));
     this.timer=setInterval(()=>this.pass(),5000);this.timer.unref();this.pass();
   }
@@ -78,7 +81,14 @@ export class SuperagentSources {
     const config=this.host.settings.current().sources.wechat;if(!config.python||!config.script)throw new Error('Configure installed wechat-skill runtime');
     for(const chat of config.conversations){const key='cursor:wechat:'+chat,since=this.host.store.get<string>(key)??new Date(Date.now()-60000).toISOString(),until=new Date().toISOString();const result=await this.command(config.python,['-X','utf8',config.script,'dump-chat','--chat',chat,'--since',since,'--until',until,'--number','20000']);const page=JSON.parse(result.stdout) as Record<string,any>;if(page.has_more||page.coverage?.complete!==true||page.coverage?.failures?.length||page.coverage?.decode_errors)throw new Error('WeChat database coverage incomplete; cursor retained');for(const item of page.records??[])this.receive(wechatTrigger(chat,item));this.host.store.set(key,until);}
   }
-  private async monitor():Promise<void> {const {pollMonitorProbes}=await import('@/modules/monitors/index.js');await pollMonitorProbes(new Date(),true);}
+  private async monitor():Promise<void> {
+    const db=this.host.store.database,now=new Date();
+    for(const row of db.prepare("SELECT * FROM monitors WHERE user_id=? AND status='active' AND running_id IS NULL").all(this.host.ownerId) as Record<string,any>[]){if(!this.ownsMonitor(row.id))continue;
+      if(row.last_event_json){const event=JSON.parse(row.last_event_json),at=String(event.at??now.toISOString());this.receive({id:'monitor:'+row.id+':'+digest(JSON.stringify(event)),source:'monitor',threads:[{source:'monitor',id:row.id}],actor:{source:'monitor',id:'probe'},human:false,at,text:JSON.stringify(event),meta:{monitorId:row.id,probe:true}});db.prepare('UPDATE monitors SET last_event_json=NULL WHERE id=? AND last_event_json=?').run(row.id,row.last_event_json);}
+      if(row.monitor_mode!=='event'){const key='monitor-clock:'+row.id,next=this.host.store.get<string>(key)??row.next_run_at;if(next>now.toISOString())continue;this.host.store.atomic(()=>{this.receive({id:'monitor:'+row.id+':clock:'+next,source:'monitor',threads:[{source:'monitor',id:row.id}],actor:{source:'monitor',id:'clock'},human:false,at:now.toISOString(),text:row.content,meta:{monitorId:row.id,scheduledAt:next}});this.host.store.set(key,row.schedule_json?nextMonitorCalendarRun(JSON.parse(row.schedule_json),now).toISOString():new Date(now.getTime()+row.interval_minutes*60000).toISOString());});}
+    }
+    const {pollMonitorProbes}=await import('@/modules/monitors/index.js');await pollMonitorProbes(now,true);
+  }
   private async send(message:OutboundMessage):Promise<{platformId?:string}> {
     const {channel,text}=message;
     if(channel.source==='github'){const repository=channel.address.repository,number=channel.address.number;if(!repository||!number)throw Object.assign(new Error('Missing original GitHub address'),{definitelyNotSent:true});const result=await this.gh('repos/'+repository+'/issues/'+number+'/comments',['--method','POST','-f','body='+text]) as {id:number};if(!result.id)throw new Error('GitHub send returned no comment ID');return {platformId:String(result.id)};}
@@ -86,5 +96,5 @@ export class SuperagentSources {
     if(channel.source==='wechat'){const config=this.host.settings.current().sources.wechat;await this.command(config.python,['-X','utf8',config.script,'send-message','--to',channel.address.chat,'--message',text],{},60000);return {};}
     throw Object.assign(new Error('Unsupported reply channel'),{definitelyNotSent:true});
   }
-  async close():Promise<void>{this.closing=true;if(this.timer)clearInterval(this.timer);setMonitorSourceHandler(undefined);await Promise.allSettled([...this.busy.values()]);await this.outbox.drain();}
+  async close():Promise<void>{this.closing=true;if(this.timer)clearInterval(this.timer);setMonitorSourceHandler(undefined);setMonitorSourceRegistration(undefined);await Promise.allSettled([...this.busy.values()]);await this.outbox.drain();}
 }

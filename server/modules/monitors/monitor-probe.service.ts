@@ -234,7 +234,7 @@ export async function pollMonitorProbes(now=new Date(), ownedOnly=false):Promise
   return probePollInFlight;
 }
 async function pollDueProbes(now:Date,ownedOnly=false):Promise<number> {
-  const rows=monitorsDb.probeDue(now).filter(row=>!ownedOnly||monitorSourceOwns(row.id)); let count=0;
+  const rows=monitorsDb.probeDue(now).filter(row=>ownedOnly?monitorSourceOwns(row.id):!monitorSourceOwns(row.id)); let count=0;
   for(let index=0;index<rows.length;index+=4){const batch=rows.slice(index,index+4);await Promise.all(batch.map(async row=>{await runProbe(row,now);count++;}));}
   return count;
 }

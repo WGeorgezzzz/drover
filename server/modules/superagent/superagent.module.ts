@@ -4,15 +4,14 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { getCurrentUserContext } from '@/modules/auth/index.js';
 import { getConnection, getDatabasePath } from '@/modules/database/index.js';
+import { SuperagentMigration } from './migration.js';
+import { superagentEnabled } from './compatibility.js';
+export { superagentEnabled };
 import { SuperagentRuntime } from './runtime.js';
 import { SuperagentStore } from './store.js';
 
 let runtime:SuperagentRuntime|undefined;
 let releaseLock:(()=>void)|undefined;
-// Server lifecycle and TaskMaster compatibility use this persisted switch without creating a second runtime.
-export function superagentEnabled():boolean {
-  try {const row=getConnection().prepare("SELECT value FROM kv WHERE key='superagent-settings'").get() as {value:string}|undefined;return row?JSON.parse(row.value).enabled===true:false;}catch{return false;}
-}
 // The HTTP server starts one host-owned engine; provider subprocesses only call its capability endpoint.
 export function initializeSuperagent(port:number):void {
   if(runtime)return;
@@ -35,6 +34,7 @@ route.put('/settings',(req,res,next)=>{try{const input=z.object({settings:z.unkn
 route.post('/tickets/:id/:action',(req,res,next)=>{try{const host=current(),id=z.string().min(1).parse(req.params.id),action=z.enum(['stop','retry','status','note']).parse(req.params.action);const result=action==='stop'?host.engine.stopTicket(id):action==='retry'?host.engine.retryTicket(id):action==='status'?host.engine.requestStatus(id):host.engine.note(id,z.string().min(1).parse(req.body.text));host.pass();res.json(result);}catch(error){next(error);}});
 route.post('/decisions/:id/dismiss',(req,res,next)=>{try{res.json(current().engine.dismiss(req.params.id));}catch(error){next(error);}});
 route.post('/triggers/:id/reevaluate',(req,res,next)=>{try{res.json({queued:current().engine.reevaluate(req.params.id)});}catch(error){next(error);}});
+route.post('/migration/:action',async(req,res,next)=>{try{const host=current(),action=z.enum(['preview','apply','rollback']).parse(req.params.action),roots=z.array(z.string()).default([]).parse(req.body.roots);const migration=new SuperagentMigration(host.store,host.ownerId,host.root);if(action!=='preview')await host.store.database.backup(getDatabasePath()+'.superagent-'+Date.now()+'.bak');res.json(action==='preview'?migration.preview(roots):action==='apply'?migration.apply(roots):migration.rollback());}catch(error){next(error);}});
 // Only the isolated acceptance instance exposes constructed Trigger injection, still behind owner authentication.
 route.post('/test/trigger',(req,res,next)=>{if(process.env.SUPERAGENT_TEST_INGRESS!=='1'){res.sendStatus(404);return;}try{const trigger=z.object({id:z.string(),source:z.string(),threads:z.array(z.object({source:z.string(),id:z.string()})).min(1),actor:z.object({source:z.string(),id:z.string()}),human:z.boolean(),addressed:z.enum(['mention','direct']).optional(),at:z.string().datetime(),text:z.string(),channel:z.object({source:z.string(),thread:z.string(),address:z.record(z.string(),z.string())}).optional(),meta:z.record(z.string(),z.unknown()),url:z.string().optional()}).strict().parse(req.body);res.json({result:current().ingress.receive(trigger)});}catch(error){next(error);}});
 // Entrypoint mounts this after JWT authentication. Capabilities never grant panel access.

@@ -1,3 +1,4 @@
+import { superagentEnabled } from '@/modules/superagent/index.js';
 import express from 'express';
 import path from 'node:path';
 import { z } from 'zod';
@@ -12,6 +13,7 @@ import { taskmasterSourcesService } from './taskmaster-sources.service.js';
 /** TaskMaster composition mounts these native endpoints ahead of legacy document routes. */
 export function createTaskmasterNativeRouter() {
   const router = express.Router(); router.use(userContextMiddleware);
+  router.use((req,res,next)=>{if(superagentEnabled()&&!['GET','HEAD','OPTIONS'].includes(req.method)){res.status(409).json({error:'SUPERAGENT_OWNS_TASKS'});return;}next();});
   router.param('projectId', authorizeProjectParameter(projectsDb.getProjectPathById));
   router.param('projectId', (req, res, next, id) => authorizePaths(() => {
     const project = projectsDb.getProjectPathById(String(id));

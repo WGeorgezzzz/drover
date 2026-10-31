@@ -1,3 +1,4 @@
+import { legacyReadOnly } from '@/modules/superagent/index.js';
 import path from 'node:path';
 import { randomUUID, createHash } from 'node:crypto';
 import * as fs from 'node:fs/promises';
@@ -41,6 +42,7 @@ async function exclusive<T>(root: string, run: () => Promise<T>): Promise<T> {
   try { return await current; } finally { if (locks.get(root) === current) locks.delete(root); }
 }
 async function atomic(file: string, value: unknown) {
+  legacyReadOnly();
   await fs.mkdir(path.dirname(file), { recursive: true });
   const temporary = `${file}.${randomUUID()}.tmp`;
   try { await fs.writeFile(temporary, JSON.stringify(value, null, 2) + '\n', 'utf8'); await fs.rename(temporary, file); }

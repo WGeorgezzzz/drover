@@ -1,3 +1,4 @@
+import { registerMonitorSource } from './monitor-source.js';
 import { createSdkMcpServer, query, tool } from '@anthropic-ai/claude-agent-sdk';
 import type { Options, SDKUserMessage } from '@anthropic-ai/claude-agent-sdk';
 import { z } from 'zod';
@@ -63,9 +64,10 @@ export function executeMonitorTool(context:ToolContext,input:unknown): unknown {
     if(!args.name||!args.content||(!args.intervalMinutes&&!schedule))throw new Error('创建必须提供名称、检查内容，以及间隔或日历规则。');
     const scheduleJson=schedule?JSON.stringify(schedule):null;
     const duplicate=monitorsService.list(context.userId,context.sessionId).find(row=>row.status!=='stopped'&&row.name===args.name!.trim()&&row.content===args.content!.trim()&&row.schedule_json===scheduleJson&&(schedule||row.interval_minutes===args.intervalMinutes)&&(JSON.parse(row.options).runMode||'isolated')===(args.runMode||'isolated'));
-    if(duplicate)return {monitor:visible(duplicate),reused:true};
+    if(duplicate){registerMonitorSource(duplicate.id,context.sessionId);return {monitor:visible(duplicate),reused:true};}
     const row=monitorsService.create(context.userId,{sessionId:context.sessionId,name:args.name,content:args.content,intervalMinutes:args.intervalMinutes,schedule,probe:args.probe,
       options:{...(args.model?{model:args.model}:{}),effort:args.model?session.effort||context.effort:'medium',permissionMode: context.authorization?.permissionMode || context.permissionMode || 'bypassPermissions',...(args.runMode?{runMode:args.runMode}:{})}},context.authorization);
+    registerMonitorSource(row.id,context.sessionId);
     return {monitor:visible(row),reused:false,permissionMode:JSON.parse(row.options).permissionMode,note:'已保存到本地调度器。权限沿用创建时的会话设置。电脑和本地服务需运行，关闭聊天页面不影响调度。'};
   }
   const requested=args.id||context.monitorId;

@@ -15,6 +15,7 @@ export const superagentSettingsSchema=z.object({
     wechat:source.extend({python:z.string().default(''),script:z.string().default(''),account:z.string().default('wangqiaozhi123')}).prefault({}),
     github:source.extend({cli:z.string().default('gh'),configDir:z.string().default(''),repository:z.string().default('WGeorgezzzz/drover'),account:z.string().default('WGeorgezzzz')}).prefault({}),
     monitor:source.prefault({}),
+    conversation:source.prefault({enabled:true,allow:['1']}), infohub:source.prefault({enabled:true,allow:['1']}),
   }).prefault({}),
 }).strict();
 

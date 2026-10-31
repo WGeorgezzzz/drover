@@ -7,3 +7,5 @@ export { createMonitorQuery, createCodexMonitorTool } from './monitors.tools.js'
 export { finishSupervisedMonitorRound } from './monitor-supervision.service.js';
 export { setMonitorSourceHandler } from './monitor-source.js';
 export { pollMonitorProbes } from './monitor-probe.service.js';
+
+export { setMonitorSourceRegistration } from './monitor-source.js';

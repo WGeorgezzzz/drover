@@ -1,3 +1,4 @@
+import { superagentEnabled, emitCompatibilityTrigger } from '@/modules/superagent/index.js';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
@@ -53,6 +54,7 @@ export function syncInfohubTasks(userId:number):Promise<SyncStatus> {
     try{
       const units=await infohubRequest('/api/units?limit=10000&order=activity') as InfohubUnit[];
       if(!Array.isArray(units)||units.length>=10000)throw Error('信息看板单元超出单次范围，请缩小同步范围后重试');
+      if(superagentEnabled()){for(const unit of units)emitCompatibilityTrigger(userId,'infohub',String(unit.id),String(unit.id)+':'+unit.updated_at,[unit.title,unit.summary].filter(Boolean).join('\n'),new Date(unit.updated_at*1000).toISOString(),{unitId:unit.id,provenance:'inferred summary; no human authorship assumed'});const next={...previous,online:true,lastSyncedAt:new Date().toISOString(),error:null,imported:0};states.set(userId,next);return next;}
       const tags=await infohubRequest('/api/tags') as unknown[];
       const selected=units.filter(u=>(u.for_me||u.tags?.includes('type:deadline'))&&(u.kind==='todo'||!!u.due_at&&u.tags?.includes('type:deadline')));
       const root=path.resolve(process.env.TASKMASTER_INBOX_ROOT||'D:/embodied/inbox-todos');

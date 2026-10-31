@@ -1,0 +1,11 @@
+import { afterEach,expect,it } from 'vitest';
+import Database from 'better-sqlite3';
+import { mkdtempSync,mkdirSync,writeFileSync,readFileSync,rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';import { join } from 'node:path';
+import { SuperagentStore } from '../store.js';import { SuperagentMigration } from '../migration.js';
+const dirs:string[]=[],dbs:Database.Database[]=[];afterEach(()=>{dbs.splice(0).forEach(d=>d.close());dirs.splice(0).forEach(d=>rmSync(d,{recursive:true,force:true}));});
+function setup(){const root=mkdtempSync(join(tmpdir(),'drover-migration-'));dirs.push(root);mkdirSync(join(root,'.taskmaster/tasks'),{recursive:true});const file=join(root,'.taskmaster/tasks/tasks.json'),text=JSON.stringify({master:{tasks:[{id:1,title:'Historical task',status:'in-progress',subtasks:[{id:1,title:'Finished task',status:'done'}]}]}});writeFileSync(file,text);const db=new Database(':memory:');dbs.push(db);const store=new SuperagentStore(db);return {root,file,text,store,migration:new SuperagentMigration(store,1,root)};}
+it('imports nested tasks once without launching historical operations or modifying legacy bytes',()=>{const h=setup();expect(h.migration.apply([h.root]).imported).toBe(2);expect(h.migration.apply([h.root]).skipped).toBe(2);expect(h.store.effects()).toEqual([]);expect(h.store.tickets.list().filter(t=>t.ended)).toHaveLength(1);expect(readFileSync(h.file,'utf8')).toBe(h.text);});
+it('rolls back only untouched imported records and leaves original files intact',()=>{const h=setup();h.migration.apply([h.root]);expect(h.migration.rollback()).toMatchObject({removed:2,retained:0,legacyFilesModified:0});expect(h.store.tickets.list()).toEqual([]);expect(readFileSync(h.file,'utf8')).toBe(h.text);expect(h.migration.apply([h.root]).imported).toBe(2);});
+it('retains changed tickets and audit history during rollback',()=>{const h=setup();h.migration.apply([h.root]);const ticket=h.store.tickets.list()[0];ticket.title+=' changed';h.store.tickets.save(ticket);expect(h.migration.rollback()).toMatchObject({removed:1,retained:1});expect(h.store.tickets.list()).toHaveLength(1);});
+it('rejects a malformed import atomically',()=>{const h=setup();writeFileSync(h.file,'{');expect(()=>h.migration.apply([h.root])).toThrow();expect(h.store.tickets.list()).toEqual([]);});

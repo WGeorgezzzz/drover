@@ -1,3 +1,4 @@
+import { superagentEnabled, emitCompatibilityTrigger, legacyReadOnly } from '@/modules/superagent/index.js';
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
@@ -59,6 +60,7 @@ export const taskmasterAutoService = {
     const messages = history.messages.filter(m => !m.parentToolUseId && ((m.kind === 'text' && ['user', 'assistant'].includes(m.role ?? '')) || (m.kind === 'tool_use' && m.toolResult)))
       .map(m => ({ id: m.id, role: m.kind === 'tool_use' ? 'tool' : m.role!, content: m.kind === 'tool_use'
         ? JSON.stringify({ tool: m.toolName, outcome: m.toolResult?.isError ? 'failed' : undefined, input: JSON.stringify(m.toolInput ?? '').slice(0, 600), result: (() => { const result = JSON.stringify(m.toolResult); return result.length > 1200 ? result.slice(0, 600) + '\n…\n' + result.slice(-600) : result; })() }) : m.content ?? '' }));
+    if(superagentEnabled()){for(const message of messages.filter(m=>m.role==='user'))emitCompatibilityTrigger(userId,'conversation',sessionId,message.id,message.content,new Date().toISOString(),{projectPath:root});return {status:'superagent_source'};}
     const result = await taskmasterWorkspace.extract(root, userId, sessionId, messages, settings.suggestOnly, confirm, automatic);
     if (result.created || result.updated) await taskmasterWorkspace.initialize(root);
     errors.delete(`${userId}:${sessionId}`); return result;
@@ -70,6 +72,7 @@ export const taskmasterAutoService = {
   },
   schedule(sessionId: string, userId: number, attempt = 0) {
     const key = `${userId}:${sessionId}`; clearTimeout(timers.get(key));
+    if(superagentEnabled()){void withUserContext(userId,()=>this.extract(sessionId,false,true)).catch(error=>console.warn('[Superagent chat source]',String(error)));return;}
     const timer = setTimeout(() => {
       timers.delete(key);
       void Promise.resolve().then(() => withUserContext(userId, () => this.extract(sessionId, false, true))).catch(error => {
@@ -82,6 +85,7 @@ export const taskmasterAutoService = {
     timer.unref(); timers.set(key, timer);
   },
   async parsePrd(root: string, fileName: string, userId: number) {
+    legacyReadOnly();
     if (!fileName || path.basename(fileName) !== fileName) throw new AppError('请选择有效的需求文件。', { statusCode: 400 });
     const file = path.join(root, '.taskmaster', 'docs', fileName); assertContextPath(file);
     const content = await readFile(file, 'utf8');

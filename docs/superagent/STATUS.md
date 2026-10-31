@@ -26,3 +26,9 @@
 - Monitor Source only probes explicitly migrated rows; legacy dispatcher skips owned rows. Source shutdown drains active sends.
 - Server typecheck passed; 245 tests passed including same-account invocation-containing outbound regressions. Real Feishu consumer ready and clean bounded timeout recorded in feishu-consumer-probe.json; 5s consumption took 13.9s including startup/shutdown.
 - Next: idempotent migration and rollback, then executor/panel and six real acceptance flows.
+
+## 2026-10-31T18:37:17.722Z — 迁移与回滚已验证
+- 3014 独立副本导入 1182 个旧任务、7 个监测，共 1189 个 Ticket；重复运行新增 0、跳过 1189。回滚移除 1189，再导入 1189。证据 migration-evidence.json。
+- 迁移不写 tasks.json；回读时 27/28 个源文件哈希一致，ras-realign-crlb 的文件在本轮读回时已发生漂移，保留该差异，不把它伪报为一致。隔离测试验证迁移与回滚均保留原始字节。
+- 增加数据库备份、迁移 API / 离线 CLI、旧任务只读、聊天和 info-hub Source 入口、cloudcli_monitor 兼容订阅及探针恢复/时钟 Trigger。服务端 typecheck、构建与 249/249 测试通过。
+- 下一步：执行器隔离、版本化提示词、中英面板及六条真实 E2E。
