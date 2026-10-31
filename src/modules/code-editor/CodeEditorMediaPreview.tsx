@@ -1,3 +1,4 @@
+import DownloadButton from '@/shared/ui/DownloadButton';
 import LocalFileActions from '@/shared/ui/LocalFileActions';
 import { useEffect, useState } from 'react';
 
@@ -259,7 +260,7 @@ export default function CodeEditorMediaPreview({
       <div className="flex min-w-0 flex-1 items-center gap-2">
         <h3 className="truncate text-sm font-medium text-gray-900 dark:text-white">{file.name}</h3>
       </div>
-      <LocalFileActions path={file.path} />{headerActions}
+      <DownloadButton projectId={projectId} path={file.path} /><span className="hidden sm:contents"><LocalFileActions path={file.path} /></span>{headerActions}
     </div>
   );
 

@@ -1470,6 +1470,7 @@ export type FileTreeServiceDependencies = {
  * mutations themselves.
  */
 export type FileTreeServices = {
+  resolveDownloadPath?(projectId: string, filePath: string): Promise<string>;
   browseWorkspace(inputPath: string | null): Promise<{
     path: string;
     suggestions: Array<{ path: string; name: string; type: 'directory' }>;

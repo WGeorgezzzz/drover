@@ -478,6 +478,12 @@ export function createFileTreeService(dependencies: FileTreeServiceDependencies)
       }
     },
 
+    async resolveDownloadPath(projectId, filePath) {
+      const root = await resolveProjectRoot(projectId);
+      const resolved = path.resolve(root, filePath) === path.resolve(root) ? root : await resolveReadablePath(root, filePath);
+      assertContextPath(resolved);
+      return await fileSystem.realpath(resolved);
+    },
     async openFile(projectId, filePath, rangeHeader) {
       const projectRoot = await resolveProjectRoot(projectId);
       const resolvedPath = await resolveReadablePath(projectRoot, filePath);

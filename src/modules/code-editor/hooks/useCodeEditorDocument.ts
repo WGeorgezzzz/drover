@@ -1,3 +1,4 @@
+import { downloadFile } from '@/shared/download';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { api, readApiJson } from '@/shared/api';
@@ -186,6 +187,10 @@ export const useCodeEditorDocument = ({ file, projectPath }: UseCodeEditorDocume
   }, [content, savedContent, filePath, fileProjectId, previewKind, fileName, previewMeta.truncated, isBinary]);
 
   const handleDownload = useCallback(() => {
+    if (fileProjectId && (previewKind || isBinary || content === savedContent || previewMeta.truncated)) {
+      void downloadFile(fileProjectId, filePath).catch(error => setSaveError(getErrorMessage(error)));
+      return;
+    }
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -197,8 +202,8 @@ export const useCodeEditorDocument = ({ file, projectPath }: UseCodeEditorDocume
     anchor.click();
     document.body.removeChild(anchor);
 
-    URL.revokeObjectURL(url);
-  }, [content, file.name]);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }, [content, savedContent, file.name, fileProjectId, filePath, previewKind, isBinary, previewMeta.truncated]);
 
   // The baseline only changes on load and save, so it is not re-normalised on
   // every keystroke.

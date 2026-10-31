@@ -257,6 +257,7 @@ export default function CodeEditor({
   if (isBinary) {
     return (
       <CodeEditorBinaryFile
+        projectId={fileProjectId}
         file={file}
         isSidebar={isSidebar}
         isFullscreen={isFullscreen}

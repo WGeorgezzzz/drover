@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { downloadRoutes } from './modules/file-tree/downloads.js';
 import { taskmasterSourcesService } from './modules/taskmaster/taskmaster-sources.service.js';
 import { infohubLifecycle, infohubRequest } from './modules/taskmaster/taskmaster-infohub.service.js';
 import { infohubStartupPage } from './modules/taskmaster/infohub-startup-page.js';
@@ -191,6 +192,7 @@ app.use('/api/quota', authenticateToken, quotaRoutes);
 app.use('/api/remote-access', authenticateToken, remoteAccessRoutes);
 
 // File Tree API Routes (protected)
+app.use('/api/downloads', downloadRoutes);
 app.use('/api/file-tree', authenticateToken, fileTreeRoutes);
 
 // Projects API Routes (protected)

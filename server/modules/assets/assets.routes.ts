@@ -1,3 +1,6 @@
+import { issueDownload } from '../file-tree/downloads.js';
+import { resolveAttachmentAssetFile } from './services/image-assets.service.js';
+import { userContextMiddleware } from '@/modules/access-control/index.js';
 import express from 'express';
 import multer from 'multer';
 
@@ -10,6 +13,18 @@ import {
 } from '@/modules/assets/services/image-assets.service.js';
 
 const router = express.Router();
+router.post('/files/:filename/download-ticket', userContextMiddleware, async (req, res, next) => {
+  try {
+    const target = resolveAttachmentAssetFile(String(req.params.filename));
+    if (!target) { res.status(400).json({error:'Invalid asset filename'}); return; }
+    res.set('Cache-Control','no-store').json(await issueDownload(target, false, async p => {
+      if (p !== target) throw new Error('Asset mismatch');
+      const checked = resolveAttachmentAssetFile(String(req.params.filename));
+      if (checked !== target) throw new Error('Asset mismatch');
+      return target;
+    }, typeof req.body?.name === 'string' ? req.body.name : undefined));
+  } catch(e) { next(e); }
+});
 
 // Multer writes uploads straight into the global assets folder; the service
 // owns the folder location and the response record shape.
