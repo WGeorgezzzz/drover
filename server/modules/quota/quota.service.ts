@@ -129,7 +129,7 @@ export function createQuotaService(deps: {
       const observedAt = new Date(now()).toISOString(), creditUpdatedAt = date(credit?.fetched_at);
       const history = balance === null ? { consumed: null, balanceChange: null, alerts: [] } : recordCreditSnapshot(deps.db(), account.id, String(account.name), balance, observedAt, creditUpdatedAt, base);
       const windows = [window('5h', { ...usage?.five_hour, utilization: extra.codex_5h_used_percent, resets_at: extra.codex_5h_reset_at }), window('7 天', { ...usage?.seven_day, utilization: extra.codex_7d_used_percent, resets_at: extra.codex_7d_reset_at })];
-      const accountWarnings = [...history.alerts.map(a => `账号 ${a.accountName} 点数被消耗 ${a.consumed}`)];
+      const accountWarnings = history.consumed !== null ? [`账号 ${account.name} 点数被消耗 ${history.consumed}`] : [];
       if (extra.auto_reset_credit_enabled === true) accountWarnings.push(`账号 ${account.name} 上游已启用点数重置`);
       const autoPause = {
         fiveHour: { disabled: extra.auto_pause_5h_disabled === true, threshold: num(extra.auto_pause_5h_threshold) },

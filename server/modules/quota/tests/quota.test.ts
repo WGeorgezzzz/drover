@@ -67,12 +67,12 @@ test('members cannot trigger pool and user-scoped key history aggregates today, 
     const direct = await f.service.overview({ userId: 4, role: 'member' }); assert.equal(direct.key.data?.mode, 'not_relay'); assert.equal(f.calls.filter(c => c.url.includes('/v1/usage')).length, 2);
   } finally { f.db.close(); }
 });
-test('sub-decimal credit debit is exact, durable, and unchanged balances do not erase alert', async () => {
+test('sub-decimal credit debit is exact, durable, and unchanged balances clear warnings but preserve alert history', async () => {
   const f = fixture(); try {
     await f.service.refreshPool(); f.debit(); f.advance();
     const result = await f.service.refreshPool(); assert.equal(result.data?.accounts[0].consumed, '0.0000000000001');
     assert.match(result.data!.warnings.join(' '), /demo-account-a 点数被消耗 0\.0000000000001/);
-    f.advance(); const next = await f.service.refreshPool(); assert.equal(next.data?.accounts[0].consumed, null); assert.equal(next.data?.accounts[0].alerts.length, 1);
+    f.advance(); const next = await f.service.refreshPool(); assert.equal(next.data?.accounts[0].consumed, null); assert.equal(next.data?.accounts[0].alerts.length, 1); assert.deepEqual(next.data?.warnings, []);
     assert.equal((f.db.prepare('SELECT COUNT(*) n FROM quota_credit_snapshots').get() as { n: number }).n, 3);
   } finally { f.db.close(); }
 });

@@ -31,5 +31,9 @@ describe('quota threshold display', () => {
     view.rerender(<QuotaIndicator onOpen={() => {}} />);
     expect(screen.getByText('账号 demo-account-a 点数被消耗 0.1')).toBeTruthy();
     expect(screen.getByTestId('quota-indicator').className).toContain('text-red-700');
+    fixture.warnings = [];
+    view.rerender(<QuotaIndicator onOpen={() => {}} />);
+    expect(screen.queryByText('账号 demo-account-a 点数被消耗 0.1')).toBeNull();
+    expect(screen.getByTestId('quota-indicator').className).not.toContain('text-red-700');
   });
 });
