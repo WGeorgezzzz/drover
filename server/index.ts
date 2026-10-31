@@ -6,6 +6,7 @@ import { requireSharedResourceAdministrator } from '@/modules/auth/index.js';
 import { initializeTaskIntelligence,closeTaskIntelligence,initializeInfohubTaskSync,closeInfohubTaskSync,taskmasterInboxService,infohubEmbedScript } from '@/modules/taskmaster/index.js';
 // Load environment variables before other imports execute.
 import './load-env.js';
+import { initializeSuperagent, closeSuperagent, superagentEnabled, superagentRoutes, superagentInternalRoutes } from '@/modules/superagent/index.js';
 
 
 import fs, { promises as fsPromises } from 'fs';
@@ -127,7 +128,7 @@ const agentRoutes = createAgentModule({
 chatRunRegistry.setRetentionGuard((sessionId) => providerRuntimeService.hasBackgroundWork(sessionId));
 chatRunRegistry.setCompletionListener((sessionId, userId) => {
     if (userId === null || monitorsDb.isMonitorSession(Number(userId),sessionId)) return;
-    taskmasterAutoService.schedule(sessionId, Number(userId));
+    if (!superagentEnabled()) taskmasterAutoService.schedule(sessionId, Number(userId));
     try { withUserContext(userId, () => sessionTitlesService.automatic(sessionId, 'completed')); }
     catch (error) { console.warn('[SessionTitles] Owner context unavailable:', String(error)); }
 });
@@ -181,6 +182,8 @@ app.get('/health', (req, res) => {
     });
 });
 
+app.use('/internal/superagent', superagentInternalRoutes);
+
 // Optional API key validation (if configured)
 app.use('/api', validateApiKey);
 
@@ -207,6 +210,7 @@ app.use('/api/worktrees', authenticateToken, worktreesRoutes);
 
 // TaskMaster API Routes (protected)
 app.use('/api/taskmaster', authenticateToken, taskmasterRoutes);
+app.use('/api/superagent', authenticateToken, requireSharedResourceAdministrator, superagentRoutes);
 
 // Commands API Routes (protected)
 app.use('/api/commands', authenticateToken, commandsRoutes);
@@ -507,11 +511,12 @@ async function startServer() {
             // A backup-based verification instance must never replay production jobs
             // or compete with the production instance for plugin listening ports.
             const passiveInstance = process.env.CLAUDEX_PASSIVE_INSTANCE === '1';
+            initializeSuperagent(SERVER_PORT);
             if (!passiveInstance) {
                 initializeScheduledMessageDispatcher(providerRuntimeService);
                 initializeMonitors(providerRuntimeService, protectedProviderSessions);
-                initializeInfohubTaskSync();
-                initializeTaskIntelligence();
+                if (!superagentEnabled()) initializeInfohubTaskSync();
+                if (!superagentEnabled()) initializeTaskIntelligence();
                 sideChatsDb.recover();
                 initializeMessageQueue(providerRuntimeService, protectedProviderSessions);
             }
@@ -529,6 +534,7 @@ async function startServer() {
         closeMessageQueue();
         // Clean up plugin processes on shutdown
         const shutdownRuntimeServices = async () => {
+            await closeSuperagent();
             closeUsage();
             closeQuota();
             closeRemoteAccess();

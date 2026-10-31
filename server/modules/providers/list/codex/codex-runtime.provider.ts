@@ -367,6 +367,7 @@ async function queryCodex(
     // SDK's `codex exec` path, which cannot take input mid-turn.
     const bridge = ws.userId != null && sessionId ? (await import('@/modules/session-bridge/index.js')).createCodexSessionTool({userId:Number(ws.userId),sessionId,userMessageId:options.cloudcliUserMessageId,userMessage:options.cloudcliUserMessage,autonomous:Boolean(options.cloudcliMonitorId || options.cloudcliBridgeSourceSessionId || options.bridgeCompact),planMode:permissionMode==='plan',permissionMode}) : null;
     const monitor=ws.userId!=null&&sessionId?(await import('@/modules/monitors/index.js')).createCodexMonitorTool({userId:Number(ws.userId),sessionId,monitorId:options.cloudcliMonitorId,permissionMode,readOnly:(Boolean(options.cloudcliBridgeSourceSessionId)&&!options.cloudcliBridgeUserAuthorization)||permissionMode==='plan',authorization:options.cloudcliBridgeUserAuthorization}):null;
+    const superagentTools=options.cloudcliSuperagent?(await import('@/modules/superagent/index.js')).createSuperagentProviderTools(options.cloudcliSuperagent):[];
     const events: AsyncIterable<AnyRecord> = process.env.CLAUDEX_CODEX_TRANSPORT === 'exec' && !/^\/compact(?:\s|$)/.test(command.trim())
       ? (await thread.runStreamed(turnInput, { signal: abortController.signal })).events as AsyncIterable<AnyRecord>
       : runCodexAppServerTurn({
@@ -378,7 +379,7 @@ async function queryCodex(
         approvalPolicy: approvalPolicy || 'on-request',
         effort: resolvedEffort,
         planMode: permissionMode === 'plan',
-        dynamicTools: [bridge?.specification,monitor?.specification].filter(Boolean) as any,
+        dynamicTools: [bridge?.specification,monitor?.specification,...superagentTools.map(entry=>entry.specification)].filter(Boolean) as any,
         monitorSlim:Boolean(options.monitorSlim),
         monitorReportContext:typeof options.cloudcliMonitorReportContext==='string'?options.cloudcliMonitorReportContext:undefined,
         onRequest: (message, reply) => {
@@ -387,6 +388,8 @@ async function queryCodex(
             return true;
           }
           if(monitor&&message.method==='item/tool/call'&&message.params?.tool==='cloudcli_monitor'){void monitor.execute(message.params.arguments).then(result=>reply({success:true,contentItems:[{type:'inputText',text:JSON.stringify(result)}]}),error=>reply({success:false,contentItems:[{type:'inputText',text:String(error.message||error)}]}));return true;}
+          const superagentTool=message.method==='item/tool/call'?superagentTools.find(entry=>entry.name===message.params?.tool):undefined;
+          if(superagentTool){void superagentTool.execute(message.params.arguments).then(result=>reply({success:true,contentItems:[{type:'inputText',text:JSON.stringify(result)}]}),error=>reply({success:false,contentItems:[{type:'inputText',text:String(error.message||error)}]}));return true;}
           return permissions.request(sessionKey() || '', message, ws, reply);
         },
         onRequestResolved: id => permissions.cancel(sessionKey() || '', id),

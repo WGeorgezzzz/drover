@@ -1,0 +1,7 @@
+{
+  "repository": "deepseek-ai/dsh-superagent-prototype",
+  "commit": "6337fc823ce20251c8de8085948165c81aaa701e",
+  "license": "MIT",
+  "core": "unmodified domain semantics",
+  "tests": "core-engine.spec.ts: import paths only"
+}

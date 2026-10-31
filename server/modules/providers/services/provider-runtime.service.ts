@@ -119,6 +119,7 @@ export function createProviderRuntimeService(
       const value=Reflect.get(target,property,target);return typeof value==='function'?value.bind(target):value;
     }}):writer;
     const execute = async () => {
+      if(providerName==='claude'&&options.cloudcliSuperagent)context.createQuery=(await import('@/modules/superagent/index.js')).createSuperagentQuery(options.cloudcliSuperagent,context.createQuery);
       agentDiscoveryService.assertEnabled(providerName);
       if (providerName === 'claude' && process.env.NEXAGENT_PROVIDER_WORKER === '1' && process.platform === 'win32') {
         const { spawn } = await import('node:child_process');
