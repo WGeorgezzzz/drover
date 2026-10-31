@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-31T19:58:29.588Z",
+  "updatedAt": "2026-10-31T20:03:31.173Z",
   "port": 3014,
   "passed": 5,
   "required": 6,
@@ -110,40 +110,80 @@
     "checks": [
       {
         "name": "typecheck-client",
-        "startedAt": "2026-10-31T19:44:44.525Z",
-        "endedAt": "2026-10-31T19:45:17.624Z",
+        "startedAt": "2026-10-31T19:59:24.835Z",
+        "endedAt": "2026-10-31T19:59:58.999Z",
         "exitCode": 0,
         "error": null
       },
       {
         "name": "typecheck-server",
-        "startedAt": "2026-10-31T19:45:17.628Z",
-        "endedAt": "2026-10-31T19:45:29.938Z",
+        "startedAt": "2026-10-31T19:59:59.002Z",
+        "endedAt": "2026-10-31T20:00:15.959Z",
         "exitCode": 0,
         "error": null
       },
       {
         "name": "lint",
-        "startedAt": "2026-10-31T19:45:29.939Z",
-        "endedAt": "2026-10-31T19:45:55.851Z",
-        "exitCode": 0,
+        "startedAt": "2026-10-31T20:00:15.960Z",
+        "endedAt": "2026-10-31T20:00:44.462Z",
+        "exitCode": 1,
         "error": null
       },
       {
         "name": "build-client",
-        "startedAt": "2026-10-31T19:45:55.853Z",
-        "endedAt": "2026-10-31T19:46:35.243Z",
+        "startedAt": "2026-10-31T20:00:44.463Z",
+        "endedAt": "2026-10-31T20:01:28.518Z",
         "exitCode": 0,
         "error": null
       },
       {
         "name": "tests",
-        "startedAt": "2026-10-31T19:46:35.243Z",
-        "endedAt": "2026-10-31T19:46:41.194Z",
+        "startedAt": "2026-10-31T20:01:28.519Z",
+        "endedAt": "2026-10-31T20:01:43.580Z",
         "exitCode": 0,
         "error": null
       }
-    ]
+    ],
+    "ownedLint": {
+      "at": "2026-10-31T20:02:42.062Z",
+      "exitCode": 0,
+      "files": 59,
+      "inheritedErrors": [
+        "src/shared/ui/DownloadButton.tsx:3:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+        "src/modules/code-editor/hooks/useCodeEditorDocument.ts:1:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+        "src/modules/chat/transcript/LocalFileLink.tsx:1:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+        "src/modules/chat/transcript/ChatMessageFiles.tsx:4:36: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+        "src/modules/file-tree/hooks/useFileTreeOperations.ts:3:30: error boundaries(no-unknown): Dependencies to unknown elements are not allowed",
+        "server/modules/assets/assets.routes.ts:1:31: error boundaries(dependencies): Cross-module imports must go through that module's barrel file (server/modules/<module>/index.ts or index.js)."
+      ],
+      "inheritedFilesEqualOriginMain": true,
+      "inheritedFileChecks": [
+        {
+          "file": "src/shared/ui/DownloadButton.tsx",
+          "identicalToOriginMain": true
+        },
+        {
+          "file": "src/modules/code-editor/hooks/useCodeEditorDocument.ts",
+          "identicalToOriginMain": true
+        },
+        {
+          "file": "src/modules/chat/transcript/LocalFileLink.tsx",
+          "identicalToOriginMain": true
+        },
+        {
+          "file": "src/modules/chat/transcript/ChatMessageFiles.tsx",
+          "identicalToOriginMain": true
+        },
+        {
+          "file": "src/modules/file-tree/hooks/useFileTreeOperations.ts",
+          "identicalToOriginMain": true
+        },
+        {
+          "file": "server/modules/assets/assets.routes.ts",
+          "identicalToOriginMain": true
+        }
+      ]
+    }
   },
   "browserErrors": [],
   "artifacts": {

@@ -50,3 +50,11 @@
 - 修复 conhost stdio=ignore 无声不执行、订阅线程准入绕过、master 误建监测/会话、session 归属与资源读取等实测问题。内核 15 文件保持 LF 归一化后相同。
 - 最终检查：253/253 测试，前后端 typecheck、lint、客户端构建退出码均为 0；六张 headless 截图、浏览器异常 0。证据 evidence/acceptance.json。
 - 下一步 fetch/合入 main，按官方守卫仅 stage release；3014 最终构建已更新，3001 未激活。
+
+
+## 2026-10-31T20:03:31.173Z — 步骤 6a：fetch/合并 main，合并后验证
+
+- 已 fetch 并合入 main 的 quota、手机原生下载、部署 hot-journal 修复三项新提交（至 de28d277），无冲突，保留全部上游功能。
+- 合并后前后端 typecheck、客户端 build、253/253 相关测试通过。本任务 59 个变更文件 lint 退出 0。
+- 合并后的全 src/server lint 退出 1，共 6 条 error，全部来自刚合入的下载功能，6 个文件均逐字等于 origin/main；不是题述旧四个测试失败，不将它们算作通过，不在本任务修改无关代码。见 lint-owned-result.json。
+- 准备推送 main 并从干净的当前 origin/main 调官方 stage-release；仅暂存，不激活。微信仍为唯一未跑通的真实 E2E，外部登录阻塞保留。
