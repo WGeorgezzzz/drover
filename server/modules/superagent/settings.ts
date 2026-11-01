@@ -6,6 +6,10 @@ import type { SuperagentStore } from './store.js';
 const source = z.object({ enabled:z.boolean().default(false), allow:z.array(z.string().min(1)).default([]), conversations:z.array(z.string()).default([]) }).strict();
 export const superagentSettingsSchema=z.object({
   enabled:z.boolean().default(false), paused:z.boolean().default(false), mode:z.enum(['off','observe','auto']).default('observe'),
+  // A posture beside `mode`: evaluation, sources and delivery run normally, but each launch waits for a person to confirm it.
+  // Unlike `paused`, which also freezes sources, evaluation and delivery, this holds only the hand-off to an executor, so
+  // work queues up for review instead of being lost.
+  requireApproval:z.boolean().default(false),
   workers:z.number().int().min(1).max(32).default(4), workerProvider:z.enum(['codex','claude','deepseek-harness']).default('codex'),
   workerModel:z.string().min(1).default('gpt-6.1-sol'), effort:z.string().default('high'), assessorModel:z.string().min(1).default('gpt-6-luna'),
   repositories:z.record(z.string(),z.object({path:z.string().min(1),baseBranch:z.string().optional()}).strict()).default({}),

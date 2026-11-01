@@ -69,6 +69,9 @@ export class SuperagentRuntime {
         const ticket=this.store.tickets.get(ticketId),assignment=ticket&&latestAssignment(ticket);
         if(!ticket||!assignment||ticket.ended||assignment.id!==effect.payload.assignmentId||assignment.state==='ended'){this.store.complete(effect.position);continue;}
         if(this.active.has(ticketId))continue;
+        // Under `requireApproval` a launch parks here until a person confirms this very Assignment: sources, evaluation
+        // and outbound delivery keep running, so work queues up for review instead of being frozen as `paused` freezes it.
+        if(this.held(assignment.id))continue;
         this.track(this.launch(ticketId,assignment.id,effect.position).catch(error=>this.store.fail(effect.position,error))); 
       }else if((effect.kind==='eval'||effect.kind==='relay')&&!this.masterBusy&&!this.settings.policy().paused) {
         this.masterBusy=true;
@@ -102,7 +105,30 @@ export class SuperagentRuntime {
   }
   ticketForSession(sessionId:string):string|undefined {const active=[...this.active].find(([,value])=>value.sessionId===sessionId)?.[0];if(active)return active;return this.store.tickets.open().find(ticket=>{const assignment=latestAssignment(ticket);return assignment?.state==='running'&&this.store.get('worker-session:'+assignment.id)===sessionId;})?.id;}
   configureExecutor(ticketId:string,input:unknown){const ticket=this.store.tickets.get(ticketId);if(!ticket)throw new Error('Ticket not found');if(this.active.has(ticketId))throw new Error('Stop or wait for the current turn first');const value=z.object({provider:z.enum(['codex','claude','deepseek-harness']),model:z.string().min(1),effort:z.string().default('high')}).strict().parse(input);this.store.set('executor:'+ticketId,value);return value;}
-  snapshot() {return {prompts:{orchestrator:this.prompts.read('orchestrator'),worker:this.prompts.read('worker')},sources:this.sources.snapshot(),settings:this.settings.current(),revision:this.settings.revision(),tickets:this.store.tickets.list().map(ticket=>({...ticket,stage:ticketStage(ticket),executor:this.store.get('executor:'+ticket.id)})),threads:this.store.threads.list(),decisions:this.store.list('decision'),outbox:this.store.outbox(),effects:this.store.effects(),active:[...this.active.keys()]};}
+  /**
+   * Confirm or refuse the hand-off of a ticket's current Assignment to an executor, which `requireApproval` holds back.
+   * Approving records the Assignment itself, so a later Assignment of the same ticket asks again; the pending launch effect
+   * then leaves on the next pass. Refusing ends the ticket instead of running it, and leaves the Trigger undelivered.
+   * Consumed by the admin routes in `superagent.module.ts` and by the ticket panel.
+   */
+  decideApproval(ticketId:string,approve:boolean){
+    const ticket=this.store.tickets.get(ticketId);if(!ticket)throw new Error('Ticket not found');
+    if(ticket.ended)throw new Error('Ticket already ended');
+    const assignment=latestAssignment(ticket);if(!assignment||assignment.state!=='pending')throw new Error('No launch is waiting for approval');
+    if(approve){this.store.set('approved:'+assignment.id,true);this.pass();return {ticketId,assignmentId:assignment.id,approved:true};}
+    this.store.set('approved:'+assignment.id,false);
+    this.engine.stopTicket(ticketId);
+    return {ticketId,assignmentId:assignment.id,approved:false};
+  }
+  /**
+   * Whether this Assignment's hand-off is held back: only `requireApproval` holds it, and only until a person answers.
+   * An approved Assignment reads `true`; a refused one ends its ticket, so it never reaches this list again.
+   * Consumed by the launch branch of {@link pass} and by {@link pendingApprovals}.
+   */
+  private held(assignmentId:string):boolean {return this.settings.current().requireApproval&&this.store.get<boolean>('approved:'+assignmentId)!==true;}
+  /** Tickets whose current Assignment waits on `requireApproval`, as the panel lists them for a person. */
+  pendingApprovals(){return this.store.tickets.open().flatMap(ticket=>{const assignment=latestAssignment(ticket);return assignment?.state==='pending'&&this.held(assignment.id)?[{ticketId:ticket.id,title:ticket.title,assignmentId:assignment.id,scope:ticket.mandate.scope,createdAt:assignment.createdAt}]:[];});}
+  snapshot() {return {prompts:{orchestrator:this.prompts.read('orchestrator'),worker:this.prompts.read('worker')},sources:this.sources.snapshot(),settings:this.settings.current(),revision:this.settings.revision(),pendingApprovals:this.pendingApprovals(),tickets:this.store.tickets.list().map(ticket=>({...ticket,stage:ticketStage(ticket),executor:this.store.get('executor:'+ticket.id)})),threads:this.store.threads.list(),decisions:this.store.list('decision'),outbox:this.store.outbox(),effects:this.store.effects(),active:[...this.active.keys()]};}
   mcpTools(token:string){const capability=this.capabilities.get(token);if(!capability)throw new Error('Expired capability');return createSuperagentProviderTools({endpoint:this.endpoint,token,role:capability.role});}
   async tool(token:string,name:string,input:unknown):Promise<unknown> {
     const capability=this.capabilities.get(token);if(!capability)throw new Error('Expired capability');
