@@ -76,6 +76,11 @@ export const infohubLifecycle=createInfohubLifecycle({
   },
   reconcile:syncInfohubTasks,
   isBusy:()=>pending.size>0,
+  isRemoteBusy:async()=>{
+    const status=async(endpoint:string)=>{try{return z.object({running:z.boolean()}).parse(await readProgress(endpoint));}catch(error){if((error as {statusCode?:number}).statusCode===404)return {running:false};throw error;}};
+    const jobs=await Promise.all([status('/api/collect/status'),status('/api/organize/status')]);
+    return jobs.some(job=>job.running);
+  },
 });
 
 /** One serial HTTP reconciliation per account; task rendering never waits for this connection. */

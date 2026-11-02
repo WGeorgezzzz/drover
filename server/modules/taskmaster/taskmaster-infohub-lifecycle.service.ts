@@ -8,11 +8,12 @@ type OrganizationProgress={running?:boolean;processed?:number;total?:number;rema
 /** Info-hub sync composition and isolated tests use an explicitly requested, single-flight lifecycle. */
 export function createInfohubLifecycle(deps: {
   probe: () => Promise<unknown>;
-  launch: () => Promise<{ pid: number; stop: () => Promise<void> }>;
+  launch: () => Promise<{ pid: number; stop: () => Promise<void>; hasExited?:()=>Promise<boolean> }>;
   collect: () => Promise<unknown>;
   organize?: (report:(progress:OrganizationProgress)=>void) => Promise<OrganizationProgress>;
   reconcile: (user: number) => Promise<{ online: boolean; error: string | null }>;
   isBusy?: () => boolean;
+  isRemoteBusy?: () => Promise<boolean>;
   now?: () => number;
 }) {
   const now = deps.now || Date.now;
@@ -40,6 +41,13 @@ export function createInfohubLifecycle(deps: {
       return; // Never interrupt a collection or a reconciliation write.
     }
     clearTimeout(idleTimer);
+    if(owned?.hasExited&&await owned.hasExited()){
+      owned=undefined;state={...state,phase:'error',running:false,owned:false,pid:null,idleDeadline:null,error:'信息看板进程已退出；未完成作业已保留'};return;
+    }
+    if(owned&&deps.isRemoteBusy){
+      let busy=true;try{busy=await deps.isRemoteBusy();}catch{/* An uncertain worker must not be interrupted by idle cleanup. */}
+      if(busy){state.lastActivityAt=new Date(now()).toISOString();arm();return;}
+    }
     if (owned) await owned.stop(); // The launcher signals only its own interpreter, never a PID tree.
     owned = undefined;
     state = { ...state, phase: 'stopped', running: false, owned: false, pid: null, idleDeadline: null };
@@ -60,6 +68,7 @@ export function createInfohubLifecycle(deps: {
           catch (cause) {
             if ((cause as {statusCode?:number;name?:string}).statusCode || (cause as Error).name==='TimeoutError') throw cause;
             // An earlier owned interpreter may still be alive after an API failure; never launch a duplicate.
+            if(owned?.hasExited&&await owned.hasExited())owned=undefined;
             if (owned) throw Error('信息看板进程尚未退出但 API 不可用，请等待空闲退出后重试');
             owned = await deps.launch();
             state.owned = true; state.pid = owned.pid;
@@ -124,7 +133,10 @@ export async function launchInfohubProcess() {
     if (launchError) throw launchError;
     try {
       const pid = Number(await readFile(pidFile, 'utf8'));
-      if (Number.isInteger(pid) && pid > 0) return { pid, stop: async () => {
+      if (Number.isInteger(pid) && pid > 0) return { pid, hasExited:async()=>{
+        try{await readFile(exitFile);return true;}catch{/* A live interpreter has no exit receipt. */}
+        try{process.kill(pid,0);return false;}catch(error){return (error as NodeJS.ErrnoException).code==='ESRCH';}
+      }, stop: async () => {
         await writeFile(stopFile, 'stop');
         for (let check = 0; check < 50; check++) {
           try { await readFile(exitFile); child.stdin?.destroy();return; } catch { await new Promise(resolve => setTimeout(resolve, 100)); }

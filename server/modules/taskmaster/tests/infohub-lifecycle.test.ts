@@ -81,3 +81,16 @@ test('the headless InfoHub child receives its existing relay credential without 
   assert.equal(JSON.parse(await readFile(ready,'utf8')).injected,true);assert.equal(process.env.INFOHUB_RELAY_KEY,undefined);
  }finally{if(owned)await owned.stop();for(const[key,value]of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
 });
+
+test('idle cleanup protects work started from the InfoHub webpage',async t=>{
+ t.mock.timers.enable({apis:['setTimeout','Date'],now:100000});let online=false,remoteBusy=true,stops=0;
+ const lifecycle=createInfohubLifecycle({probe:async()=>{if(!online)throw Error('offline');},launch:async()=>{online=true;return {pid:123,stop:async()=>{stops++;}};},collect:async()=>({}),reconcile:async()=>({online:true,error:null}),isRemoteBusy:async()=>remoteBusy});
+ lifecycle.configure(1);lifecycle.start(1);await lifecycle.settled();t.mock.timers.tick(60000);await new Promise(resolve=>setImmediate(resolve));assert.equal(stops,0);
+ remoteBusy=false;t.mock.timers.tick(60000);await new Promise(resolve=>setImmediate(resolve));assert.equal(stops,1);
+});
+
+test('an exited owned interpreter can be restarted without launching beside a live one',async()=>{
+ let online=false,dead=false,launches=0;
+ const lifecycle=createInfohubLifecycle({probe:async()=>{if(!online)throw Error('offline');},launch:async()=>{launches++;online=true;dead=false;return {pid:launches,hasExited:async()=>dead,stop:async()=>{online=false;dead=true;}};},collect:async()=>({}),reconcile:async()=>({online:true,error:null})});
+ lifecycle.start(1);await lifecycle.settled();online=false;dead=true;lifecycle.start(1);await lifecycle.settled();assert.equal(launches,2);assert.equal(lifecycle.snapshot().phase,'idle');await lifecycle.stop();
+});
