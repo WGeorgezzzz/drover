@@ -3,12 +3,14 @@ import { mkdtemp, readFile, writeFile, open } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
+type OrganizationProgress={running?:boolean;processed?:number;total?:number;remaining?:number|null;error?:string|null;reason?:string|null};
+
 /** Info-hub sync composition and isolated tests use an explicitly requested, single-flight lifecycle. */
 export function createInfohubLifecycle(deps: {
   probe: () => Promise<unknown>;
   launch: () => Promise<{ pid: number; stop: () => Promise<void> }>;
   collect: () => Promise<unknown>;
-  organize?: () => Promise<{ remaining?: number | null; error?: string | null; reason?: string | null }>;
+  organize?: (report:(progress:OrganizationProgress)=>void) => Promise<OrganizationProgress>;
   reconcile: (user: number) => Promise<{ online: boolean; error: string | null }>;
   isBusy?: () => boolean;
   now?: () => number;
@@ -21,7 +23,7 @@ export function createInfohubLifecycle(deps: {
   let state = { phase: 'stopped', running: false, owned: false, pid: null as number | null,
     startedAt: null as string | null, lastActivityAt: null as string | null,
     idleDeadline: null as string | null, error: null as string | null,
-    organization: null as { remaining?: number | null; error?: string | null; reason?: string | null } | null,
+    organization: null as OrganizationProgress | null,
     progress: { completed: 0, total: deps.organize ? 4 : 3 } };
   const arm = () => {
     clearTimeout(idleTimer);
@@ -75,7 +77,7 @@ export function createInfohubLifecycle(deps: {
             const collected = await deps.reconcile(user);
             if (!collected.online) throw Error(collected.error || '任务同步失败');
             state.phase = 'organizing'; state.progress.completed = 2;
-            state.organization = await deps.organize();
+            state.organization = await deps.organize(progress=>{state.organization={...progress};});
           }
           state.phase = 'syncing'; state.progress.completed = deps.organize ? 3 : 2;
           const result = await deps.reconcile(user);

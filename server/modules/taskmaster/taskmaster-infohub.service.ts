@@ -42,10 +42,11 @@ export const infohubLifecycle=createInfohubLifecycle({
   probe:()=>infohubRequest('/api/health',undefined,1500),
   launch:launchInfohubProcess,
   collect:()=>infohubRequest('/api/poll',{},180000),
-  organize:async()=>{
+  organize:async report=>{
     try {
       let state=await infohubRequest('/api/organize',{},10000) as {running:boolean;remaining?:number|null;error?:string|null;reason?:string|null};
-      while(state.running){await new Promise(resolve=>setTimeout(resolve,2000));state=await infohubRequest('/api/organize/status',undefined,10000) as typeof state;}
+      report(state);
+      while(state.running){await new Promise(resolve=>setTimeout(resolve,2000));state=await infohubRequest('/api/organize/status',undefined,10000) as typeof state;report(state);}
       return state;
     } catch(error) {return {error:error instanceof Error?error.message:String(error)};}
   },

@@ -3,7 +3,7 @@ import { AlertCircle, ChevronDown, Loader2, Play } from 'lucide-react';
 import { inboxTasksApi } from '@/shared/api';
 
 type Source = { id:string; name:string; status:string; count:number; taskCount:number; lastSyncedAt:string|null; error:string|null; note?:string; lastObservedAt?:string|null };
-type Sources = { sources:Source[]; infohub:{phase:string; running:boolean; online:boolean; error:string|null; idleMinutes:number; idleDeadline:string|null; organization?:{remaining?:number|null;reason?:string|null;error?:string|null}|null; progress:{completed:number;total:number}} };
+type Sources = { sources:Source[]; infohub:{phase:string; running:boolean; online:boolean; error:string|null; idleMinutes:number; idleDeadline:string|null; organization?:{processed?:number;total?:number;remaining?:number|null;reason?:string|null;error?:string|null}|null; progress:{completed:number;total:number}} };
 const phaseNames:Record<string,string>={starting:'正在启动',collecting:'增量读取消息',organizing:'整理主题与待办',syncing:'同步到任务',idle:'运行中',error:'同步失败',stopped:'未运行'};
 async function read<T>(response:Response):Promise<T>{const result=await response.json();if(!response.ok)throw Error(result.message||result.error?.message||'来源请求失败');return result;}
 
@@ -32,7 +32,7 @@ export function TaskSourcesBar({onSynced,showSettings=false}:{onSynced:()=>void;
         <span aria-hidden className={'h-1.5 w-1.5 rounded-full '+(failed?'bg-destructive':offline?'bg-slate-400':'bg-emerald-500')}/><span>{source.name}</span><span className="tabular-nums text-muted-foreground">{source.count}</span>{source.id==='infohub'&&<span className="text-muted-foreground">{data.infohub.online?(phaseNames[data.infohub.phase]||'运行中'):'未运行'}</span>}<ChevronDown size={10}/>
       </button>;})}
       </div>
-      <button disabled={submitting||busy} onClick={()=>void start()} className="flex min-h-8 shrink-0 items-center gap-1 rounded-md border bg-background px-2 text-xs disabled:opacity-60">{busy||submitting?<Loader2 size={12} className="animate-spin"/>:<Play size={12}/>} {busy?`${phaseNames[data!.infohub.phase]} ${data!.infohub.progress.completed}/${data!.infohub.progress.total}`:'启动并同步'}</button>
+      <button disabled={submitting||busy} onClick={()=>void start()} className="flex min-h-8 shrink-0 items-center gap-1 rounded-md border bg-background px-2 text-xs disabled:opacity-60">{busy||submitting?<Loader2 size={12} className="animate-spin"/>:<Play size={12}/>} {busy?`${phaseNames[data!.infohub.phase]} ${data!.infohub.phase==='organizing'&&data!.infohub.organization?.total?`${data!.infohub.organization.processed||0}/${data!.infohub.organization.total}`:`${data!.infohub.progress.completed}/${data!.infohub.progress.total}`}`:'启动并同步'}</button>
     </div>
     {(error||data?.infohub.error)&&<p role="alert" className="mt-1 flex items-start gap-1 text-xs text-destructive"><AlertCircle size={12} className="mt-0.5 shrink-0"/>{error||data?.infohub.error}</p>}
     {!busy&&!!data?.infohub.organization?.remaining&&<p className="mt-1 text-xs text-muted-foreground">InfoHub 仍有 {data.infohub.organization.remaining} 个待整理作业{data.infohub.organization.reason?' · '+data.infohub.organization.reason:''}；当前已完成的整理结果已同步。</p>}

@@ -53,3 +53,11 @@ test('organization progress prevents duplicate starts and exposes remaining work
  render(<TaskSourcesBar onSynced={()=>{}}/>);
  expect(await screen.findByText(/InfoHub 仍有 8 个待整理作业/)).toBeTruthy();expect(mock.start).not.toHaveBeenCalled();
 });
+
+
+test('a running organizer shows its actual job progress',async()=>{
+ const data={...snapshot('organizing'),infohub:{...snapshot('organizing').infohub,organization:{processed:120,total:297,remaining:177},progress:{completed:2,total:4}}};
+ mock.sources.mockImplementation(async()=>new Response(JSON.stringify(data)));
+ render(<TaskSourcesBar onSynced={()=>{}}/>);
+ expect((await screen.findByRole('button',{name:'整理主题与待办 120/297'})).hasAttribute('disabled')).toBe(true);
+});

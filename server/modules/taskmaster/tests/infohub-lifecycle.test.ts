@@ -63,8 +63,8 @@ test('real headless launcher executes a private script and stops only its own Py
 test('organization remains single flight and partial results reconcile before surfacing the model error',async()=>{
  const order:string[]=[];let release!:(value:{remaining:number;error:string})=>void;
  const organization=new Promise<{remaining:number;error:string}>(resolve=>{release=resolve;});
- const lifecycle=createInfohubLifecycle({probe:async()=>({}),launch:async()=>{throw Error('No duplicate launch');},collect:async()=>{order.push('collect');},organize:async()=>{order.push('organize');return organization;},reconcile:async()=>{order.push('sync');return {online:true,error:null};}});
- lifecycle.start(1);for(let i=0;i<8;i++)await Promise.resolve();assert.equal(lifecycle.snapshot().phase,'organizing');lifecycle.start(1);assert.deepEqual(order,['collect','sync','organize']);
+ const lifecycle=createInfohubLifecycle({probe:async()=>({}),launch:async()=>{throw Error('No duplicate launch');},collect:async()=>{order.push('collect');},organize:async report=>{order.push('organize');report({running:true,processed:2,total:5,remaining:3});return organization;},reconcile:async()=>{order.push('sync');return {online:true,error:null};}});
+ lifecycle.start(1);for(let i=0;i<8;i++)await Promise.resolve();assert.equal(lifecycle.snapshot().phase,'organizing');assert.equal(lifecycle.snapshot().organization?.processed,2);lifecycle.start(1);assert.deepEqual(order,['collect','sync','organize']);
  release({remaining:3,error:'model unavailable'});await lifecycle.settled();assert.deepEqual(order,['collect','sync','organize','sync']);assert.equal(lifecycle.snapshot().organization?.remaining,3);assert.equal(lifecycle.snapshot().phase,'error');assert.equal(lifecycle.snapshot().error,'model unavailable');
 });
 
