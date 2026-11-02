@@ -44,7 +44,7 @@ function save(user:number,state:State){const file=stateFile(user);mkdirSync(path
 async function rows():Promise<Row[]>{const value=await taskmasterInboxService.global();return value.projects.flatMap(project=>project.tasks.filter(task=>task.mergedInto===undefined).map(task=>({id:project.projectId+':'+task.id,projectId:project.projectId,sourceProject:project.name||undefined,testSource:/copy-|production-.*project|\[测试\]|workspace-\d+|[\\/]nexagent-integrate[^\\/]*(?:$|[\\/].*-project)/i.test(String(project.name)+' '+('root' in project?project.root:'')),root:('root' in project?project.root:'')||'',project:infohubTaskGrouping(task)?.project||workline(String(project.name||'')+' '+task.title).slice(0,60),evidenceRoot:'originalRoot' in project&&typeof project.originalRoot==='string'?project.originalRoot:('root' in project?project.root:''),task})));}
 /** Source grouping is projected locally; execution/status and explicit user corrections are retained. */
 function applyInfohubClassification(state:State,all:Row[]):boolean {
- const before=JSON.stringify({entries:state.entries,groups:state.groups});
+ let changed=false;
  for(const row of all){
   const source=infohubTaskGrouping(row.task);if(!source)continue;
   const previous=state.entries[row.id];
@@ -53,15 +53,16 @@ function applyInfohubClassification(state:State,all:Row[]):boolean {
   const move=state.constraints.find(c=>c.action==='move'&&c.id===row.id);
   const groupId=move?.target||sourceId;
   let group=state.groups.find(g=>g.id===sourceId);
-  if(!group){group={id:sourceId,name:source.groupName,summary:'沿用 InfoHub 信息单元主题关系',project};state.groups.push(group);}
-  else if(!state.constraints.some(c=>c.action==='rename'&&c.id===sourceId))group.name=source.groupName;
-  state.entries[row.id]={...previous,classificationSource:'infohub',qualityVersion:3,hash:taskHash(row.task),
+  if(!group){group={id:sourceId,name:source.groupName,summary:'沿用 InfoHub 信息单元主题关系',project};state.groups.push(group);changed=true;}
+  else if(group.name!==source.groupName&&!state.constraints.some(c=>c.action==='rename'&&c.id===sourceId)){group.name=source.groupName;changed=true;}
+  const next:Entry={...previous,classificationSource:'infohub',qualityVersion:3,hash:taskHash(row.task),
    summary:String(row.task.description||row.task.title).slice(0,200),project,kind:row.task.forMe?'todo':'fyi',
    due:typeof row.task.due==='string'&&row.task.due?row.task.due:null,people:previous?.people||[],
    next_action:previous?.next_action||'查看 InfoHub 原始来源并处理',urgency:row.task.priority==='high'?1:row.task.priority==='low'?3:2,
    groupId,group_id:groupId,new_group:undefined,parent:null};
+  if(JSON.stringify(previous)!==JSON.stringify(next)){state.entries[row.id]=next;changed=true;}
  }
- return before!==JSON.stringify({entries:state.entries,groups:state.groups});
+ return changed;
 }
 function violates(item:Pick<Interpretation,'project'|'group_id'|'duplicate_of'|'parent'>,id:string,state:State){return state.constraints.some(c=>c.id===id&&((c.action==='move'&&item.group_id!==c.target)||(c.action==='project'&&item.project!==c.value)||(c.action==='separate'&&(item.duplicate_of===c.target||Boolean(item.parent&&state.entries[c.target||'']?.parent?.key===item.parent.key)))));}
 function constrained(item:Interpretation,id:string,state:State){for(const c of state.constraints.filter(c=>c.id===id)){if(c.action==='move'){item.group_id=c.target;delete item.new_group;}if(c.action==='project')item.project=c.value||item.project;if(c.action==='deny-completion'&&item.completion?.status==='done')item.completion={status:'unknown',confidence:0,evidence:[]};if(c.action==='separate'){if(item.duplicate_of===c.target)item.duplicate_of=null;if(item.parent?.key===state.entries[c.target||'']?.parent?.key)item.parent=null;}}return item;}

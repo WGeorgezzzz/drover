@@ -3,7 +3,7 @@ import { AlertCircle, ChevronDown, Loader2, Play } from 'lucide-react';
 import { inboxTasksApi } from '@/shared/api';
 
 type Source = { id:string; name:string; status:string; count:number; taskCount:number; lastSyncedAt:string|null; error:string|null; note?:string; lastObservedAt?:string|null };
-type Sources = { sources:Source[]; infohub:{phase:string; running:boolean; online:boolean; error:string|null; idleMinutes:number; idleDeadline:string|null; organization?:{processed?:number;total?:number;remaining?:number|null;reason?:string|null;error?:string|null}|null; progress:{completed:number;total:number}} };
+type Sources = { sources:Source[]; infohub:{phase:string; running:boolean; online:boolean; syncError?:string|null; error:string|null; idleMinutes:number; idleDeadline:string|null; organization?:{processed?:number;total?:number;remaining?:number|null;reason?:string|null;error?:string|null}|null; progress:{completed:number;total:number}} };
 const phaseNames:Record<string,string>={starting:'正在启动',collecting:'增量读取消息',organizing:'整理主题与待办',syncing:'同步到任务',idle:'运行中',error:'同步失败',stopped:'未运行'};
 async function read<T>(response:Response):Promise<T>{const result=await response.json();if(!response.ok)throw Error(result.message||result.error?.message||'来源请求失败');return result;}
 
@@ -34,7 +34,7 @@ export function TaskSourcesBar({onSynced,showSettings=false}:{onSynced:()=>void;
       </div>
       <button disabled={submitting||busy} onClick={()=>void start()} className="flex min-h-8 shrink-0 items-center gap-1 rounded-md border bg-background px-2 text-xs disabled:opacity-60">{busy||submitting?<Loader2 size={12} className="animate-spin"/>:<Play size={12}/>} {busy?`${phaseNames[data!.infohub.phase]} ${data!.infohub.phase==='organizing'&&data!.infohub.organization?.total?`${data!.infohub.organization.processed||0}/${data!.infohub.organization.total}`:`${data!.infohub.progress.completed}/${data!.infohub.progress.total}`}`:'启动并同步'}</button>
     </div>
-    {(error||data?.infohub.error)&&<p role="alert" className="mt-1 flex items-start gap-1 text-xs text-destructive"><AlertCircle size={12} className="mt-0.5 shrink-0"/>{error||data?.infohub.error}</p>}
+    {(error||data?.infohub.error||data?.infohub.syncError)&&<p role="alert" className="mt-1 flex items-start gap-1 text-xs text-destructive"><AlertCircle size={12} className="mt-0.5 shrink-0"/>{error||data?.infohub.error||data?.infohub.syncError}</p>}
     {!busy&&!!data?.infohub.organization?.remaining&&<p className="mt-1 text-xs text-muted-foreground">InfoHub 仍有 {data.infohub.organization.remaining} 个待整理作业{data.infohub.organization.reason?' · '+data.infohub.organization.reason:''}；当前已完成的整理结果已同步。</p>}
     {chosen&&<div className="mt-2 space-y-1 rounded-md border bg-background p-3 text-xs" role="region" aria-label={chosen.name+'来源详情'}>
       <p className="font-medium">{chosen.name} · {chosen.count} 条来源记录 · {chosen.taskCount} 条关联任务</p>

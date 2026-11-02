@@ -61,3 +61,10 @@ test('a running organizer shows its actual job progress',async()=>{
  render(<TaskSourcesBar onSynced={()=>{}}/>);
  expect((await screen.findByRole('button',{name:'整理主题与待办 120/297'})).hasAttribute('disabled')).toBe(true);
 });
+
+
+test('a writeback conflict remains visible even while the source is online',async()=>{
+ const data={...snapshot('idle'),infohub:{...snapshot('idle').infohub,syncError:'来源同期变化，请核对'}};
+ mock.sources.mockImplementation(async()=>new Response(JSON.stringify(data)));render(<TaskSourcesBar onSynced={()=>{}}/>);
+ expect((await screen.findByRole('alert')).textContent).toContain('来源同期变化，请核对');
+});

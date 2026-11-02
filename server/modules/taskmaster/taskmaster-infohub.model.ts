@@ -1,9 +1,8 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import type { InfohubTaskGrouping, InfohubRecord } from '@/shared/types.js';
+import type { InfohubTaskGrouping, InfohubRecord, InfohubUnit } from '@/shared/types.js';
 import type { TopicUnit } from './taskmaster-units.service.js';
 
-export type InfohubUnit={id:number;title:string;kind:string;status:string;summary?:string;priority?:string;due_at?:number|null;updated_at:number;for_me?:number|boolean;tags?:string[];parents?:{id:number;title:string;kind?:string}[];messages?:{id:number;source:string;channel_name?:string;link?:string;text?:string}[]};
 export const remoteStatus=(status:string)=>status==='done'?'done':status==='cancelled'?'dropped':'open';
 const groupingSchema=z.object({groupId:z.string().min(1),groupName:z.string().min(1),project:z.string().min(1),topics:z.array(z.object({id:z.number(),title:z.string(),depth:z.number().int().positive()}))});
 

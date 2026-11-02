@@ -85,6 +85,9 @@ export function createTaskmasterWorkspaceService(generate: (input: unknown) => P
           let task=data.tasks.find(t=>t.source==='infohub'&&String(t.sourceId)===record.id);
           if(!task&&syncState[record.id]?.fingerprint===record.fingerprint)continue; // An undone import stays undone until its source changes.
           if(!task)task=data.tasks.find(t=>t.source!=='infohub'&&t.mergedInto===undefined&&!t.executionSessionId&&keyOf(t.title)===keyOf(String(record.fields.title))&&(!t.due||!record.fields.due||String(t.due).slice(0,10)===String(record.fields.due).slice(0,10)));
+          // Unchanged source records need no evidence cloning or deduplication. Local status changes still reconcile.
+          const cached=task?.infohub as {fingerprint?:string;fieldsFingerprint?:string;lastSyncedStatus?:string}|undefined;
+          if(task?.source==='infohub'&&cached?.fingerprint===record.fingerprint&&cached.fieldsFingerprint===record.fieldsFingerprint&&task.status===cached.lastSyncedStatus)continue;
           const before=task?structuredClone(task):null;
           if(!task){task={id:Math.max(0,...data.tasks.map(t=>Number(t.id)||0))+1,title:String(record.fields.title),status:record.status,createdAt:now};data.tasks.push(task);}
           else if(task.source!=='infohub')merges.push({unitId:record.id,taskId:task.id,title:task.title});

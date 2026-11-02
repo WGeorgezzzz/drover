@@ -1763,3 +1763,6 @@ export type InfohubRecord = {
   status: string;
   fields: Record<string, unknown>;
 };
+
+/** TaskMaster's HTTP adapter and source projection share the InfoHub unit shape, including the optimistic update token. */
+export type InfohubUnit={id:number;title:string;kind:string;status:string;summary?:string;priority?:string;due_at?:number|null;updated_at:number;revision?:string;for_me?:number|boolean;tags?:string[];parents?:{id:number;title:string;kind?:string}[];messages?:{id:number;source:string;channel_name?:string;link?:string;text?:string}[]};

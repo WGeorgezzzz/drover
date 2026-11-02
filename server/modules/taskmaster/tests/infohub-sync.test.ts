@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createTaskmasterWorkspaceService } from '../taskmaster-workspace.service.js';
 import { infohubRecord,infohubTopics } from '../taskmaster-infohub.model.js';
-import type { InfohubUnit } from '../taskmaster-infohub.model.js';
+import type { InfohubUnit } from '@/shared/types.js';
 
 const unit=(changes:Partial<InfohubUnit>={}):InfohubUnit=>({id:42,kind:'todo',status:'open',title:'同步验收任务',summary:'摘要',updated_at:Math.floor(Date.now()/1000)-10,for_me:1,tags:['project:实验','topic:同步'],parents:[{id:7,title:'主题'}],messages:[{id:9,source:'lark',link:'https://example.test/message'}],...changes});
 test('source IDs deduplicate incrementally, merge legacy evidence and remote completion is reversible',async()=>{
