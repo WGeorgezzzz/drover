@@ -13,7 +13,7 @@ import { chatRunRegistry, connectedClients, clientUserIds } from '@/modules/webs
 import { withUserContext } from '@/modules/auth/index.js';
 import { taskmasterAutoService, taskmasterWorkspace } from '../taskmaster-auto.service.js';
 import { sessionsService, providerRuntimeService } from '@/modules/providers/index.js';
-import { createTaskmasterNativeRouter } from '../taskmaster-native.routes.js';
+import { createTaskmasterNativeRouter, feedsSuperagent } from '../taskmaster-native.routes.js';
 
 installAuthorizationFixture();
 test('native HTTP initialization, validation, account/project isolation and junction boundary', async () => {
@@ -117,4 +117,21 @@ test('automatic running sessions skip before reading history and tool evidence r
     return { status: 'unchanged', created: 0, updated: 0, auditId: null };
   });
   await withUserContext(userId, () => taskmasterAutoService.extract('budget-session', false, true));
+});
+
+
+
+test('the Superagent takeover still admits the routes that feed it', () => {
+  // Legacy writes stay refused while Superagent owns execution, but a conversation must still reach it: these two routes
+  // emit Superagent Triggers and return before touching tasks.json. Refusing them too would leave the takeover with no
+  // way in at all, which is exactly how every arrival was being dropped.
+  assert.equal(feedsSuperagent({ method: 'POST', path: '/auto/sessions/abc/extract' }), true);
+  assert.equal(feedsSuperagent({ method: 'POST', path: '/auto/sessions/abc/confirm' }), true);
+  // A legacy write that would edit the task document stays behind the takeover guard.
+  for (const path of ['/auto/settings', '/auto/sessions/abc/undo', '/inbox/import', '/add-task/1', '/init/1']) {
+    assert.equal(feedsSuperagent({ method: 'POST', path }), false, path + ' must still be refused');
+  }
+  // Reading is never a feed, and a lookalike route deeper in the path is not the extraction endpoint.
+  assert.equal(feedsSuperagent({ method: 'GET', path: '/auto/sessions/abc/extract' }), false);
+  assert.equal(feedsSuperagent({ method: 'POST', path: '/auto/sessions/abc/extract/extra' }), false);
 });

@@ -10,10 +10,22 @@ import { taskmasterAutoService, taskmasterWorkspace } from './taskmaster-auto.se
 import { taskIntelligenceService } from './taskmaster-intelligence.service.js';
 import { taskmasterSourcesService } from './taskmaster-sources.service.js';
 
+/**
+ * Whether this request feeds Superagent rather than editing the legacy task document.
+ *
+ * Once Superagent owns execution the task document is read-only, but the two routes that hand a conversation to it must
+ * stay reachable: their service branches emit Superagent Triggers and return before touching `tasks.json`. Refusing
+ * those as well left the takeover with no way in at all, so every arrival was rejected and nothing was ever received.
+ * Exported for the route test that pins this behaviour.
+ */
+export function feedsSuperagent(req: Pick<express.Request, 'method' | 'path'>): boolean {
+  return req.method === 'POST' && /^\/auto\/sessions\/[^/]+\/(extract|confirm)$/.test(req.path);
+}
+
 /** TaskMaster composition mounts these native endpoints ahead of legacy document routes. */
 export function createTaskmasterNativeRouter() {
   const router = express.Router(); router.use(userContextMiddleware);
-  router.use((req,res,next)=>{if(superagentEnabled()&&!['GET','HEAD','OPTIONS'].includes(req.method)){res.status(409).json({error:'SUPERAGENT_OWNS_TASKS'});return;}next();});
+  router.use((req,res,next)=>{if(superagentEnabled()&&!['GET','HEAD','OPTIONS'].includes(req.method)&&!feedsSuperagent(req)){res.status(409).json({error:'SUPERAGENT_OWNS_TASKS'});return;}next();});
   router.param('projectId', authorizeProjectParameter(projectsDb.getProjectPathById));
   router.param('projectId', (req, res, next, id) => authorizePaths(() => {
     const project = projectsDb.getProjectPathById(String(id));
