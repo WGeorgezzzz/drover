@@ -1,10 +1,9 @@
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
-import type { InfohubTaskGrouping } from '@/shared/types.js';
+import type { InfohubTaskGrouping, InfohubRecord } from '@/shared/types.js';
 import type { TopicUnit } from './taskmaster-units.service.js';
 
 export type InfohubUnit={id:number;title:string;kind:string;status:string;summary?:string;priority?:string;due_at?:number|null;updated_at:number;for_me?:number|boolean;tags?:string[];parents?:{id:number;title:string;kind?:string}[];messages?:{id:number;source:string;channel_name?:string;link?:string;text?:string}[]};
-export type InfohubRecord={id:string;updatedAt:number;fingerprint:string;fieldsFingerprint:string;status:string;fields:Record<string,unknown>};
 export const remoteStatus=(status:string)=>status==='done'?'done':status==='cancelled'?'dropped':'open';
 const groupingSchema=z.object({groupId:z.string().min(1),groupName:z.string().min(1),project:z.string().min(1),topics:z.array(z.object({id:z.number(),title:z.string(),depth:z.number().int().positive()}))});
 
@@ -41,8 +40,11 @@ export function infohubRecord(unit:InfohubUnit,graph:InfohubUnit[]=[]):InfohubRe
     due:unit.due_at?new Date(unit.due_at*1000).toISOString():'',priority:unit.priority==='P0'||unit.priority==='P1'?'high':unit.priority==='P3'?'low':'medium',tags,
     parentIds:[...new Set([...(unit.parents||[]).map(p=>'infohub-unit:'+p.id),...tags.filter(t=>t.startsWith('topic:')||t.startsWith('project:'))])],
     evidenceLink:link,forMe:!!unit.for_me,infohubGrouping:sourceGrouping(unit,graph),infohubEvidence:[{unitId:unit.id,link},...(unit.messages||[]).map(m=>({messageId:m.id,source:m.source,channel:m.channel_name,link:m.link||link,evidence:m.text?.slice(0,1500)}))]};
+  // Derived graph metadata must not invalidate an undo of the source's editable fields.
+  const contentFields={...fields} as Record<string,unknown>;delete contentFields.infohubGrouping;
   return {id:String(unit.id),updatedAt:unit.updated_at*1000,status:unit.status==='done'?'done':['dropped','ignored'].includes(unit.status)?'cancelled':'pending',
-    fieldsFingerprint:createHash('sha256').update(JSON.stringify(fields)).digest('hex'),
+    fieldsFingerprint:createHash('sha256').update(JSON.stringify(contentFields)).digest('hex'),
+    legacyFieldsFingerprint:createHash('sha256').update(JSON.stringify(fields)).digest('hex'),
     fingerprint:createHash('sha256').update(JSON.stringify({...fields,status:unit.status,updatedAt:unit.updated_at})).digest('hex'),fields};
 }
 export function infohubTopics(units:InfohubUnit[]):TopicUnit[] {

@@ -70,7 +70,7 @@ export function syncInfohubTasks(userId:number):Promise<SyncStatus> {
       const project=projectsDb.createProjectPath(root,'收件箱待办').project;if(!project)throw Error('无法注册任务项目');
       const existing=(await taskmasterWorkspace.list(root,userId)).tasks;
       const linked=new Map(existing.filter(t=>t.source==='infohub').map(t=>[String(t.sourceId),t]));
-      const all:InfohubUnit[]=[];
+      const all:InfohubUnit[]=[],preserveHistoryStatus=new Set<string>();
       const graphVersion=JSON.stringify(units.map(u=>[u.id,(u as InfohubUnit&{n_children?:number}).n_children||0]).sort((a,b)=>Number(a[0])-Number(b[0])));
       const graphChanged=topology.get(userId)!==graphVersion;
       const load=async(unit:InfohubUnit):Promise<InfohubUnit>=>{
@@ -83,12 +83,20 @@ export function syncInfohubTasks(userId:number):Promise<SyncStatus> {
       for(const unit of selected)all.push(await load(unit));
       // Reconcile already linked records even if they lose their "for me" flag or drop out of the todo view.
       for(const id of linked.keys())if(!all.some(u=>String(u.id)===id)){
-        const listed=units.find(u=>String(u.id)===id);if(listed)all.push(await load(listed));
+        const listed=units.find(u=>String(u.id)===id);
+        if(listed)all.push(await load(listed));
+        else try{
+          // The ordinary units feed omits dropped records. Read only already-linked history, without resurrecting it.
+          const hidden=await infohubRequest('/api/unit/'+encodeURIComponent(id)+'?depth=2') as InfohubUnit;
+          all.push(hidden);
+          if(['done','cancelled'].includes(String(linked.get(id)?.status)))preserveHistoryStatus.add(id);
+        }catch(error){if((error as {statusCode?:number}).statusCode!==404)throw error;}
       }
       const parents:InfohubUnit[]=[];const visited=new Set(all.map(u=>u.id));
       const addParents=async(unit:InfohubUnit,depth=0)=>{if(depth>20)throw Error('信息看板主题层级过深');for(const parent of unit.parents||[]){if(visited.has(parent.id))continue;visited.add(parent.id);const full=await infohubRequest('/api/unit/'+parent.id+'?depth=2') as InfohubUnit;parents.push(full);await addParents(full,depth+1);}};
       for(const unit of all)await addParents(unit);
-      let result=await taskmasterWorkspace.reconcileInfohub(root,userId,all.map(unit=>infohubRecord(unit,[...parents,...all])),infohubTopics([...parents,...all]));
+      const records=()=>all.map(unit=>({...infohubRecord(unit,[...parents,...all]),preserveStatus:preserveHistoryStatus.has(String(unit.id))}));
+      let result=await taskmasterWorkspace.reconcileInfohub(root,userId,records(),infohubTopics([...parents,...all]));
       const merges=[...result.merges];
       for(const write of result.writes){
         const latest=await infohubRequest('/api/unit/'+write.unitId+'?depth=2') as InfohubUnit;
@@ -99,7 +107,7 @@ export function syncInfohubTasks(userId:number):Promise<SyncStatus> {
         details.set(userId+':'+baseUrl().href+':'+confirmed.id,confirmed);
         const index=all.findIndex(u=>u.id===confirmed.id);if(index>=0)all[index]=confirmed;
       }
-      if(result.writes.length)result=await taskmasterWorkspace.reconcileInfohub(root,userId,all.map(unit=>infohubRecord(unit,[...parents,...all])),infohubTopics([...parents,...all]));
+      if(result.writes.length)result=await taskmasterWorkspace.reconcileInfohub(root,userId,records(),infohubTopics([...parents,...all]));
       const next={online:true,lastSyncedAt:new Date().toISOString(),error:null,imported:result.imported,merged:[...previous.merged,...merges],unmatchedLegacy:result.unmatchedLegacy,tags};
       const file=syncMetadataPath(userId);await fs.mkdir(path.dirname(file),{recursive:true});const temporary=file+'.'+randomUUID()+'.tmp';await fs.writeFile(temporary,JSON.stringify({lastSyncedAt:next.lastSyncedAt,imported:next.imported}));await fs.rename(temporary,file);
       topology.set(userId,graphVersion);states.set(userId,next);return next;

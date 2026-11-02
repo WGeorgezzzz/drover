@@ -71,3 +71,19 @@ test('a source refresh cannot reset an active task or reopen a completed source 
  const outcome=await service.reconcileInfohub(root,1,[infohubRecord(next)],infohubTopics([next]));
  const task=(await service.list(root,1)).tasks[0];assert.equal(task.status,'in-progress');assert.equal(task.executionSessionId,'existing-run');assert.equal(task.userInput,'keep my note');assert.equal(outcome.writes.length,0);
 });
+
+test('derived topic enrichment preserves undone source fields and a completed historical status',async()=>{
+ const root=await mkdtemp(path.join(os.tmpdir(),'infohub-history-')),service=createTaskmasterWorkspaceService(async()=>({}));
+ const original=unit({parents:[{id:7,title:'旧主题',kind:'topic'}]}),edited=unit({title:'来源新标题',parents:original.parents});
+ await service.reconcileInfohub(root,1,[infohubRecord(original)],infohubTopics([original]));
+ const receipt=await service.reconcileInfohub(root,1,[infohubRecord(edited)],infohubTopics([edited]));
+ await service.undo(root,1,'global',receipt.auditId!);
+ const parent=unit({id:7,kind:'topic',title:'重命名后的主题',parents:[]});
+ await service.reconcileInfohub(root,1,[infohubRecord(edited,[parent])],infohubTopics([edited,parent]));
+ let task=(await service.list(root,1)).tasks[0];assert.equal(task.title,original.title);assert.equal((task.infohubGrouping as {groupName:string}).groupName,parent.title);
+ await service.changeInboxTask(root,1,String(task.id),async()=>({status:'done',userInput:'保留备注'}));
+ const history={...infohubRecord({...edited,status:'dropped'},[parent]),preserveStatus:true};
+ const result=await service.reconcileInfohub(root,1,[history],infohubTopics([edited,parent]));
+ task=(await service.list(root,1)).tasks[0];assert.equal(task.status,'done');assert.equal(task.userInput,'保留备注');assert.equal(result.writes.length,0);
+ assert.equal((await service.reconcileInfohub(root,1,[history],infohubTopics([edited,parent]))).imported,0);
+});

@@ -7,7 +7,7 @@ import { AppError } from '@/shared/index.js';
 import { recordTaskmasterMetric } from './taskmaster-metrics.service.js';
 import { labelInfoTask, organizeInfoUnits, assertTopicGraph } from './taskmaster-units.service.js';
 import type { TopicUnit } from './taskmaster-units.service.js';
-import type { InfohubRecord } from './taskmaster-infohub.model.js';
+import type { InfohubRecord } from '@/shared/types.js';
 
 const status = z.enum(['pending', 'in-progress', 'done', 'blocked', 'cancelled', 'review', 'deferred']);
 const proposal = z.object({
@@ -94,10 +94,11 @@ export function createTaskmasterWorkspaceService(generate: (input: unknown) => P
           const localWins=changedLocally&&localTime>=record.updatedAt&&(meta.fingerprint===record.fingerprint||localTime>=record.updatedAt+1000);
           // An upstream topic/title refresh must not reset an active execution or reopen its source unit.
           const executing=task.status==='in-progress'||task.executionStatus==='running';
-          const desiredStatus=executing?task.status:localWins?task.status:record.status;
-          if(!executing&&localWins&&(['done','cancelled'].includes(desiredStatus)||['done','cancelled'].includes(record.status))&&desiredStatus!==record.status)writes.push({unitId:record.id,status:desiredStatus,expectedUpdatedAt:record.updatedAt,taskId:task.id});
+          const desiredStatus=executing||record.preserveStatus?task.status:localWins?task.status:record.status;
+          if(!executing&&!record.preserveStatus&&localWins&&(['done','cancelled'].includes(desiredStatus)||['done','cancelled'].includes(record.status))&&desiredStatus!==record.status)writes.push({unitId:record.id,status:desiredStatus,expectedUpdatedAt:record.updatedAt,taskId:task.id});
           const evidence=[...(Array.isArray(task.originEvidence)?task.originEvidence:[]),...(before&&before.source!=='infohub'?[{source:before.source,taskId:before.id,evidence:before.description}]:[]),...(record.fields.infohubEvidence as unknown[])];
-          Object.assign(task,meta.ignoredFieldsFingerprint===record.fieldsFingerprint?{}:record.fields,{status:desiredStatus,originEvidence:[...new Map(evidence.map(e=>[JSON.stringify(e),e])).values()],infohub:{fingerprint:record.fingerprint,fieldsFingerprint:record.fieldsFingerprint,...(meta.ignoredFieldsFingerprint===record.fieldsFingerprint?{ignoredFieldsFingerprint:meta.ignoredFieldsFingerprint}:{}),updatedAt:record.updatedAt,lastSyncedStatus:localWins?meta.lastSyncedStatus:record.status}});
+          const ignoredFields=!!meta.ignoredFieldsFingerprint&&(meta.ignoredFieldsFingerprint===record.fieldsFingerprint||meta.ignoredFieldsFingerprint===record.legacyFieldsFingerprint);
+          Object.assign(task,ignoredFields?(record.fields.infohubGrouping?{infohubGrouping:record.fields.infohubGrouping}:{}):record.fields,{status:desiredStatus,originEvidence:[...new Map(evidence.map(e=>[JSON.stringify(e),e])).values()],infohub:{fingerprint:record.fingerprint,fieldsFingerprint:record.fieldsFingerprint,...(ignoredFields?{ignoredFieldsFingerprint:record.fieldsFingerprint}:{}),updatedAt:record.updatedAt,lastSyncedStatus:record.preserveStatus?desiredStatus:localWins?meta.lastSyncedStatus:record.status}});
           if(!before||JSON.stringify(before)!==JSON.stringify(task)){task.updatedAt=now;audit.changes.push({id:task.id,before,after:structuredClone(task)});}
           syncState[record.id]={taskId:task.id,fingerprint:record.fingerprint};
         }

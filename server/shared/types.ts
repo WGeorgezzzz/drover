@@ -1751,3 +1751,15 @@ export type InfohubTaskGrouping = {
   topics: { id: number; title: string; depth: number }[];
 };
 // ---------------------------
+
+/** TaskMaster's InfoHub adapter passes source fingerprints and optional history preservation to the serialized native workspace writer. Derived graph metadata has a separate compatibility fingerprint so user undos survive enrichment. */
+export type InfohubRecord = {
+  id: string;
+  updatedAt: number;
+  fingerprint: string;
+  fieldsFingerprint: string;
+  legacyFieldsFingerprint?: string;
+  preserveStatus?: boolean;
+  status: string;
+  fields: Record<string, unknown>;
+};
