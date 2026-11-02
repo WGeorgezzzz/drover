@@ -3,8 +3,8 @@ import { AlertCircle, ChevronDown, Loader2, Play } from 'lucide-react';
 import { inboxTasksApi } from '@/shared/api';
 
 type Source = { id:string; name:string; status:string; count:number; taskCount:number; lastSyncedAt:string|null; error:string|null; note?:string; lastObservedAt?:string|null };
-type Sources = { sources:Source[]; infohub:{phase:string; running:boolean; online:boolean; error:string|null; idleMinutes:number; idleDeadline:string|null; progress:{completed:number;total:number}} };
-const phaseNames:Record<string,string>={starting:'正在启动',collecting:'增量读取消息',syncing:'同步到任务',idle:'运行中',error:'同步失败',stopped:'未运行'};
+type Sources = { sources:Source[]; infohub:{phase:string; running:boolean; online:boolean; error:string|null; idleMinutes:number; idleDeadline:string|null; organization?:{remaining?:number|null;reason?:string|null;error?:string|null}|null; progress:{completed:number;total:number}} };
+const phaseNames:Record<string,string>={starting:'正在启动',collecting:'增量读取消息',organizing:'整理主题与待办',syncing:'同步到任务',idle:'运行中',error:'同步失败',stopped:'未运行'};
 async function read<T>(response:Response):Promise<T>{const result=await response.json();if(!response.ok)throw Error(result.message||result.error?.message||'来源请求失败');return result;}
 
 /** IntelligentTasksPanel displays observed source health and explicitly starts the optional message collector. */
@@ -20,7 +20,7 @@ export function TaskSourcesBar({onSynced,showSettings=false}:{onSynced:()=>void;
   const callback=useRef(onSynced);callback.current=onSynced;
   const previousPhase=useRef('');
   const load=useCallback(async()=>{try{const next=await read<Sources>(await inboxTasksApi.sources());setData(next);setError('');if(next.infohub.phase==='idle'&&previousPhase.current!=='idle')callback.current();previousPhase.current=next.infohub.phase;}catch(cause){setError(cause instanceof Error?cause.message:String(cause));}},[]);
-  const busy=!!data&&['starting','collecting','syncing'].includes(data.infohub.phase);
+  const busy=!!data&&['starting','collecting','organizing','syncing'].includes(data.infohub.phase);
   useEffect(()=>{void load();const timer=setInterval(()=>{if(!document.hidden)void load();},busy?2000:30000);return()=>clearInterval(timer);},[load,busy]);
   const start=async()=>{setSubmitting(true);try{await read(await inboxTasksApi.startInfohub());await load();}catch(cause){setError(cause instanceof Error?cause.message:String(cause));}finally{setSubmitting(false);}};
   const chosen=data?.sources.find(source=>source.id===(showSettings?'infohub':selected));
@@ -35,6 +35,7 @@ export function TaskSourcesBar({onSynced,showSettings=false}:{onSynced:()=>void;
       <button disabled={submitting||busy} onClick={()=>void start()} className="flex min-h-8 shrink-0 items-center gap-1 rounded-md border bg-background px-2 text-xs disabled:opacity-60">{busy||submitting?<Loader2 size={12} className="animate-spin"/>:<Play size={12}/>} {busy?`${phaseNames[data!.infohub.phase]} ${data!.infohub.progress.completed}/${data!.infohub.progress.total}`:'启动并同步'}</button>
     </div>
     {(error||data?.infohub.error)&&<p role="alert" className="mt-1 flex items-start gap-1 text-xs text-destructive"><AlertCircle size={12} className="mt-0.5 shrink-0"/>{error||data?.infohub.error}</p>}
+    {!busy&&!!data?.infohub.organization?.remaining&&<p className="mt-1 text-xs text-muted-foreground">InfoHub 仍有 {data.infohub.organization.remaining} 个待整理作业{data.infohub.organization.reason?' · '+data.infohub.organization.reason:''}；当前已完成的整理结果已同步。</p>}
     {chosen&&<div className="mt-2 space-y-1 rounded-md border bg-background p-3 text-xs" role="region" aria-label={chosen.name+'来源详情'}>
       <p className="font-medium">{chosen.name} · {chosen.count} 条来源记录 · {chosen.taskCount} 条关联任务</p>
       <p>最后同步／更新：{chosen.lastSyncedAt?new Date(chosen.lastSyncedAt).toLocaleString('zh-CN'):'尚无记录'}</p>

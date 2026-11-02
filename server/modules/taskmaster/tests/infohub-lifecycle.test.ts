@@ -59,3 +59,25 @@ test('real headless launcher executes a private script and stops only its own Py
     assert.equal(Number(await readFile(ready,'utf8')),owned.pid);await owned.stop();owned=undefined;
   }finally{if(owned)await owned.stop();for(const[key,value]of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
 });
+
+test('organization remains single flight and partial results reconcile before surfacing the model error',async()=>{
+ const order:string[]=[];let release!:(value:{remaining:number;error:string})=>void;
+ const organization=new Promise<{remaining:number;error:string}>(resolve=>{release=resolve;});
+ const lifecycle=createInfohubLifecycle({probe:async()=>({}),launch:async()=>{throw Error('No duplicate launch');},collect:async()=>{order.push('collect');},organize:async()=>{order.push('organize');return organization;},reconcile:async()=>{order.push('sync');return {online:true,error:null};}});
+ lifecycle.start(1);for(let i=0;i<8;i++)await Promise.resolve();assert.equal(lifecycle.snapshot().phase,'organizing');lifecycle.start(1);assert.deepEqual(order,['collect','sync','organize']);
+ release({remaining:3,error:'model unavailable'});await lifecycle.settled();assert.deepEqual(order,['collect','sync','organize','sync']);assert.equal(lifecycle.snapshot().organization?.remaining,3);assert.equal(lifecycle.snapshot().phase,'error');assert.equal(lifecycle.snapshot().error,'model unavailable');
+});
+
+test('the headless InfoHub child receives its existing relay credential without changing the parent environment',async()=>{
+ const python='D:/embodied/info-hub/.venv/Scripts/python.exe';
+ const root=await mkdtemp(path.join(os.tmpdir(),'infohub-env-fixture-'));await mkdir(path.join(root,'infohub'));
+ await writeFile(path.join(root,'infohub','__init__.py'),'');const ready=path.join(root,'ready'),auth=path.join(root,'auth.json');
+ await writeFile(auth,JSON.stringify({OPENAI_API_KEY:'fixture-relay-value'}));
+ await writeFile(path.join(root,'infohub','__main__.py'),`import os,time,pathlib,json\npathlib.Path(${JSON.stringify(ready.replaceAll('\\','/'))}).write_text(json.dumps({'injected':os.environ.get('INFOHUB_RELAY_KEY')=='fixture-relay-value'}))\nwhile True: time.sleep(0.1)\n`);
+ const previous={INFOHUB_ROOT:process.env.INFOHUB_ROOT,INFOHUB_PYTHON:process.env.INFOHUB_PYTHON,INFOHUB_AI_AUTH_FILE:process.env.INFOHUB_AI_AUTH_FILE,INFOHUB_RELAY_KEY:process.env.INFOHUB_RELAY_KEY};
+ process.env.INFOHUB_ROOT=root;process.env.INFOHUB_PYTHON=python;process.env.INFOHUB_AI_AUTH_FILE=auth;delete process.env.INFOHUB_RELAY_KEY;
+ let owned:Awaited<ReturnType<typeof launchInfohubProcess>>|undefined;
+ try{owned=await launchInfohubProcess();for(let i=0;i<50;i++){try{await access(ready);break;}catch{await new Promise(resolve=>setTimeout(resolve,100));}}
+  assert.equal(JSON.parse(await readFile(ready,'utf8')).injected,true);assert.equal(process.env.INFOHUB_RELAY_KEY,undefined);
+ }finally{if(owned)await owned.stop();for(const[key,value]of Object.entries(previous)){if(value===undefined)delete process.env[key];else process.env[key]=value;}}
+});

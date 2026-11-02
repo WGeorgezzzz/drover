@@ -42,6 +42,13 @@ export const infohubLifecycle=createInfohubLifecycle({
   probe:()=>infohubRequest('/api/health',undefined,1500),
   launch:launchInfohubProcess,
   collect:()=>infohubRequest('/api/poll',{},180000),
+  organize:async()=>{
+    try {
+      let state=await infohubRequest('/api/organize',{},10000) as {running:boolean;remaining?:number|null;error?:string|null;reason?:string|null};
+      while(state.running){await new Promise(resolve=>setTimeout(resolve,2000));state=await infohubRequest('/api/organize/status',undefined,10000) as typeof state;}
+      return state;
+    } catch(error) {return {error:error instanceof Error?error.message:String(error)};}
+  },
   reconcile:syncInfohubTasks,
   isBusy:()=>pending.size>0,
 });
@@ -80,7 +87,7 @@ export function syncInfohubTasks(userId:number):Promise<SyncStatus> {
       const parents:InfohubUnit[]=[];const visited=new Set(all.map(u=>u.id));
       const addParents=async(unit:InfohubUnit,depth=0)=>{if(depth>20)throw Error('信息看板主题层级过深');for(const parent of unit.parents||[]){if(visited.has(parent.id))continue;visited.add(parent.id);const full=await infohubRequest('/api/unit/'+parent.id+'?depth=2') as InfohubUnit;parents.push(full);await addParents(full,depth+1);}};
       for(const unit of all)await addParents(unit);
-      let result=await taskmasterWorkspace.reconcileInfohub(root,userId,all.map(infohubRecord),infohubTopics([...parents,...all]));
+      let result=await taskmasterWorkspace.reconcileInfohub(root,userId,all.map(unit=>infohubRecord(unit,[...parents,...all])),infohubTopics([...parents,...all]));
       const merges=[...result.merges];
       for(const write of result.writes){
         const latest=await infohubRequest('/api/unit/'+write.unitId+'?depth=2') as InfohubUnit;
@@ -91,7 +98,7 @@ export function syncInfohubTasks(userId:number):Promise<SyncStatus> {
         details.set(userId+':'+baseUrl().href+':'+confirmed.id,confirmed);
         const index=all.findIndex(u=>u.id===confirmed.id);if(index>=0)all[index]=confirmed;
       }
-      if(result.writes.length)result=await taskmasterWorkspace.reconcileInfohub(root,userId,all.map(infohubRecord),infohubTopics([...parents,...all]));
+      if(result.writes.length)result=await taskmasterWorkspace.reconcileInfohub(root,userId,all.map(unit=>infohubRecord(unit,[...parents,...all])),infohubTopics([...parents,...all]));
       const next={online:true,lastSyncedAt:new Date().toISOString(),error:null,imported:result.imported,merged:[...previous.merged,...merges],unmatchedLegacy:result.unmatchedLegacy,tags};
       const file=syncMetadataPath(userId);await fs.mkdir(path.dirname(file),{recursive:true});const temporary=file+'.'+randomUUID()+'.tmp';await fs.writeFile(temporary,JSON.stringify({lastSyncedAt:next.lastSyncedAt,imported:next.imported}));await fs.rename(temporary,file);
       topology.set(userId,graphVersion);states.set(userId,next);return next;

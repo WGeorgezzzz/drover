@@ -50,3 +50,24 @@ test('undoing source edits keeps the reverted fields until that source changes a
 test('a todo used as a parent retains its own ancestor in the source graph',()=>{
  const root=unit({id:1,kind:'topic',parents:[]}),parent=unit({id:2,parents:[{id:1,title:'根主题'}]}),child=unit({id:3,parents:[{id:2,title:'父待办'}]});const topics=infohubTopics([root,parent,child]);assert.deepEqual(topics.find(t=>t.id==='infohub-unit:2')?.parentIds,['infohub-unit:1']);
 });
+
+test('source grouping follows stable nearest topics and preserves all ancestor evidence',()=>{
+ const root=unit({id:1,kind:'topic',title:'研究',parents:[],tags:['project:ras']}),near=unit({id:2,kind:'topic',title:'位姿精度',parents:[{id:1,title:'研究',kind:'topic'}],tags:[]});
+ const child=unit({id:3,tags:[],parents:[{id:1,title:'研究',kind:'topic'},{id:2,title:'位姿精度',kind:'topic'}]});
+ const a=infohubRecord(child,[root,near]),b=infohubRecord({...child,parents:[...child.parents!].reverse()},[near,root]);
+ const grouping=a.fields.infohubGrouping as {project:string;groupId:string;topics:{id:number}[]};
+ assert.equal(grouping.project,'ras');assert.equal(grouping.groupId,'infohub:topic:1');assert.deepEqual(grouping.topics.map(t=>t.id),[1,2]);
+ assert.deepEqual(a.fields.infohubGrouping,b.fields.infohubGrouping);
+ const descendant=infohubRecord({...child,parents:[{id:2,title:'位姿精度',kind:'topic'}]},[root,near]).fields.infohubGrouping as {groupId:string;topics:{id:number;depth:number}[]};
+ assert.equal(descendant.groupId,'infohub:topic:2');assert.deepEqual(descendant.topics.map(t=>[t.id,t.depth]),[[2,1],[1,2]]);
+});
+
+test('a source refresh cannot reset an active task or reopen a completed source unit',async()=>{
+ const root=await mkdtemp(path.join(os.tmpdir(),'infohub-execution-')),service=createTaskmasterWorkspaceService(async()=>({})),u=unit();
+ await service.reconcileInfohub(root,1,[infohubRecord(u)],infohubTopics([u]));
+ const id=String((await service.list(root,1)).tasks[0].id);
+ await service.changeInboxTask(root,1,id,async()=>({status:'in-progress',executionSessionId:'existing-run',userInput:'keep my note'}));
+ const next=unit({status:'done',title:'来源整理后的标题',updated_at:Math.floor(Date.now()/1000)+20});
+ const outcome=await service.reconcileInfohub(root,1,[infohubRecord(next)],infohubTopics([next]));
+ const task=(await service.list(root,1)).tasks[0];assert.equal(task.status,'in-progress');assert.equal(task.executionSessionId,'existing-run');assert.equal(task.userInput,'keep my note');assert.equal(outcome.writes.length,0);
+});

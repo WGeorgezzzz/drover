@@ -43,3 +43,13 @@ test('organizer settings expose the idle timeout without starting collection',as
   fireEvent.change(input,{target:{value:'15'}});fireEvent.blur(input);
   await waitFor(()=>expect(mock.settings).toHaveBeenCalledWith(15));expect(mock.start).not.toHaveBeenCalled();
 });
+
+test('organization progress prevents duplicate starts and exposes remaining work after a partial run',async()=>{
+ let data={...snapshot('organizing'),infohub:{...snapshot('organizing').infohub,organization:null as {remaining:number;reason:string}|null,progress:{completed:2,total:4}}};
+ mock.sources.mockImplementation(async()=>new Response(JSON.stringify(data)));
+ const view=render(<TaskSourcesBar onSynced={()=>{}}/>);
+ expect((await screen.findByRole('button',{name:'整理主题与待办 2/4'})).hasAttribute('disabled')).toBe(true);
+ view.unmount();data={...data,infohub:{...data.infohub,phase:'idle',organization:{remaining:8,reason:'daily budget reached'},progress:{completed:4,total:4}}};
+ render(<TaskSourcesBar onSynced={()=>{}}/>);
+ expect(await screen.findByText(/InfoHub 仍有 8 个待整理作业/)).toBeTruthy();expect(mock.start).not.toHaveBeenCalled();
+});

@@ -92,8 +92,10 @@ export function createTaskmasterWorkspaceService(generate: (input: unknown) => P
           const changedLocally=meta.lastSyncedStatus!==undefined?task.status!==meta.lastSyncedStatus:!!before&&before.status!==record.status;
           const localTime=Date.parse(String(task.infohubLocalChangedAt||task.updatedAt||task.createdAt||''))||0;
           const localWins=changedLocally&&localTime>=record.updatedAt&&(meta.fingerprint===record.fingerprint||localTime>=record.updatedAt+1000);
-          const desiredStatus=localWins?task.status:record.status;
-          if(localWins&&(['done','cancelled'].includes(desiredStatus)||['done','cancelled'].includes(record.status))&&desiredStatus!==record.status)writes.push({unitId:record.id,status:desiredStatus,expectedUpdatedAt:record.updatedAt,taskId:task.id});
+          // An upstream topic/title refresh must not reset an active execution or reopen its source unit.
+          const executing=task.status==='in-progress'||task.executionStatus==='running';
+          const desiredStatus=executing?task.status:localWins?task.status:record.status;
+          if(!executing&&localWins&&(['done','cancelled'].includes(desiredStatus)||['done','cancelled'].includes(record.status))&&desiredStatus!==record.status)writes.push({unitId:record.id,status:desiredStatus,expectedUpdatedAt:record.updatedAt,taskId:task.id});
           const evidence=[...(Array.isArray(task.originEvidence)?task.originEvidence:[]),...(before&&before.source!=='infohub'?[{source:before.source,taskId:before.id,evidence:before.description}]:[]),...(record.fields.infohubEvidence as unknown[])];
           Object.assign(task,meta.ignoredFieldsFingerprint===record.fieldsFingerprint?{}:record.fields,{status:desiredStatus,originEvidence:[...new Map(evidence.map(e=>[JSON.stringify(e),e])).values()],infohub:{fingerprint:record.fingerprint,fieldsFingerprint:record.fieldsFingerprint,...(meta.ignoredFieldsFingerprint===record.fieldsFingerprint?{ignoredFieldsFingerprint:meta.ignoredFieldsFingerprint}:{}),updatedAt:record.updatedAt,lastSyncedStatus:localWins?meta.lastSyncedStatus:record.status}});
           if(!before||JSON.stringify(before)!==JSON.stringify(task)){task.updatedAt=now;audit.changes.push({id:task.id,before,after:structuredClone(task)});}
