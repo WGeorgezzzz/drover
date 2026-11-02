@@ -2,7 +2,8 @@ import {useState,useEffect,useCallback,useRef} from 'react';
 import {useNavigate,useSearchParams} from 'react-router-dom';
 import {Menu,Plus,RefreshCw,Settings,MoreHorizontal,Check,X,ChevronRight,MessageSquare,FileText,Inbox,ExternalLink} from 'lucide-react';
 import {api,inboxTasksApi} from '@/shared/api';
-import {TaskExecutionPanel,prefetchTaskExecutionModels} from '@/modules/task-master/TaskExecutionPanel';
+import {startVisiblePolling} from '@/shared/utils';
+import {TaskExecutionPanel} from '@/modules/task-master/TaskExecutionPanel';
 import {TaskSourcesBar} from '@/modules/task-master/TaskSourcesBar';
 import {useTaskGroupPreferences} from '@/modules/task-master/hooks/useTaskGroupPreferences';
 import {useTaskListKeyboard} from '@/modules/task-master/hooks/useTaskListKeyboard';
@@ -39,7 +40,7 @@ function sourceLinks(row:Row){
 }
 
 /** GlobalTasksPage uses this unified workspace; the original view remains URL-only for recovery. */
-export function IntelligentTasksPanel({onReady,projectId='',onMenuClick}:{onReady:(ready:boolean)=>void;projectId?:string;onMenuClick?:()=>void}){
+export function IntelligentTasksPanel({onReady,projectId='',onMenuClick}:{onReady?:(ready:boolean)=>void;projectId?:string;onMenuClick?:()=>void}){
  const navigate=useNavigate(),[params,setParams]=useSearchParams();
  // Poll persisted results while the organizer works independently.
  const [data,setData]=useState<Snapshot|null>(null);
@@ -66,8 +67,8 @@ export function IntelligentTasksPanel({onReady,projectId='',onMenuClick}:{onRead
  // File evidence is read with authentication and displayed in its owning task drawer.
  const [sourceFile,setSourceFile]=useState<{taskId:string;path:string;content:string;error?:boolean}|null>(null);
  const sourceRequest=useRef(0);
- const load=useCallback(async()=>{try{const s=await value(await inboxTasksApi.intelligence());setData(s);onReady(Boolean(s.updatedAt));}catch(e){setError(String(e));}},[onReady]);
- useEffect(()=>{void load();prefetchTaskExecutionModels();const timer=setInterval(()=>void load(),5000);return()=>clearInterval(timer);},[load]);
+ const load=useCallback(async()=>{try{const s=await value(await inboxTasksApi.intelligence());setData(previous=>JSON.stringify(previous)===JSON.stringify(s)?previous:s);onReady?.(Boolean(s.updatedAt));}catch(e){setError(String(e));}},[onReady]);
+ useEffect(()=>startVisiblePolling(load,15000),[load]);
  useEffect(()=>{if(!receipt)return;const timer=setTimeout(()=>setReceipt(null),5000);return()=>clearTimeout(timer);},[receipt]);
  const selectedId=params.get('task');
  const close=useCallback(()=>{const next=new URLSearchParams(params);next.delete('task');setParams(next,{replace:true});},[params,setParams]);

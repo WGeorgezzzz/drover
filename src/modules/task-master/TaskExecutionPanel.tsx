@@ -9,9 +9,7 @@ const modes:Record<string,string>={default:'按需审批',acceptEdits:'允许编
 const control='min-h-10 w-full rounded-lg border bg-background px-3 text-sm';
 async function value(response:Response){const body=await response.json();if(!response.ok)throw Error(body.error?.message||body.message||'无法读取执行设置');return body.data??body;}
 function executionCacheKey(){try{const payload=JSON.parse(atob((localStorage.getItem('auth-token')||'').split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return 'task-execution-cache-v2:'+payload.userId;}catch{return 'task-execution-cache-v2';}}
-let prefetchedUntil=0;
-/** GlobalTasksPage warms independent native catalogs before the user opens the execution picker. */
-export function prefetchTaskExecutionModels(){if(typeof localStorage==='undefined'||Date.now()<prefetchedUntil)return;prefetchedUntil=Date.now()+60000;for(const id of ['claude','codex','deepseek-harness'] as const)void api.providers.models(id).then(value).then(data=>{const key=executionCacheKey();let prior:any={};try{prior=JSON.parse(localStorage.getItem(key)||'{}');}catch{/* Ignore damaged optional cache. */}localStorage.setItem(key,JSON.stringify({...prior,catalogs:{...prior.catalogs,[id]:data.models}}));}).catch(()=>{});}
+/** Task views load provider catalogs only when the execution dialog is opened. */
 export function TaskExecutionPanel({title,cwd,open,onClose,onConfirm,busy,preview='',errorMessage=''}:{title:string;cwd:string;preview?:string;errorMessage?:string;open:boolean;onClose:()=>void;onConfirm:(settings:TaskExecutionSettings)=>Promise<void>;busy:boolean}){
   const cacheKey=executionCacheKey();
   // Late preferences may initialize the form only until the user edits it.

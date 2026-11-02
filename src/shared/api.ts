@@ -13,6 +13,9 @@ export type ApiRequestOptions = Omit<RequestInit, 'headers'> & {
   headers?: Record<string, string>;
 };
 
+// Only simultaneous task reads are shared; mutation responses invalidate pending snapshots.
+const pendingTaskSnapshots = new Map<string, Promise<Response>>();
+
 // Utility function for authenticated API calls
 export const authenticatedFetch = (
   url: string,
@@ -44,6 +47,7 @@ export const authenticatedFetch = (
       ...options.headers,
     },
   }).then((response) => {
+    if (options.method && !['GET', 'HEAD'].includes(options.method.toUpperCase())) pendingTaskSnapshots.clear();
     const refreshedToken = response.headers.get('X-Refreshed-Token');
     if (refreshedToken) {
       storeAuthToken(refreshedToken);
@@ -70,6 +74,20 @@ type QueryValue = string | number | boolean | null | undefined;
 /** Authorizes same-origin iframe navigation using a scoped HttpOnly cookie. */
 export const infoHubApi = { authorize: () => authenticatedFetch('/api/infohub/session', { method: 'POST' }) };
 
+// Only simultaneous reads are shared; no response survives completion or crosses an identity change.
+function readTaskSnapshot(url: string): Promise<Response> {
+  const key = JSON.stringify([getStoredAuthToken(), url]);
+  let pending = pendingTaskSnapshots.get(key);
+  if (!pending) {
+    pending = authenticatedFetch(url).finally(() => {
+      if (pendingTaskSnapshots.get(key) === pending) pendingTaskSnapshots.delete(key);
+    });
+    pendingTaskSnapshots.set(key, pending);
+  }
+  // Each caller owns its body stream, so sidebar counts cannot consume the page's response.
+  return pending.then(response => response.clone());
+}
+
 /** Global tasks and the sidebar share the authenticated TaskMaster transport. */
 export const inboxTasksApi = {
   sources:()=>authenticatedFetch('/api/taskmaster/inbox/sources'),
@@ -77,7 +95,7 @@ export const inboxTasksApi = {
   infohubSettings:()=>authenticatedFetch('/api/taskmaster/inbox/sources/infohub/settings'),
   saveInfohubSettings:(idleMinutes:number)=>authenticatedFetch('/api/taskmaster/inbox/sources/infohub/settings',{method:'PUT',body:JSON.stringify({idleMinutes})}),
   executeIntelligence:(input:unknown)=>authenticatedFetch('/api/taskmaster/inbox/intelligence/execute',{method:'POST',body:JSON.stringify(input)}),
-  intelligence:()=>authenticatedFetch('/api/taskmaster/inbox/intelligence'),
+  intelligence:()=>readTaskSnapshot('/api/taskmaster/inbox/intelligence'),
   refreshIntelligence:(force=false)=>authenticatedFetch('/api/taskmaster/inbox/intelligence/refresh',{method:'POST',body:JSON.stringify({force})}),
   correctIntelligence:(input:unknown)=>authenticatedFetch('/api/taskmaster/inbox/intelligence/correct',{method:'POST',body:JSON.stringify(input)}),
   executionSettings:()=>authenticatedFetch('/api/taskmaster/inbox/execution-settings'),
@@ -87,7 +105,7 @@ export const inboxTasksApi = {
   linkUnit: (projectId:string,body:{id:string;title?:string;parentIds:string[];tags?:string[]})=>authenticatedFetch('/api/taskmaster/inbox/unit',{method:'POST',body:JSON.stringify({projectId,...body})}),
   views:()=>authenticatedFetch('/api/taskmaster/inbox/views'),
   saveViews:(views:unknown[])=>authenticatedFetch('/api/taskmaster/inbox/views',{method:'PUT',body:JSON.stringify(views)}),
-  list: () => authenticatedFetch('/api/taskmaster/inbox/global'),
+  list: () => readTaskSnapshot('/api/taskmaster/inbox/global'),
   create: (projectId: string, body: { title: string; priority?: string }) => authenticatedFetch('/api/taskmaster/inbox/create', { method: 'POST', body: JSON.stringify({ projectId, ...body }) }),
   saveInput: (projectId: string, taskId: string, userInput: string) => authenticatedFetch('/api/taskmaster/inbox/input', { method: 'POST', body: JSON.stringify({ projectId, taskId, userInput }) }),
   execute: (projectId: string, taskId: string, option: string, userInput?: string,settings?:unknown) => authenticatedFetch('/api/taskmaster/inbox/execute', { method: 'POST', body: JSON.stringify({ projectId, taskId, option, userInput,...(settings?{settings}:{}) }) }),

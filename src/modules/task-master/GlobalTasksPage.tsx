@@ -1,7 +1,7 @@
 import { SuperagentPanel, SuperagentNavigation } from '@/modules/task-master/SuperagentPanel';
 import { authenticatedFetch } from '@/shared/api';
 import { IntelligentTasksPanel } from '@/modules/task-master/IntelligentTasksPanel';
-import { TaskExecutionPanel,prefetchTaskExecutionModels } from '@/modules/task-master/TaskExecutionPanel';
+import { TaskExecutionPanel } from '@/modules/task-master/TaskExecutionPanel';
 import type { LLMProvider } from '@/shared/types';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -57,9 +57,11 @@ function LegacyTasksNavigation() {
   const [counts,setCounts]=useState<{attention:number;open:number}|null>(null);
   // The intelligence snapshot already includes the global task collection.
   // Retain the legacy feed only as a fallback until that endpoint succeeds.
-  const navigate = useNavigate(), { projects, error, loading } = useGlobalTasks(counts === null);
+  // Fetch the legacy count only if the semantic feed is unavailable.
+  const [semanticFailed,setSemanticFailed]=useState(!inboxTasksApi.intelligence);
+  const navigate = useNavigate(), { projects, error, loading } = useGlobalTasks(counts === null && semanticFailed);
   const tasks = projects.flatMap(p => p.tasks).filter(isOpenTask);
-  useEffect(()=>{if(!inboxTasksApi.intelligence)return;let active=true;const load=async()=>{try{const snapshot=await read(await inboxTasksApi.intelligence());const rows=snapshot.tasks.filter((r:any)=>!r.testSource&&!snapshot.entries[r.id]?.mergedInto&&!['done','cancelled'].includes(r.task.status));if(active){const next={open:rows.length,attention:rows.filter((r:any)=>['blocked','review'].includes(r.task.status)||r.task.forMe||snapshot.entries[r.id]?.kind==='todo').length};setCounts(previous=>previous?.open===next.open&&previous?.attention===next.attention?previous:next);}}catch{/* Keep the last count when offline. */}};const stop=startVisiblePolling(load,30000);return()=>{active=false;stop();};},[]);
+  useEffect(()=>{if(!inboxTasksApi.intelligence)return;let active=true;const load=async()=>{try{const snapshot=await read(await inboxTasksApi.intelligence());const rows=snapshot.tasks.filter((r:any)=>!r.testSource&&!snapshot.entries[r.id]?.mergedInto&&!['done','cancelled'].includes(r.task.status));if(active){const next={open:rows.length,attention:rows.filter((r:any)=>['blocked','review'].includes(r.task.status)||r.task.forMe||snapshot.entries[r.id]?.kind==='todo').length};setCounts(previous=>previous?.open===next.open&&previous?.attention===next.attention?previous:next);}}catch{if(active)setSemanticFailed(true);}};const stop=startVisiblePolling(load,30000);return()=>{active=false;stop();};},[]);
   const high = counts?.attention??tasks.filter(t => ['blocked','review'].includes(t.status)||t.forMe).length;
   const openCount=counts?.open??tasks.length;
   return <button type="button" className="sidebar-nav-action" onClick={() => navigate('/tasks')} title={`需要你处理 ${high} · 未完成 ${openCount}`} aria-label={`任务，需要你处理 ${high} · 未完成 ${openCount}`}>
@@ -78,7 +80,6 @@ export function InfoHubNavigation() {
 function LegacyGlobalTasksPage({ onMenuClick }: { onMenuClick: () => void }) {
   const { projects, error, loading, load, setError,infohub } = useGlobalTasks(), navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  useEffect(()=>{prefetchTaskExecutionModels();},[]);
   // Project scope stays stable while polling updates the collection.
   const [projectId, setProjectId] = useState(searchParams.get('project') || '');
   // Priority filtering is independent of task status.
@@ -264,4 +265,4 @@ function TopicPicker({label,options,selected,disabled,onChange}:{label:string;op
 // Keep legacy views available until the administrator enables the migrated runtime.
 function useSuperagentEnabled(){const [enabled,setEnabled]=useState<boolean>();useEffect(()=>startVisiblePolling(async()=>{try{const response=await authenticatedFetch('/api/superagent');if(!response.ok){setEnabled(false);return;}const value=await response.json();setEnabled(value.settings.enabled);}catch{setEnabled(false);}},15000),[]);return enabled;}
 export function TasksNavigation(){const enabled=useSuperagentEnabled();return enabled===undefined?null:enabled?<SuperagentNavigation/>:<LegacyTasksNavigation/>;}
-export function GlobalTasksPage(props:{onMenuClick:()=>void}){const enabled=useSuperagentEnabled(),[params]=useSearchParams();if(enabled===undefined)return <p className="p-4">…</p>;return enabled||params.get('view')==='superagent'?<SuperagentPanel {...props}/>:<><a className="block px-4 py-2 text-sm underline" href="/tasks?view=superagent">Superagent</a><LegacyGlobalTasksPage {...props}/></>;}
+export function GlobalTasksPage(props:{onMenuClick:()=>void}){const enabled=useSuperagentEnabled(),[params]=useSearchParams();if(enabled===undefined)return <p className="p-4">…</p>;return enabled||params.get('view')==='superagent'?<SuperagentPanel {...props}/>:params.get('view')==='legacy'?<LegacyGlobalTasksPage {...props}/>:<IntelligentTasksPanel onMenuClick={props.onMenuClick} projectId={params.get('project')||''}/>;}

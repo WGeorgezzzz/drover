@@ -69,3 +69,29 @@ test('time and name orders load all conversations and search beyond the first pa
   fireEvent.change(screen.getByRole('combobox',{name:'侧栏显示模式'}),{target:{value:'name'}});
   await waitFor(()=>expect(api.projectOrganization.update).toHaveBeenCalledWith(expect.objectContaining({action:'mode',mode:'name'})));
 });
+
+test('collapsed monitor history mounts no session rows and expanded history is paged without losing older rounds', async()=>{
+  snapshot.sessions=Array.from({length:125},(_,i)=>({id:'round-'+i,title:'Round '+i,provider:'claude',sourceProjectId:'a',projectId:'a',cwd:'/alpha',roots:['/alpha'],updatedAt:'2026-11-02T00:00:00Z',monitorId:'monitor-1',monitorName:'History'}));
+  const callbacks={...props(),activeSessions:new Set<string>(),backgroundSessionIds:new Set<string>(),attentionSessionIds:new Set<string>()};
+  const view=render(<ProjectOrganization props={callbacks}/>);
+  const summary=await screen.findByText('监测 · History（125 轮）');
+  expect(view.container.querySelectorAll('[data-organization-session]')).toHaveLength(0);
+  const details=summary.closest('details')!;
+  details.open=true;fireEvent(details,new Event('toggle'));
+  await waitFor(()=>expect(view.container.querySelectorAll('[data-organization-session]')).toHaveLength(50));
+  fireEvent.click(screen.getByRole('button',{name:'加载更多历史（50/125）'}));
+  fireEvent.click(screen.getByRole('button',{name:'加载更多历史（100/125）'}));
+  expect(view.container.querySelectorAll('[data-organization-session]')).toHaveLength(125);
+  details.open=false;fireEvent(details,new Event('toggle'));
+  await waitFor(()=>expect(view.container.querySelectorAll('[data-organization-session]')).toHaveLength(0));
+});
+
+test('reordering a conversation across deferred chunks preserves the full project order', async()=>{
+  snapshot.sessions=Array.from({length:30},(_,i)=>({id:'s'+i,title:'Session '+i,provider:'claude',sourceProjectId:'a',projectId:'a',cwd:'/alpha',roots:['/alpha'],updatedAt:'2026-11-02T00:00:00Z'}));
+  const callbacks={...props(),activeSessions:new Set<string>(),backgroundSessionIds:new Set<string>(),attentionSessionIds:new Set<string>()};
+  const view=render(<ProjectOrganization props={callbacks}/>);
+  await waitFor(()=>expect(view.container.querySelectorAll('[data-organization-session]')).toHaveLength(30));
+  fireEvent.dragStart(view.container.querySelector('[data-organization-session="s0"]')!);
+  fireEvent.drop(view.container.querySelector('[data-organization-session="s29"]')!);
+  await waitFor(()=>expect(api.projectOrganization.update).toHaveBeenCalledWith(expect.objectContaining({action:'thread-order',projectId:'a',ids:[...Array.from({length:29},(_,i)=>'s'+(i+1)),'s0']})));
+});

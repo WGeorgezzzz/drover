@@ -9,6 +9,7 @@ import { ActionMenu, Dialog, DialogContent, DialogTitle } from '@/shared/ui';
 import type { LLMProvider, Project, ProjectOrganizationSnapshot, SidebarProjectListProps } from '@/shared/types';
 import SidebarProjectList from '@/modules/sidebar/SidebarProjectList';
 import SidebarSessionItem from '@/modules/sidebar/SidebarSessionItem';
+import { DeferredSessionRows } from '@/modules/sidebar/DeferredSessionRows';
 
 async function read(response:Response):Promise<ProjectOrganizationSnapshot>{const body=await response.json();if(!response.ok)throw new Error(readApiErrorMessage(body)||'无法保存项目设置');return body.data;}
 
@@ -18,6 +19,8 @@ export function ProjectOrganization({props,editorOnly=false,searchQuery=''}:{pro
   // The authoritative account snapshot includes sessions that discovery has not loaded into expanded projects yet.
   const [snapshot,setSnapshot]=useState<ProjectOrganizationSnapshot|null>(null);
   const [visibleCount,setVisibleCount]=useState(100);
+  // Closed history mounts no rows; an opened monitor reveals bounded pages on demand.
+  const [monitorPages,setMonitorPages]=useState<Record<string,number>>({});
   // One metadata editor can inspect either a project or a conversation without navigating away.
   const [editor,setEditor]=useState<{kind:'project'|'session';id:string}|null>(null);
   // Preserve editable project fields until an explicit save.
@@ -77,15 +80,20 @@ export function ProjectOrganization({props,editorOnly=false,searchQuery=''}:{pro
     if(target<0||target>=ids.length)return;
     ids.splice(index,1);ids.splice(target,0,id);void change({action:'thread-order',projectId,ids});
   };
-  const renderRows=(rows:ProjectOrganizationSnapshot['sessions'],manual:boolean)=>rows.filter(row=>!!searchQuery||props.projects.length===props.filteredProjects.length||props.filteredProjects.some(p=>p.projectId===row.sourceProjectId)).map((row,index)=>{
+  const renderRows=(rows:ProjectOrganizationSnapshot['sessions'],manual:boolean)=>rows.filter(row=>!!searchQuery||props.projects.length===props.filteredProjects.length||props.filteredProjects.some(p=>p.projectId===row.sourceProjectId)).map(row=>{
     const project=row.sourceProjectId&&snapshot.projects.some(p=>p.id===row.sourceProjectId)?projectFor(row.sourceProjectId):{projectId:'projectless',displayName:'无项目对话',fullPath:row.cwd};
     const rename=props.activeRename?.target==='session'&&props.activeRename.id===row.id?props.activeRename:null;
-    return <div key={row.id} data-organization-session={row.id} className="group/organization flex min-w-0 items-center" draggable={manual&&!busy} onDragStartCapture={()=>{dragged.current=row.id;}} onDragOver={event=>{if(manual)event.preventDefault();}} onDrop={event=>{event.preventDefault();event.stopPropagation();if(manual&&dragged.current&&rows.some(s=>s.id===dragged.current))move(row.projectId,dragged.current,index);dragged.current=null;}}>
+    return <div key={row.id} data-organization-session={row.id} className="group/organization flex min-w-0 items-center" draggable={manual&&!busy} onDragStartCapture={()=>{dragged.current=row.id;}} onDragOver={event=>{if(manual)event.preventDefault();}} onDrop={event=>{event.preventDefault();event.stopPropagation();if(manual&&dragged.current&&sorted(row.projectId).some(s=>s.id===dragged.current))move(row.projectId,dragged.current,sorted(row.projectId).findIndex(s=>s.id===row.id));dragged.current=null;}}>
       <div className="min-w-0 flex-1"><SidebarSessionItem project={project} session={{id:row.id,summary:row.title,lastActivity:row.updatedAt,updated_at:row.updatedAt,__provider:row.provider as LLMProvider}} selectedSession={props.selectedSession}
         isProcessing={props.activeSessions.has(row.id)} hasBackgroundWork={props.backgroundSessionIds.has(row.id)} needsAttention={props.attentionSessionIds.has(row.id)} currentTime={props.currentTime}
         isEditing={!!rename} renameDraft={rename?.draft??''} onRenameDraftChange={props.onRenameDraftChange} onStartEditingSession={props.onStartEditingSession} onCancelEditingSession={props.onCancelEditingSession} onSaveEditingSession={props.onSaveEditingSession}
         onProjectSelect={props.onProjectSelect} onSessionSelect={props.onSessionSelect} onDeleteSession={props.onDeleteSession} onForkSession={props.onForkSession} onEditOrganization={()=>setEditor({kind:'session',id:row.id})} isSelecting={false} isChecked={false} onToggleSessionSelected={props.onToggleSessionSelected} t={props.t}/></div>
     </div>;
+  });
+  const renderProjectRows=(rows:ProjectOrganizationSnapshot['sessions'])=>Array.from({length:Math.ceil(rows.length/25)},(_,page)=>{
+    const offset=page*25,batch=rows.slice(offset,offset+25);
+    const forceVisible=batch.some(row=>row.id===props.selectedSession?.id||props.activeRename?.target==='session'&&props.activeRename.id===row.id);
+    return <DeferredSessionRows key={batch[0].id} count={batch.length} forceVisible={forceVisible}>{()=>renderRows(batch,true)}</DeferredSessionRows>;
   });
   const needle=props.filteredProjects.length===props.projects.length?'':null;
   const editedProject=editor?.kind==='project'?snapshot.projects.find(p=>p.id===editor.id):undefined;
@@ -105,11 +113,11 @@ export function ProjectOrganization({props,editorOnly=false,searchQuery=''}:{pro
             {key:'up',label:'上移项目：'+project.name,icon:ArrowUp,disabled:busy||index===0,onSelect:()=>void change({action:'move',projectId:project.id,direction:'up'})},
             {key:'down',label:'下移项目：'+project.name,icon:ArrowDown,disabled:busy||index===snapshot.projects.length-1,onSelect:()=>void change({action:'move',projectId:project.id,direction:'down'})},
           ]}/>
-        </div></SectionRow></div>{!project.collapsed&&renderRows(sorted(project.id),true)}
+        </div></SectionRow></div>{!project.collapsed&&renderProjectRows(sorted(project.id))}
       </section>)}
-      <section aria-label="无项目对话"><h3 className="mx-3 py-2 text-xs text-muted-foreground">无项目对话</h3>{renderRows(sorted(null),true)}</section>
+      <section aria-label="无项目对话"><h3 className="mx-3 py-2 text-xs text-muted-foreground">无项目对话</h3>{renderProjectRows(sorted(null))}</section>
     </>}
-    {monitorGroups.map(id=>{const rows=snapshot.sessions.filter(s=>s.monitorId===id&&matches(s));return !rows.length?null:<details key={id} className="mx-3 mt-2 text-xs"><summary className="min-h-10 cursor-pointer py-2">监测 · {rows[0].monitorName}（{rows.length} 轮）</summary>{renderRows(rows,false)}</details>;})}
+    {monitorGroups.map(id=>{const rows=snapshot.sessions.filter(s=>s.monitorId===id&&matches(s));return !rows.length?null:<details key={id} onToggle={event=>{const open=event.currentTarget.open;setMonitorPages(previous=>({...previous,[id]:open?(previous[id]||50):0}));}} className="mx-3 mt-2 text-xs"><summary className="min-h-10 cursor-pointer py-2">监测 · {rows[0].monitorName}（{rows.length} 轮）</summary>{!!monitorPages[id]&&<>{renderRows(rows.slice(0,monitorPages[id]),false)}{monitorPages[id]<rows.length&&<button type="button" className="min-h-10 rounded-lg border px-3 text-xs" onClick={()=>setMonitorPages(previous=>({...previous,[id]:previous[id]+50}))}>加载更多历史（{monitorPages[id]}/{rows.length}）</button>}</>}</details>;})}
     </>}
     <Dialog open={!!editor} onOpenChange={open=>{if(!open)setEditor(null);}}><DialogContent className="max-h-[85dvh] w-[calc(100vw-1.5rem)] max-w-lg space-y-4 overflow-auto p-4">
       <div className="flex items-center justify-between"><DialogTitle className="not-sr-only text-base font-semibold">{editedProject?'项目设置':'会话归属与工作区'}</DialogTitle><button aria-label="关闭项目设置" onClick={()=>setEditor(null)}><X size={18}/></button></div>
