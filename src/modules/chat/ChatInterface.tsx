@@ -5,6 +5,7 @@ import { ArrowDownIcon } from 'lucide-react';
 
 import { useTasksSettings, ConversationTasksPanel,TaskSourceBanner } from '@/modules/task-master';
 import { usePaletteOpsRegister } from '@/modules/command-palette';
+import { PluginTabContent, usePlugins } from '@/modules/plugins';
 import { useWebSocket } from '@/shared/context/WebSocketContext';
 import PermissionContext from '@/modules/chat/context/PermissionContext';
 import { MarkdownWorkspaceContext } from '@/modules/chat/context/MarkdownWorkspaceContext';
@@ -101,6 +102,9 @@ function ChatInterface({
     getSessionActivity,
   } = useSessionProtectionActions();
 
+  const { plugins } = usePlugins();
+  const [remoteSelected, setRemoteSelected] = useState(false);
+  useEffect(() => setRemoteSelected(false), [selectedProject?.projectId, selectedSession?.id, newSessionTrigger]);
   const sessionStore = useSessionStore();
   const streamTimerRef = useRef<number | null>(null);
   const accumulatedStreamRef = useRef('');
@@ -517,6 +521,19 @@ function ChatInterface({
             ? t('messageTypes.opencode', { defaultValue: 'OpenCode' })
           : t('messageTypes.claude');
 
+  const remoteAvailable = !isSideChat && !selectedSession && !currentSessionId
+    && plugins.some(plugin => plugin.name === 'h200-claude' && plugin.enabled);
+  const selectRemote = remoteAvailable ? () => setRemoteSelected(true) : undefined;
+  if (remoteAvailable && remoteSelected && selectedProject) {
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        <button type="button" className="self-start px-4 py-2 text-sm text-muted-foreground"
+          onClick={() => setRemoteSelected(false)}>{t('providerSelection.changeRemoteModel', '← 切换模型')}</button>
+        <PluginTabContent pluginName="h200-claude" selectedProject={selectedProject} selectedSession={null} />
+      </div>
+    );
+  }
+
   if (!selectedProject) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -554,6 +571,7 @@ function ChatInterface({
                 if (message) revealMessage(message); else { setTaskSource({id, evidence}); void loadFullTranscript(); }
               }}/>
             <ChatMessagesPane
+              onSelectRemote={selectRemote}
               scrollContainerRef={scrollContainerRef}
               // Not redundant with the `scroll` listener. A first page is 20 rows,
               // tool results fold into their calls, and the "load earlier" link is
@@ -638,6 +656,7 @@ function ChatInterface({
           <NextPromptSuggestions messages={displayMessages} busy={isProcessing} onInsert={insertComposerText}
             sessionId={currentSessionId || selectedSession?.id} provider={provider}/>
           <ChatComposer
+            onSelectRemote={selectRemote}
           provider={provider}
           extraActions={provider === 'claude' && (currentSessionId || selectedSession?.id) ? <CrossSessionDialog key={`bridge-${currentSessionId || selectedSession?.id}`} sourceSessionId={(currentSessionId || selectedSession?.id)!} draft={input} onInsert={insertComposerText}/> : undefined}
           busySendMode={busySendMode}

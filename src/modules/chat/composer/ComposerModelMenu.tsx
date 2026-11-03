@@ -17,6 +17,7 @@ import {
 type EffortOption = NonNullable<ProviderModelOption['effort']>['values'][number];
 
 type ComposerModelMenuProps = {
+  onSelectRemote?: () => void;
   provider?: LLMProvider;
   providerLabel?: string;
   effort: string;
@@ -35,6 +36,7 @@ type ComposerModelMenuProps = {
  * provider's model and reasoning effort for the next turn.
  */
 function ComposerModelMenu({
+  onSelectRemote,
   provider,
   providerLabel,
   effort,
@@ -80,7 +82,7 @@ function ComposerModelMenu({
 
   const hasEffortSection = resolvedEffortOptions.length > 0;
   const hasModelSection = modelOptions.length > 0 || modelsLoading;
-  if (!hasEffortSection && !hasModelSection) {
+  if (!onSelectRemote && !hasEffortSection && !hasModelSection) {
     return null;
   }
 
@@ -113,6 +115,11 @@ function ComposerModelMenu({
 
       {isOpen && anchor && createPortal(
         <ComposerMenuSurface anchor={anchor} menuRef={menuRef} ariaLabel={ariaLabel}>
+          {onSelectRemote && (
+            <ComposerMenuItem label="H200 Claude" role="menuitem" isSelected={false}
+              icon={<LLMProviderLogo provider="claude" />}
+              onSelect={() => { close(); onSelectRemote(); }} />
+          )}
           {hasEffortSection && (
             <>
               <ComposerMenuHeading>

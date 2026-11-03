@@ -17,6 +17,7 @@ import {
   Command,
   CommandInput,
   CommandList,
+  CommandItem,
   CommandEmpty,
   Card,
   Button,
@@ -53,6 +54,7 @@ function modelSearchFilter(value: string, search: string): number {
 }
 
 type ProviderSelectionEmptyStateProps = {
+  onSelectRemote?: () => void;
   selectedSession: ProjectSession | null;
   currentSessionId: string | null;
   provider: LLMProvider;
@@ -94,6 +96,7 @@ function getProviderDisplayName(p: LLMProvider) {
  * the user can pick a provider, model and permission mode before their first turn.
  */
 export default function ProviderSelectionEmptyState({
+  onSelectRemote,
   selectedSession,
   currentSessionId,
   provider,
@@ -285,6 +288,12 @@ export default function ProviderSelectionEmptyState({
                   })}
                 />
                 <CommandList className="max-h-[350px]">
+                  {onSelectRemote && (
+                    <CommandItem value="H200 Claude 远程 remote" onSelect={() => { setPickerOpen(false); onSelectRemote(); }}>
+                      <LLMProviderLogo provider="claude" className="mr-2 h-4 w-4" />
+                      H200 Claude
+                    </CommandItem>
+                  )}
                   <CommandEmpty>
                     {t("providerSelection.noModelsFound", {
                       defaultValue: "No models found.",

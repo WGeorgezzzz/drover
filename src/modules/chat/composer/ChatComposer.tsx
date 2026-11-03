@@ -45,6 +45,7 @@ type MentionableFile = {
 };
 
 type ChatComposerProps = {
+  onSelectRemote?: () => void;
   provider?: LLMProvider;
   extraActions?: ReactNode;
   pendingTray?: ReactNode;
@@ -136,6 +137,7 @@ type ChatComposerProps = {
  * model/permission popovers that drive the next turn.
  */
 export default function ChatComposer({
+  onSelectRemote,
   extraActions,
   pendingTray,
   submissionNotice,
@@ -507,6 +509,7 @@ export default function ChatComposer({
             {extraActions}
             </ComposerActions>
             <ComposerModelMenu
+              onSelectRemote={onSelectRemote}
               provider={provider}
               providerLabel={providerLabel}
               effort={effort}
