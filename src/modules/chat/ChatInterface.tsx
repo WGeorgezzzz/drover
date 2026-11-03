@@ -5,7 +5,8 @@ import { ArrowDownIcon } from 'lucide-react';
 
 import { useTasksSettings, ConversationTasksPanel,TaskSourceBanner } from '@/modules/task-master';
 import { usePaletteOpsRegister } from '@/modules/command-palette';
-import { PluginTabContent, usePlugins } from '@/modules/plugins';
+import { useNavigate } from 'react-router-dom';
+import { newRemoteSession, usePlugins } from '@/modules/plugins';
 import { useWebSocket } from '@/shared/context/WebSocketContext';
 import PermissionContext from '@/modules/chat/context/PermissionContext';
 import { MarkdownWorkspaceContext } from '@/modules/chat/context/MarkdownWorkspaceContext';
@@ -103,8 +104,7 @@ function ChatInterface({
   } = useSessionProtectionActions();
 
   const { plugins } = usePlugins();
-  const [remoteSelected, setRemoteSelected] = useState(false);
-  useEffect(() => setRemoteSelected(false), [selectedProject?.projectId, selectedSession?.id, newSessionTrigger]);
+  const navigate = useNavigate();
   const sessionStore = useSessionStore();
   const streamTimerRef = useRef<number | null>(null);
   const accumulatedStreamRef = useRef('');
@@ -523,17 +523,7 @@ function ChatInterface({
 
   const remoteAvailable = !isSideChat && !selectedSession && !currentSessionId
     && plugins.some(plugin => plugin.name === 'h200-claude' && plugin.enabled);
-  const selectRemote = remoteAvailable ? () => setRemoteSelected(true) : undefined;
-  if (remoteAvailable && remoteSelected && selectedProject) {
-    return (
-      <div className="flex h-full min-h-0 flex-col">
-        <button type="button" className="self-start px-4 py-2 text-sm text-muted-foreground"
-          onClick={() => setRemoteSelected(false)}>{t('providerSelection.changeRemoteModel', '← 切换模型')}</button>
-        <PluginTabContent pluginName="h200-claude" selectedProject={selectedProject} selectedSession={null} />
-      </div>
-    );
-  }
-
+  const selectRemote = remoteAvailable ? () => navigate(newRemoteSession()) : undefined;
   if (!selectedProject) {
     return (
       <div className="flex h-full items-center justify-center">

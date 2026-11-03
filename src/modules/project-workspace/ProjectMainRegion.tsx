@@ -5,6 +5,7 @@ import { GlobalTasksPage } from '@/modules/task-master';
 import { useProjectMainState } from '@/modules/project-workspace/context/ProjectsStateContext';
 import type { SessionEstablishedContext, SessionNavigationOptions,ProjectWorkspaceShellProps } from '@/shared/types';
 import WorkspaceMain from '@/modules/project-workspace/WorkspaceMain';
+import { RemoteConversation } from '@/modules/plugins';
 import { InfoHubPage } from '@/modules/info-hub';
 
 /** Rendered by ProjectWorkspaceShell to bind this module's project state to WorkspaceMain. */
@@ -54,6 +55,7 @@ function ProjectMainRegion({
     void refreshProjectsSilently();
   }, [refreshProjectsSilently]);
 
+  if (location.pathname.startsWith('/remote/h200/')) return <RemoteConversation onMenu={handleOpenSidebar}/>;
   if (location.pathname === '/tasks') return <GlobalTasksPage onMenuClick={handleOpenSidebar}/>;
   if (['/infohub', '/information'].includes(location.pathname)) return <InfoHubPage onMenuClick={handleOpenSidebar}/>;
   return (

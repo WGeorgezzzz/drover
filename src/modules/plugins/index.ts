@@ -1,3 +1,4 @@
+export { RemoteFolders, RemoteConversation, newRemoteSession } from '@/modules/plugins/RemoteSessions';
 export { PluginsProvider, usePlugins } from '@/modules/plugins/context/PluginsContext';
 export { default as PluginIcon } from '@/modules/plugins/PluginIcon';
 export { default as PluginSettingsTab } from '@/modules/plugins/PluginSettingsTab';

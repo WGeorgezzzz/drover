@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { Activity, Archive, Folder, MessageSquare, RotateCcw, Search, Trash2 } from 'lucide-react';
 import type { TFunction } from 'i18next';
 
+import { RemoteFolders } from '@/modules/plugins';
 import { WorkspaceSectionsProvider } from '@/modules/sidebar/context/WorkspaceSectionsContext';
 import { SessionRowActionsProvider } from '@/modules/sidebar/context/SessionRowActionsContext';
 import { LLMProviderLogo, ScrollArea } from '@/shared/ui';
@@ -218,6 +219,7 @@ export default function SidebarContent({
       />
 
       <ScrollArea className="min-h-0 flex-1 overscroll-contain md:px-1.5 md:py-2" viewportClassName="overflow-y-auto overflow-x-hidden">
+        {!searchFilter.trim() && <RemoteFolders/>}
         {!searchFilter.trim()&&<SessionWorkspacePanel onSelect={onConversationResultClick}/>}
         {showConversationSearch ? (
           isSearching && !conversationResults ? (

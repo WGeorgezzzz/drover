@@ -124,6 +124,7 @@ export default function App() {
                   <Router basename={routerBasename}>
                     <Routes>
                       <Route path="/" element={<ProjectWorkspaceRoute />} />
+                      <Route path="/remote/h200/:remoteId" element={<ProjectWorkspaceRoute />} />
                       <Route path="/tasks" element={<ProjectWorkspaceRoute />} />
                       <Route path="/infohub" element={<ProjectWorkspaceRoute />} />
                       <Route path="/information" element={<ProjectWorkspaceRoute />} />
