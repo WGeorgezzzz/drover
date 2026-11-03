@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Markdown, RemoteClaudeComposer } from '@/modules/chat';
+import type { RemoteClaudeOptions } from '@/shared/types';
 import { Folder, Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/modules/auth';
 import { api } from '@/shared/api';
@@ -10,8 +12,8 @@ const DEFAULT_HOST = 'H200-1';
 const CHANGE = 'drover:remote-sessions';
 type FolderTarget = {host: string; cwd: string};
 type Session = {id: string; title: string};
-type Turn = {id: string; prompt: string; result?: string; state: string; cwd: string};
-type Transcript = {turns: Turn[]; older: boolean};
+type Turn = {options?: RemoteClaudeOptions; modelsUsed?: string[]; id: string; prompt: string; result?: string; state: string; cwd: string};
+type Transcript = {models: string[]; turns: Turn[]; older: boolean};
 const defaultTarget = {host: DEFAULT_HOST, cwd: DEFAULT_FOLDER};
 
 function stored<T>(key: string, fallback: T): T {
@@ -50,7 +52,10 @@ export function newRemoteSession(target: FolderTarget = defaultTarget) {
 function FolderRow({target}: {target: FolderTarget}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [open,setOpen] = useState(target.host === DEFAULT_HOST && target.cwd === DEFAULT_FOLDER);
+  const params = new URLSearchParams(location.search);
+  const selectedFolder = location.pathname.startsWith('/remote/h200/') && params.get('host')===target.host && params.get('cwd')===target.cwd;
+  const [open,setOpen] = useState(selectedFolder || (target.host === DEFAULT_HOST && target.cwd === DEFAULT_FOLDER));
+  useEffect(()=>{if(selectedFolder)setOpen(true)},[selectedFolder]);
   const [sessions,setSessions] = useState<Session[]>([]);
   const [error,setError] = useState('');
   const [revision,setRevision] = useState(0);
@@ -122,6 +127,9 @@ export function RemoteConversation({onMenu}: {onMenu:()=>void}) {
 function Conversation({target,id,onMenu}: {target:FolderTarget;id:string;onMenu:()=>void}) {
   const key='remote.pending.'+storageKey(target)+id;
   const [pending,setPending]=useState(()=>stored<{id:string;prompt:string;after:string|null}|null>(key,null));
+  const optionKey = 'remote.options.'+storageKey(target)+id;
+  const [models,setModels]=useState<string[]>([]);
+  const [options,setOptions]=useState<RemoteClaudeOptions|null>(()=>stored(optionKey,null));
   const [input,setInput]=useState(pending?.prompt || '');
   const [turns,setTurns]=useState<Turn[]>([]);
   const [older,setOlder]=useState(false);
@@ -136,6 +144,11 @@ function Conversation({target,id,onMenu}: {target:FolderTarget;id:string;onMenu:
       try {
         const page=await request<Transcript>(target,'get',{thread:id});
         if(!active)return;
+        setModels(page.models);
+        setOptions(current=>{
+          const saved=current || page.turns.at(-1)?.options;
+          return {model:saved && page.models.includes(saved.model)?saved.model:page.models[0],effort:saved?.effort || 'default',permission:saved?.permission || 'acceptEdits'};
+        });
         setTurns(previous=>{ const ids=new Set(page.turns.map(t=>t.id));return [...previous.filter(t=>!ids.has(t.id)),...page.turns]; });
         setOlder(previous=>ready?previous:page.older);
         setReady(true);setError('');
@@ -147,8 +160,8 @@ function Conversation({target,id,onMenu}: {target:FolderTarget;id:string;onMenu:
   },[id,revision]);
   const last=turns.at(-1);
   async function send() {
-    if(!input.trim() || busy || !ready || last?.state==='运行中')return;
-    const turn=pending?.prompt===input?pending:{id:crypto.randomUUID(),prompt:input,after:last?.id??null};
+    if(!options || !input.trim() || busy || !ready || last?.state==='运行中')return;
+    const turn=pending?.prompt===input?pending:{id:crypto.randomUUID(),prompt:input,options,after:last?.id??null};
     setBusy(true);setError('');setPending(turn);localStorage.setItem(key,JSON.stringify(turn));
     try{
       await request(target,'start',{...turn,thread:id});
@@ -171,11 +184,13 @@ function Conversation({target,id,onMenu}: {target:FolderTarget;id:string;onMenu:
       {ready && !turns.length && <p>在此目录开始一个独立会话。</p>}
       {turns.map(turn=><article key={turn.id} className="space-y-2">
         <p className="whitespace-pre-wrap break-words rounded-lg bg-muted p-3">{turn.prompt}</p>
-        <p className="whitespace-pre-wrap break-words">{turn.result || turn.state}</p>
+        <Markdown className="prose prose-sm max-w-none break-words dark:prose-invert">{turn.result || turn.state}</Markdown>
+        {turn.modelsUsed?.length ? <small className="text-muted-foreground">{turn.modelsUsed.join(' · ')}</small> : null}
       </article>)}
     </div>
     {error && <div role="alert">{error} <button onClick={()=>setRevision(v=>v+1)}>刷新</button></div>}
-    <textarea className="rounded border bg-background p-3" aria-label="远程会话消息" rows={3} value={input} onChange={e=>setInput(e.target.value)} placeholder="发给这个会话的 Claude…"/>
-    <button className="self-end rounded bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50" disabled={!ready || busy || !input.trim() || last?.state==='运行中'} onClick={send}>发送</button>
+    {options && <RemoteClaudeComposer input={input} setInput={setInput} options={options} models={models}
+      onOptions={next=>{setOptions(next);localStorage.setItem(optionKey,JSON.stringify(next))}}
+      onSend={send} disabled={!ready || busy || !input.trim() || last?.state==='运行中'}/>}
   </main>;
 }

@@ -8,6 +8,8 @@ import type { NavigateFunction } from 'react-router-dom';
 export type LLMProvider = 'claude' | 'cursor' | 'codex' | 'opencode' | 'workbuddy' | 'deepseek-harness' | 'gemini';
 
 /** One selectable model in a provider's model menu, including its optional reasoning-effort choices. */
+/** Settings attached to one remote Claude turn by the chat composer. */
+export type RemoteClaudeOptions = {model: string; effort: string; permission: PermissionMode};
 export type ProviderModelOption = {
   disabled?:boolean;unavailableReason?:string;
   value: string;
