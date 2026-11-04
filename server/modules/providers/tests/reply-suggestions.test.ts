@@ -77,7 +77,10 @@ test('relay suggestions use Terra JSON with bounded output, allow explicit overr
     assert.equal(body.model, context.env.REPLY_SUGGESTIONS_MODEL || process.env.REPLY_SUGGESTIONS_MODEL || 'gpt-6.1-terra');
     assert.equal(body.max_output_tokens, 1200); assert.equal(body.store, false);
     assert.deepEqual(body.reasoning, { effort: 'low' }); assert.deepEqual(body.text, { format: { type: 'json_object' } });
-    assert.match(body.instructions, /NEXT USER REPLIES/); assert.deepEqual(JSON.parse(body.input).recentConversation, history);
+    assert.match(body.instructions, /NEXT USER REPLIES/);
+    // The live Responses gateway requires JSON in input, not only in instructions.
+    assert.match(body.input, /^Return JSON\. UNTRUSTED_DATA:\n/);
+    assert.deepEqual(JSON.parse(body.input.slice(body.input.indexOf('\n') + 1)).recentConversation, history);
     assert.ok(options.signal);
     return Response.json({ status: 'completed', model: 'gpt-6.1-terra', usage: { input_tokens: 42, output_tokens: 9 }, output: [{ content: [{ type: 'output_text', text: '{"replies":["Choose garden B."]}' }] }] });
   });

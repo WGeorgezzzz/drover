@@ -63,7 +63,7 @@ export async function generateContextualReplies(context: ReplyContext): Promise<
     const response = await fetch(base.replace(/\/$/, '').replace(/\/v1$/, '') + '/v1/responses', {
       method: 'POST', redirect: 'error',
       headers: { 'content-type': 'application/json', Authorization: 'Bearer ' + key },
-      body: JSON.stringify({ model, instructions: INSTRUCTIONS, input: JSON.stringify({ recentConversation: context }),
+      body: JSON.stringify({ model, instructions: INSTRUCTIONS, input: 'Return JSON. UNTRUSTED_DATA:\n' + JSON.stringify({ recentConversation: context }),
         max_output_tokens: 1200, store: false, reasoning: { effort: 'low' }, text: { format: { type: 'json_object' } } }),
       signal: AbortSignal.timeout(45000),
     });
