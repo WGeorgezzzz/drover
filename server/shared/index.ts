@@ -1,5 +1,7 @@
 export { appendFilesInputTag, appendImagesInputTag, buildClaudeUserContent, buildCodexInputItems, normalizeImageDescriptors } from './image-attachments.js';
 export { AppError, createCompleteMessage, createNormalizedMessage } from './utils.js';
+// TaskMaster and Providers use the same account-scoped relay credential selection.
+export { resolveAuxiliaryRelay } from './utils.js';
 // Provider adapters use the shared verified process-tree terminator for cancellation and protocol failures.
 export { killProcessTree } from './process-tree.js';
 // Provider adapters locate their packaged launcher alongside source or compiled server modules.

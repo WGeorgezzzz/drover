@@ -18,6 +18,7 @@ import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import TOML from '@iarna/toml';
 
 import { parseFrontMatter } from '@/shared/frontmatter.js';
 import type {
@@ -38,6 +39,38 @@ import type {
 /** Auth binds per-run identities; shared path and attachment helpers read them
  * without importing auth middleware or opening its database during module evaluation. */
 export const userContextStorage = new AsyncLocalStorage<UserRuntimeContext>();
+
+// ---------------------------
+//----------------- AUXILIARY RELAY CONFIGURATION ------------
+/**
+ * TaskMaster and Providers share the authenticated user's auxiliary relay selection.
+ * Runtime settings override Claude settings; explicit Codex API-key configuration
+ * then takes precedence. Administrators can use the dedicated .codex-qz relay,
+ * while members remain confined to their own Codex home. Subscription tokens are
+ * never interpreted as API keys. Callers must require a Responses protocol and
+ * nonempty base/key before making a request; this helper never selects a model.
+ */
+export async function resolveAuxiliaryRelay(context: UserRuntimeContext) {
+  let configured: Record<string, string> = {};
+  try { const settings = JSON.parse(await readFile(path.join(context.claudeConfigDir, 'settings.json'), 'utf8')); configured = settings.env ?? {}; } catch { /* Explicit runtime env can suffice. */ }
+  const env = { ...configured, ...context.env };
+  let base = env.TASKMASTER_AUTO_BASE_URL || env.ANTHROPIC_BASE_URL;
+  let key = env.TASKMASTER_AUTO_API_KEY || env.ANTHROPIC_AUTH_TOKEN || env.ANTHROPIC_API_KEY;
+  let protocol = env.TASKMASTER_AUTO_PROTOCOL || 'anthropic';
+  let configuredModel: string | undefined;
+  const relayHome = context.role === 'admin' && fs.existsSync(path.join(process.env.TASKMASTER_CODEX_HOME || path.join(os.homedir(), '.codex-qz'), 'config.toml'))
+    ? process.env.TASKMASTER_CODEX_HOME || path.join(os.homedir(), '.codex-qz') : context.codexHome;
+  if (context.env.CODEX_HOME) {
+    try {
+      const config = TOML.parse(await readFile(path.join(relayHome, 'config.toml'), 'utf8')) as Record<string, unknown>;
+      const providers = config.model_providers as Record<string, { base_url?: string }> | undefined;
+      const provider = providers?.[String(config.model_provider)];
+      const auth = JSON.parse(await readFile(path.join(relayHome, 'auth.json'), 'utf8'));
+      if (provider?.base_url && typeof auth.OPENAI_API_KEY === 'string') { base = provider.base_url; key = auth.OPENAI_API_KEY; protocol = 'responses'; configuredModel = typeof config.model === 'string' ? config.model : undefined; }
+    } catch { /* Subscription-only credentials are not sent as relay API keys. */ }
+  }
+  return { env, base, key, protocol, configuredModel };
+}
 
 // ---------------------------
 //----------------- ENVIRONMENT UTILITIES ------------
