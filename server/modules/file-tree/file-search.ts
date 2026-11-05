@@ -2,12 +2,17 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { rgPath } from '@vscode/ripgrep';
 import type { FileTreeNode } from '@/shared/types.js';
+import {searchIndexedFilePaths} from './indexed-file-search.js';
 
 const EXCLUDED = ['node_modules','.git','.svn','.hg','.venv','venv','__pycache__','dist','build','.next','.nuxt','.cache','.parcel-cache','.pytest_cache','.mypy_cache','.tox','target','vendor','.gradle','.idea','coverage','.nyc_output'];
 /** File-tree service filename discovery: bounded time/count, no content reads or symlink traversal. */
-export function searchFilePaths(root: string, query: string, respectGitignore = true, exactSuffix = false): Promise<{files: FileTreeNode[]; truncated: boolean}> {
+export async function searchFilePaths(root: string, query: string, respectGitignore = true, exactSuffix = false): Promise<{files: FileTreeNode[]; truncated: boolean}> {
   const normalized = query.slice(0,512).replaceAll('\\','/');
   const needle = exactSuffix && process.platform !== 'win32' ? normalized : normalized.toLowerCase();
+  if(exactSuffix && !respectGitignore && process.platform==='win32'){
+    const indexed=await searchIndexedFilePaths(root,normalized,EXCLUDED);
+    if(indexed)return indexed;
+  }
   return new Promise((resolve,reject) => {
     const args = ['--files','--hidden','--null','--line-buffered','--no-ignore-parent','--no-require-git', ...(respectGitignore ? [] : ['--no-ignore']), ...EXCLUDED.flatMap(name => ['-g','!**/'+name+'/**'])];
     // Push the literal suffix into ripgrep so unrelated files never fill the pipe.
