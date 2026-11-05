@@ -436,6 +436,9 @@ export const api = {
     get(fileContentPath(projectId, filePath), options),
   resolveFilePattern: (projectId: string, patternPath: string, options: ApiRequestOptions = {}) =>
     get(`/api/file-tree/projects/${projectId}/files/resolve-pattern${query({ path: patternPath })}`, options),
+  // Relative-link fallback stays within the registered project and includes ignored outputs.
+  resolveFileSuffix: (projectId: string, suffix: string, options: ApiRequestOptions = {}) =>
+    get(`/api/file-tree/projects/${projectId}/files/search${query({q:suffix,exactSuffix:true})}`, options),
   saveFile: (projectId: string, filePath: string, content: string, expectedContent?: string) =>
     put(`/api/file-tree/projects/${projectId}/file`, { filePath, content, ...(expectedContent !== undefined ? {expectedContent} : {}) }),
   getFiles: (projectId: string, options: ApiRequestOptions = {}, workspacePath?:string) =>

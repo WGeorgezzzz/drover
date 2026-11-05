@@ -4,8 +4,8 @@ import {afterEach,test,vi} from 'vitest';
 import {Markdown} from '@/modules/chat/transcript/Markdown';
 import {MarkdownWorkspaceContext} from '@/modules/chat/context/MarkdownWorkspaceContext';
 import {folderPath,nativePath} from '@/shared/localPath';
-const {preview,readFileBlob}=vi.hoisted(()=>({preview:vi.fn(),readFileBlob:vi.fn()}));
-vi.mock('@/shared/api',()=>({api:{readFileBlob}}));
+const {preview,readFileBlob,resolveFileSuffix}=vi.hoisted(()=>({preview:vi.fn(),readFileBlob:vi.fn(),resolveFileSuffix:vi.fn(async()=>({ok:true,json:async()=>({files:[],truncated:false})}))}));
+vi.mock('@/shared/api',()=>({api:{readFileBlob,resolveFileSuffix}}));
 vi.mock('@/modules/command-palette',()=>({usePaletteOps:()=>({openFileInEditor:preview,openDirectory:vi.fn()})}));
 afterEach(()=>{cleanup();vi.clearAllMocks();});
 test('relative directory hint and bare mp4 / jpg links resolve against conversation cwd before project',async()=>{

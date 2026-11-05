@@ -606,6 +606,15 @@ export function createFileTreeService(dependencies: FileTreeServiceDependencies)
 
     async searchProjectFiles(projectId, query, options) {
       const registered = await resolveProjectRoot(projectId);
+      if (options?.exactSuffix) {
+        const suffix = query.replaceAll('\\', '/').replace(/^(\.\/)+/, '');
+        if (!suffix || suffix.length > 512 || /^[a-z]:|^\//i.test(suffix) || suffix.split('/').some(part => !part || part === '.' || part === '..') || /[\x00-\x1f]/.test(suffix)) {
+          throw createFileTreeError('Expected a relative file path without traversal',400,'INVALID_FILE_SUFFIX');
+        }
+        // Never expand a fallback lookup to a caller-supplied or sibling workspace.
+        assertContextPath(registered);
+        return searchFilePaths(registered, suffix, false, true);
+      }
       const root = options?.workspacePath ? path.resolve(options.workspacePath) : registered;
       if (options?.workspacePath) {
         if (!path.isAbsolute(options.workspacePath)) throw createFileTreeError('Workspace path must be absolute',400,'INVALID_WORKSPACE_PATH');

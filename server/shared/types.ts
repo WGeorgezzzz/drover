@@ -1496,7 +1496,8 @@ export type FileTreeServices = {
     projectId: string,
     options?: { respectGitignore: boolean; workspacePath?:string; directory?:string; shallow?:boolean },
   ): Promise<FileTreeNode[]>;
-  searchProjectFiles(projectId: string, query: string, options?: {respectGitignore?: boolean; workspacePath?: string}): Promise<{files: FileTreeNode[]; truncated: boolean}>;
+  /** Searches project filenames. exactSuffix matches complete relative path segments, including ignored outputs, within the registered project only. */
+  searchProjectFiles(projectId: string, query: string, options?: {respectGitignore?: boolean; workspacePath?: string; exactSuffix?: boolean}): Promise<{files: FileTreeNode[]; truncated: boolean}>;
   createEntry(input: {
     projectId: string;
     parentPath: string;

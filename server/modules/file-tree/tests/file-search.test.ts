@@ -15,3 +15,16 @@ test('native search finds deep paths, nested ignores, hard exclusions and litera
   assert.equal((await searchFilePaths(root,'[needle]*')).files.length,0);
  } finally {await rm(root,{recursive:true,force:true});}
 });
+
+test('suffix lookup finds ignored PDFs by whole path segments, including literal glob characters', async () => {
+ const root = await mkdtemp(path.join(os.tmpdir(), 'drover-suffix-'));
+ try {
+  const paths = ['task/paper-v10/main_zh.pdf', 'other/paper-v10/main_zh.pdf', 'task/not-paper-v10/main_zh.pdf', 'task/paper-v10/main_zh.pdf.bak', 'task/paper-v[10]/main_zh.pdf'];
+  for (const file of paths) { await mkdir(path.dirname(path.join(root, file)), {recursive:true}); await writeFile(path.join(root,file),'pdf'); }
+  await writeFile(path.join(root,'.gitignore'),'*.pdf');
+  const result = await searchFilePaths(root, 'paper-v10/main_zh.pdf', false, true);
+  assert.deepEqual(result.files.map(file=>path.relative(root,file.path).replaceAll('\\','/')).sort(), paths.slice(0,2).sort());
+  assert.equal(result.truncated,false);
+  assert.equal((await searchFilePaths(root, 'paper-v[10]/main_zh.pdf', false, true)).files.length,1);
+ } finally { await rm(root,{recursive:true,force:true}); }
+});

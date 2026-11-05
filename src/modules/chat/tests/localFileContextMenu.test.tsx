@@ -29,6 +29,7 @@ test('right-click opens the exact decoded Windows path without line suffix; left
 
 test('inline relative references use their conversation project for native opening', async () => {
   desktop.cloudcliDesktop = { openLocalPath: vi.fn().mockResolvedValue({}) };
+  readFileBlob.mockResolvedValue({ok:true,status:200});
   render(<MarkdownWorkspaceContext.Provider value={{ projectId: 'one', projectPath: 'D:\\项目' }}>
     <Markdown>{'`docs/报告.md:23`'}</Markdown>
   </MarkdownWorkspaceContext.Provider>);

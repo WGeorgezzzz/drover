@@ -87,12 +87,21 @@ export function LocalFileLink({ fileReference, directories = [], onPreview, chil
     if (!roots.length) throw new Error('会话工作目录不可用，请使用绝对路径');
     if (directories.length > 32) throw new Error('目录过多，请使用绝对路径');
     const join=(base:string,relative:string)=>base.replace(/\/$/,'')+'/'+relative;
-    return [directories.flatMap(dir=> /^(?:[a-z]:\/|\/)/i.test(dir) ? [join(dir,path)] : roots.map(root=>join(join(root,dir),path))),...roots.map(root=>[join(root,path)])].filter(group=>group.length);
+    const joinReference = (base: string) => {
+      const segments = base.replace(/\\/g,'/').replace(/\/$/,'').split('/');
+      const reference = path.replace(/^(\.\/)+/,'').split('/');
+      // Directory hints often already end with the link's directory prefix.
+      for (let count = Math.min(segments.length, reference.length - 1); count > 0; count--) {
+        if (segments.slice(-count).join('/') === reference.slice(0,count).join('/')) return join(segments.join('/'),reference.slice(count).join('/'));
+      }
+      return join(base,path);
+    };
+    return [directories.flatMap(dir=> /^(?:[a-z]:\/|\/)/i.test(dir) ? [joinReference(dir)] : roots.map(root=>joinReference(join(root,dir)))),...roots.map(root=>[join(root,path)]),...roots.filter(root=>joinReference(root)!==join(root,path)).map(root=>[joinReference(root)])].filter(group=>group.length);
   };
   const resolvePaths = async (): Promise<string[]> => {
     const groups = candidateGroups();
     if(!abbreviated && /^(?:[a-z]:\/|\/)/i.test(parseLocalFileLink(fileReference).path)) return groups[0];
-    if (!projectId || (!directories.length && !cwd && !abbreviated)) return groups[0];
+    if (!projectId) return groups[0];
     const tried:string[]=[]; const failures:string[]=[];
     for (const group of groups) {
       const matches:string[]=[];
@@ -108,6 +117,16 @@ export function LocalFileLink({ fileReference, directories = [], onPreview, chil
       }
       const unique=[...new Set(matches.map(p=>p.replace(/\\/g,'/')))];
       if(unique.length) {setResolvedTitle(unique.join('\n'));return unique;}
+    }
+    const reference = parseLocalFileLink(fileReference).path;
+    // Exact failures may recover by a complete relative suffix, never by basename alone.
+    if (!abbreviated && !/^(?:[a-z]:\/|\/)/i.test(reference) && !reference.split('/').includes('..') && !failures.length) {
+      const response = await api.resolveFileSuffix(projectId, reference, {signal:AbortSignal.timeout(65000)});
+      if (!response.ok) throw new Error('项目内路径查找失败 (' + response.status + ')；已尝试：' + tried.join('；'));
+      const result = await response.json() as {files: {path:string}[]; truncated:boolean};
+      if (result.truncated) throw new Error('项目内路径查找未完成，无法确定唯一文件，请使用完整路径。');
+      const matches = [...new Set(result.files.map(file=>file.path.replace(/\\/g,'/')))];
+      if (matches.length) {setResolvedTitle(matches.join('\n'));return matches;}
     }
     throw new Error((failures.length?failures.join('；'):'未找到文件')+'；已尝试：'+tried.join('；'));
   };

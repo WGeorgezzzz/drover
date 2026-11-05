@@ -205,7 +205,7 @@ export function createFileTreeRouter(
   }, logger));
 
   router.get('/projects/:projectId/files/search', createRouteHandler(async (request, response) => {
-    response.json(await services.searchProjectFiles(readProjectId(request), readOptionalString(request.query.q) ?? '', {respectGitignore: request.query.respectGitignore !== 'false', ...(typeof request.query.workspacePath === 'string' ? {workspacePath: request.query.workspacePath} : {})}));
+    response.json(await services.searchProjectFiles(readProjectId(request), readOptionalString(request.query.q) ?? '', {respectGitignore: request.query.respectGitignore !== 'false', ...(request.query.exactSuffix === 'true' ? {exactSuffix:true} : {}), ...(typeof request.query.workspacePath === 'string' ? {workspacePath: request.query.workspacePath} : {})}));
   }, logger));
 
   router.get('/projects/:projectId/files', createRouteHandler(async (request, response) => {

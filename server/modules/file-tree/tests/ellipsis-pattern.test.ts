@@ -1,4 +1,5 @@
-import { installAuthorizationFixture, authenticateTestRequest } from '@/test-support/authorization-fixture.js';
+import { installAuthorizationFixture, authenticateTestRequest, testUserId } from '@/test-support/authorization-fixture.js';
+import { withUserContext } from '@/modules/auth/index.js';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import fs from 'node:fs';
@@ -97,6 +98,16 @@ test('resolveFilePattern returns only existing files that match, never directori
 });
 
 installAuthorizationFixture();
+
+test('suffix lookup stays in project and rejects traversal and absolute input', async () => {
+  await withUserContext(testUserId(), () => withProject(async (root, service) => {
+    const result = await service.searchProjectFiles('p','preview-r6/' + realName,{exactSuffix:true,workspacePath:os.tmpdir()});
+    assert.deepEqual(result.files.map(file=>file.path),[path.join(root,'preview-r6',realName)]);
+    for (const suffix of ['../main.pdf','a/../main.pdf','/main.pdf','C:/main.pdf','a//main.pdf','']) {
+      await assert.rejects(service.searchProjectFiles('p',suffix,{exactSuffix:true}),{statusCode:400});
+    }
+  }));
+});
 
 test('content route serves byte ranges for video seeking and resolve-pattern returns the real path', async () => {
   await withProject(async (root, service) => {

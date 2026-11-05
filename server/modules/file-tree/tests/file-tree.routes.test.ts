@@ -62,6 +62,15 @@ async function withFileTreeServer(
 
 installAuthorizationFixture();
 
+test('suffix search route forwards explicit mode to the service', async () => {
+  const calls: unknown[][] = [];
+  await withFileTreeServer(createFakeServices({searchProjectFiles:async(...args)=>{calls.push(args);return {files:[],truncated:false};}}),async base=>{
+    const response=await fetch(base+'/api/file-tree/projects/project-1/files/search?q=paper-v10%2Fmain_zh.pdf&exactSuffix=true');
+    assert.equal(response.status,200);
+  });
+  assert.deepEqual(calls,[['project-1','paper-v10/main_zh.pdf',{respectGitignore:true,exactSuffix:true}]]);
+});
+
 test('project files route uses the File Tree API namespace and forwards the project id', async () => {
   const inputs: Parameters<FileTreeServices['listProjectFiles']>[] = [];
   const services = createFakeServices({
