@@ -17,3 +17,8 @@ adapter must likewise preserve member isolation.
 This setting does not copy credentials, expose local files, or make SSH durable.
 A separate authenticated local-tool bridge, persistent remote execution, and
 transcript synchronization must be verified before claiming remote operation.
+
+Set `CLAUDEX_PRESERVE_MISSING_TRANSCRIPTS=1` when transcript files are mirrored or
+may be temporarily unavailable. Synchronization then retains indexed records
+instead of treating a missing file as permission to delete their history index.
+This does not reconstruct missing content; explicit session deletion still works.

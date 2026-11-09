@@ -110,7 +110,10 @@ async function runSessionSynchronization(): Promise<SessionSynchronizeResult> {
   // not have re-indexed transcripts it would otherwise have re-created.
   // A passive verification copy deliberately has only selected transcripts.
   // Never interpret its incomplete filesystem as permission to delete baseline rows.
+  // Remote transcript mirrors can be temporarily incomplete even while their directory exists.
+  // Opt-in preservation keeps indexed history available until artifacts are restored or explicitly deleted.
   const prunedOrphans = failures.length === 0 && process.env.CLAUDEX_PASSIVE_INSTANCE !== '1'
+    && process.env.CLAUDEX_PRESERVE_MISSING_TRANSCRIPTS !== '1'
     ? await pruneOrphanedSessions() : 0;
 
   if (failures.length === 0) {

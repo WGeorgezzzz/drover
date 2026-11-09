@@ -55,6 +55,25 @@ async function withIsolatedDatabase(runTest: (workspace: string) => Promise<void
 
 const PROJECT_PATH = '/tmp/session-prune-project';
 
+test('remote mirror preservation retains a missing transcript without disabling synchronization', async () => {
+  await withIsolatedDatabase(async (workspace) => {
+    const directory = path.join(workspace, 'mirror');
+    await mkdir(directory, { recursive: true });
+    sessionsDb.createSession('remote-mirror-session', 'claude', PROJECT_PATH, 'Remote', undefined, undefined, path.join(directory, 'pending.jsonl'));
+    const previous = process.env.CLAUDEX_PRESERVE_MISSING_TRANSCRIPTS;
+    process.env.CLAUDEX_PRESERVE_MISSING_TRANSCRIPTS = '1';
+    try {
+      const result = await sessionSynchronizerService.synchronizeSessions();
+      assert.deepEqual(result.failures, []);
+      assert.equal(result.prunedOrphans, 0);
+      assert.ok(sessionsDb.getSessionById('remote-mirror-session'));
+    } finally {
+      if (previous === undefined) delete process.env.CLAUDEX_PRESERVE_MISSING_TRANSCRIPTS;
+      else process.env.CLAUDEX_PRESERVE_MISSING_TRANSCRIPTS = previous;
+    }
+  });
+});
+
 test('synchronizeSessions drops indexed sessions whose transcript file was deleted', async () => {
   await withIsolatedDatabase(async (workspace) => {
     const transcriptDirectory = path.join(workspace, 'transcripts');
