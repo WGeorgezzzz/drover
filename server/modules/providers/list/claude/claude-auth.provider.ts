@@ -1,11 +1,14 @@
+import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { promisify } from 'node:util';
 
 import spawn from 'cross-spawn';
-import { createClaudeLaunchEnvironment, getClaudeConfigDir } from '@/shared/index.js';
 
+import { createClaudeLaunchEnvironment, getClaudeConfigDir } from '@/shared/index.js';
 import { resolveClaudeCodeExecutablePath } from '@/shared/claude-cli-path.js';
+import { getCurrentUserContext } from '@/modules/auth/index.js';
 import type { IProviderAuth } from '@/shared/interfaces.js';
 import type { ProviderAuthStatus, ProviderAuthSubscriptionOverride } from '@/shared/types.js';
 import { readObjectRecord, readOptionalString } from '@/shared/utils.js';
@@ -32,6 +35,32 @@ const hasErrorCode = (error: unknown, code: string): boolean => (
 );
 
 export class ClaudeProviderAuth implements IProviderAuth {
+  /** An explicitly configured owner-only adapter reports its remote login without copying OAuth credentials. */
+  private async remoteStatus(): Promise<ProviderAuthStatus | null> {
+    const adapter = process.env.CLAUDE_REMOTE_CLI_PATH?.trim();
+    if (!adapter || getCurrentUserContext()?.role === 'member') return null;
+    const unavailable: ProviderAuthStatus = {
+      provider: 'claude', installed: true, authenticated: false, email: null, method: null,
+      error: 'Remote Claude authentication could not be verified. Check the configured remote connection.',
+    };
+    try {
+      if (!path.isAbsolute(adapter)) return unavailable;
+      const script = /\.[cm]?js$/i.test(adapter);
+      const { stdout } = await promisify(execFile)(script ? process.execPath : adapter,
+        script ? [adapter, 'auth', 'status'] : ['auth', 'status'], {
+          timeout: 25000, maxBuffer: 128 * 1024, windowsHide: true,
+          env: createClaudeLaunchEnvironment(getCurrentUserContext()?.env ?? process.env, adapter),
+        });
+      const status = readObjectRecord(JSON.parse(stdout));
+      if (typeof status?.loggedIn !== 'boolean') return unavailable;
+      return {
+        provider: 'claude', installed: true, authenticated: status.loggedIn,
+        email: readOptionalString(status.email) ?? null,
+        method: status.loggedIn ? readOptionalString(status.authMethod) ?? 'remote' : null,
+        ...(status.loggedIn ? {} : { error: 'Remote Claude is not authenticated. Log in on the remote host.' }),
+      };
+    } catch { return unavailable; }
+  }
   /**
    * Checks whether the Claude Code CLI is available on this host.
    */
@@ -54,6 +83,8 @@ export class ClaudeProviderAuth implements IProviderAuth {
    * Returns Claude installation and credential status using Claude Code's auth priority.
    */
   async getStatus(): Promise<ProviderAuthStatus> {
+    const remote = await this.remoteStatus();
+    if (remote) return remote;
     const installed = this.checkInstalled();
 
     if (!installed) {
