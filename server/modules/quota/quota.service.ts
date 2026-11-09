@@ -8,6 +8,7 @@ import { getCloudCliHomeDir } from '@/shared/index.js';
 
 import { initializeQuotaTables, recordCreditSnapshot } from './quota.db.js';
 import { quotaFetch } from './quota.http.js';
+import { parseRemoteClaudeUsage, runRemoteClaudeUsage } from './remote-claude-usage.js';
 import { normalizeRelayBaseUrl, readRelayConfiguration, readLegacyRelayBaseUrl } from './quota.config.js';
 
 // Untrusted upstream JSON is projected field by field; never forward credentials or raw errors.
@@ -15,7 +16,7 @@ type Json = Record<string, any>;
 type Window = { label: string; percent: number | null; resetsAt: string | null; severity: string; stats?: { requests: number | null; tokens: number | null; cost: number | null } };
 const num = (v: unknown): number | null => (typeof v === 'number' || typeof v === 'string') && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
 const date = (v: unknown): string | null => typeof v === 'number' ? new Date(v * 1000).toISOString() : typeof v === 'string' && Number.isFinite(Date.parse(v)) ? new Date(v).toISOString() : null;
-const stale = (at: string | null, now: number) => !at || now - Date.parse(at) > 900000;
+const stale = (at: string | null, now: number, limit = 900000) => !at || now - Date.parse(at) > limit;
 function window(label: string, raw: Json = {}): Window {
   const percent = num(raw.utilization ?? raw.percent);
   return { label, percent, resetsAt: date(raw.resets_at), severity: percent !== null && percent >= 95 ? 'danger' : raw.severity === 'warning' ? 'warning' : 'normal',
@@ -23,17 +24,17 @@ function window(label: string, raw: Json = {}): Window {
 }
 
 /** Quota composition and module tests use a cache with single-flight refresh, bounded retries and sanitized failures. */
-export function createQuotaCache<T>(load: () => Promise<T>, now = Date.now) {
+export function createQuotaCache<T>(load: () => Promise<T>, now = Date.now, { ttlMs = 120000, staleAfterMs = 900000 } = {}) {
   let data: T | null = null, updatedAt: string | null = null, error: string | null = null, next = 0, failures = 0;
   let pending: Promise<void> | null = null;
   return async () => {
     if (!pending && now() >= next) {
-      pending = load().then(value => { data = value; updatedAt = new Date(now()).toISOString(); error = null; failures = 0; next = now() + 120000; })
+      pending = load().then(value => { data = value; updatedAt = new Date(now()).toISOString(); error = null; failures = 0; next = now() + ttlMs; })
         .catch(e => { error = e instanceof QuotaError ? e.message : '额度刷新失败，请稍后重试'; next = now() + Math.min(600000, 30000 * 2 ** Math.min(failures++, 5)); })
         .finally(() => { pending = null; });
     }
     await pending;
-    return { data, updatedAt, stale: stale(updatedAt, now()), error, nextRefreshAt: new Date(next).toISOString() };
+    return { data, updatedAt, stale: stale(updatedAt, now(), staleAfterMs), staleAfterMs, error, nextRefreshAt: new Date(next).toISOString() };
   };
 }
 class QuotaError extends Error {}
@@ -44,6 +45,7 @@ export function createQuotaService(deps: {
   paths: typeof resolveUserConfigPaths; secretFile: string; password: () => Promise<string>;
   db: typeof getConnection; now?: () => number;
   relayBaseUrl?: string;
+  remoteClaudeUsage?: () => Promise<string>;
 }) {
   const now = deps.now || Date.now;
   const base = normalizeRelayBaseUrl(deps.relayBaseUrl ?? '');
@@ -92,7 +94,16 @@ export function createQuotaService(deps: {
       throw e;
     }
   }
-  const claude = createQuotaCache(async () => {
+  // Remote Claude asks its own CLI, because a direct call would leave from a different address than the account's lane.
+  const loadRemoteClaude = async () => {
+    let stdout: string;
+    try { stdout = await deps.remoteClaudeUsage!(); }
+    catch { throw new QuotaError('无法经 SSH 读取 Contabo 的 Claude 额度'); }
+    const windows = parseRemoteClaudeUsage(stdout, now());
+    if (!windows) throw new QuotaError('Contabo Claude 额度响应不完整');
+    return { windows: windows.map(item => window(item.label, { utilization: item.percent, resets_at: item.resetsAt })), extraUsageEnabled: false };
+  };
+  const claude = deps.remoteClaudeUsage ? createQuotaCache(loadRemoteClaude, now, { ttlMs: 1800000, staleAfterMs: 2700000 }) : createQuotaCache(async () => {
     const file = path.join(deps.paths(1, 'admin').adminClaude, '.credentials.json');
     const credentials = await deps.readJson(file);
     const token = credentials.claudeAiOauth?.accessToken;
@@ -177,6 +188,7 @@ export function createQuotaService(deps: {
       return { claude: subscription, key, relayConfigured: Boolean(base), ...(identity.role === 'admin' ? { pool: base ? await pool() : unconfigured } : {}) };
     },
     refreshPool: () => base ? pool() : Promise.resolve({ data: null, updatedAt: null, stale: false, error: null }),
+    refreshClaude: () => claude(),
   };
 }
 
@@ -184,7 +196,7 @@ let service: ReturnType<typeof createQuotaService> | undefined;
 /** Quota routes obtain the process singleton; tests construct independent instances with mocks. */
 export function getQuotaService() {
   service ||= createQuotaService({ readJson: async file => JSON.parse(await fs.readFile(file, 'utf8')), request: quotaFetch, paths: resolveUserConfigPaths,
-    relayBaseUrl: readRelayConfiguration().baseUrl,
+    relayBaseUrl: readRelayConfiguration().baseUrl, remoteClaudeUsage: process.env.CLAUDE_REMOTE_CLI_PATH?.trim() ? runRemoteClaudeUsage : undefined,
     secretFile: path.join(getCloudCliHomeDir(), 'secrets', 'sub2api-admin.json'), db: getConnection,
     password: async () => process.env.NEXAGENT_RELAY_ADMIN_PASSWORD || (JSON.parse(await fs.readFile(path.join(getCloudCliHomeDir(), 'secrets', 'sub2api-admin.json'), 'utf8')).password ?? '') });
   return service;
@@ -192,11 +204,17 @@ export function getQuotaService() {
 /** Admin configuration changes discard all cached upstream data and credentials before the next request. */
 export function resetQuotaService() { service = undefined; }
 let interval: ReturnType<typeof setInterval> | undefined;
+let claudeInterval: ReturnType<typeof setInterval> | undefined;
 /** Server lifecycle initializes history and polls read-only upstream metadata every ten minutes. */
 export function initializeQuota() {
   initializeQuotaTables(getConnection(), readLegacyRelayBaseUrl());
   const refresh = () => { void getQuotaService().refreshPool().catch(() => console.error('[Quota] Background refresh failed')); };
   refresh(); interval = setInterval(refresh, 600000); interval.unref();
+  if (process.env.CLAUDE_REMOTE_CLI_PATH?.trim()) {
+    // Each tick only consults the 30-minute cache, which also paces retries after a failure.
+    const refreshClaude = () => { void getQuotaService().refreshClaude().catch(() => console.error('[Quota] Remote Claude refresh failed')); };
+    refreshClaude(); claudeInterval = setInterval(refreshClaude, 60000); claudeInterval.unref();
+  }
 }
 /** Server shutdown cancels future quota polling. */
-export function closeQuota() { clearInterval(interval); }
+export function closeQuota() { clearInterval(interval); clearInterval(claudeInterval); }

@@ -3,7 +3,7 @@ import { useQuota } from '@/modules/usage/hooks/useQuota';
 import { RelaySettings } from '@/modules/usage/RelaySettings';
 
 function Freshness({ value, now }: { value: QuotaCache<unknown>; now: number }) {
-  const stale = value.stale || !value.updatedAt || now - Date.parse(value.updatedAt) > 900000;
+  const stale = value.stale || !value.updatedAt || now - Date.parse(value.updatedAt) > (value.staleAfterMs ?? 900000);
   return <p className={`mt-2 text-xs ${stale || value.error ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>
     {value.error && <span role="alert">{value.error} · </span>}{stale && '数据已过期 · '}
     {value.updatedAt ? `刷新于 ${new Date(value.updatedAt).toLocaleString()}` : '尚无成功数据'}

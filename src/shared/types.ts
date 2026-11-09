@@ -1990,7 +1990,7 @@ export type UsageOverview = {range:string;buckets:string[];series:UsageSeries[];
 /** Sanitized quota window; missing upstream values remain null instead of suggesting zero usage. */
 export type QuotaWindow = { label: string; percent: number | null; resetsAt: string | null; severity: string; stats?: { requests: number | null; tokens: number | null; cost: number | null } };
 /** Last successful data and refresh health, used by both the settings panel and sidebar indicator. */
-export type QuotaCache<T> = { data: T | null; updatedAt: string | null; stale: boolean; error: string | null };
+export type QuotaCache<T> = { data: T | null; updatedAt: string | null; stale: boolean; staleAfterMs?: number; error: string | null };
 /** Key-scoped relay statistics; unavailable daily history is null, never substituted with another key's totals. */
 export type QuotaKeyStats = { requests: number | null; tokens: number | null; cost: number | null };
 /** Public quota contract. Pool is absent for members; credentials and raw upstream payloads are never included. */

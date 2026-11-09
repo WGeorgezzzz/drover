@@ -24,7 +24,7 @@ export function QuotaIndicator({ onOpen }: { onOpen: () => void }) {
     const percent=values.length?values[0].percent:localWindows?.some(w=>w.usedPercent!=null||w.remainingPercent!=null)?0:null;
     const at = first ? cache?.updatedAt : localAt;
     const failed = Boolean(error || (first ? cache?.error : local && local.status !== 'ok'));
-    const stale = failed || !at || !Number.isFinite(Date.parse(at)) || now - Date.parse(at) > 900000
+    const stale = failed || !at || !Number.isFinite(Date.parse(at)) || now - Date.parse(at) > ((first ? cache?.staleAfterMs : undefined) ?? 900000)
       || Boolean(first && (cache?.stale || (provider === 'codex' && accounts.some(account => account.usageStale))));
     return { provider, percent, windows, stale,
       detail: failed ? `读取失败（上次 ${age(at)}）` : age(at) };
