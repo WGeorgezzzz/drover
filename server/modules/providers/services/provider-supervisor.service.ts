@@ -92,6 +92,7 @@ export class DurableProvider {
     const file = path.join(this.directory, 'output.ndjson');
     let readOffset = offset;
     let pending = Buffer.alloc(0);
+    let terminalRead = false;
     for (;;) {
       const fd = fs.openSync(file, 'r');
       const buffer = Buffer.alloc(256 * 1024);
@@ -110,10 +111,17 @@ export class DurableProvider {
       }
       const record = this.registry();
       if (count === 0 && record.state !== 'running') {
+        // The worker journals exit before saving its terminal state, so one
+        // read after observing that state cannot miss the end of the journal.
+        if (!terminalRead) { terminalRead = true; continue; }
         if (pending.length) throw new Error('Incomplete supervisor journal; output retained');
         return;
       }
-      if (count === 0 && !(await this.identity())) throw new Error('Supervisor unavailable; output retained, adoption failed');
+      if (count === 0 && !(await this.identity())) {
+        // A worker that finished between these checks has closed its endpoint.
+        if (this.registry().state !== 'running') continue;
+        throw new Error('Supervisor unavailable; output retained, adoption failed');
+      }
       if (count < buffer.length) await new Promise(resolve => setTimeout(resolve, 100));
     }
   }

@@ -35,10 +35,12 @@ const hasErrorCode = (error: unknown, code: string): boolean => (
 );
 
 export class ClaudeProviderAuth implements IProviderAuth {
-  /** An explicitly configured owner-only adapter reports its remote login without copying OAuth credentials. */
+  /** An explicitly configured adapter reports its remote login without copying OAuth credentials. */
   private async remoteStatus(): Promise<ProviderAuthStatus | null> {
     const adapter = process.env.CLAUDE_REMOTE_CLI_PATH?.trim();
-    if (!adapter || getCurrentUserContext()?.role === 'member') return null;
+    if (!adapter) return null;
+    // Members share the owner's remote login and must not see its account.
+    const isMember = getCurrentUserContext()?.role === 'member';
     const unavailable: ProviderAuthStatus = {
       provider: 'claude', installed: true, authenticated: false, email: null, method: null,
       error: 'Remote Claude authentication could not be verified. Check the configured remote connection.',
@@ -55,7 +57,7 @@ export class ClaudeProviderAuth implements IProviderAuth {
       if (typeof status?.loggedIn !== 'boolean') return unavailable;
       return {
         provider: 'claude', installed: true, authenticated: status.loggedIn,
-        email: readOptionalString(status.email) ?? null,
+        email: isMember ? null : readOptionalString(status.email) ?? null,
         method: status.loggedIn ? readOptionalString(status.authMethod) ?? 'remote' : null,
         ...(status.loggedIn ? {} : { error: 'Remote Claude is not authenticated. Log in on the remote host.' }),
       };
