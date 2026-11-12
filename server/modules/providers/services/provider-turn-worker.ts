@@ -1,4 +1,4 @@
-import { initializeDatabase, closeConnection, messageQueueDb, getConnection, sessionsDb, getSessionOwnerId } from '@/modules/database/index.js';
+import { initializeWorkerDatabase, closeConnection, messageQueueDb, getConnection, sessionsDb, getSessionOwnerId } from '@/modules/database/index.js';
 import type { AnyRecord, LLMProvider, QueuedTurnRecord } from '@/shared/types.js';
 import { createNormalizedMessage } from '@/shared/utils.js';
 
@@ -8,7 +8,7 @@ import { providerRuntimeService } from './provider-runtime.service.js';
 // of the lifespan of the HTTP client that submitted them.
 export async function executeSupervisedTurn(spec: AnyRecord, emit: (kind: string, data: unknown) => void,
   installControl: (handler: (operation: AnyRecord) => unknown | Promise<unknown>) => void): Promise<unknown> {
-  await initializeDatabase();
+  initializeWorkerDatabase();
   const provider = spec.provider as LLMProvider;
   const sessionId = spec.options.sessionId as string;
   let current = { id: 'initial', spec, completed: false };

@@ -37,3 +37,21 @@ test('a bootstrap exit is recorded and fails promptly instead of waiting without
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('Windows exit zero without a registration receipt is a failure, not a successful launch', { skip: process.platform !== 'win32' }, async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'supervisor-no-receipt-'));
+  t.mock.method(childProcess, 'spawn', () => {
+    const child = Object.assign(new EventEmitter(), { unref() {}, kill() {} });
+    setTimeout(() => child.emit('exit', 0, null), 5);
+    return child;
+  });
+  syncBuiltinESMExports();
+  const started = Date.now();
+  try {
+    await assert.rejects(DurableProvider.start(root, { command: process.execPath }), /before registration completed/);
+    assert.ok(Date.now() - started < 3000);
+  } finally {
+    t.mock.restoreAll(); syncBuiltinESMExports();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

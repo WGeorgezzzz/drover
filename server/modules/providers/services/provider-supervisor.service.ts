@@ -66,6 +66,9 @@ export class DurableProvider {
       child.stdin?.destroy();
       fs.writeFileSync(path.join(directory, 'bootstrap-exit.json'), JSON.stringify({ code, signal, at: new Date().toISOString() }));
       if (code !== 0) spawnError = new Error(`Provider bootstrap exited with code ${code}, signal ${signal}`);
+      else if (process.platform === 'win32' && !fs.existsSync(resultFile)) {
+        spawnError = new Error('Provider bootstrap exited before registration completed (exit code 0)');
+      }
     });
     child.unref();
     fs.closeSync(log);

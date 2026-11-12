@@ -7,8 +7,8 @@ import { createRequire } from 'node:module';
 import { once } from 'node:events';
 import { Worker } from 'node:worker_threads';
 
-import { closeConnection } from '@/modules/database/connection.js';
-import { initializeDatabase } from '@/modules/database/init-db.js';
+import { closeConnection, getConnection } from '@/modules/database/connection.js';
+import { initializeDatabase, initializeWorkerDatabase } from '@/modules/database/init-db.js';
 import { sessionsDb } from '@/modules/database/repositories/sessions.db.js';
 
 async function withIsolatedDatabase(runTest: () => void | Promise<void>): Promise<void> {
@@ -135,5 +135,13 @@ test('provider mapping waits for a concurrent writer instead of failing its lock
     } finally {
       await exited;
     }
+  });
+});
+
+test('worker database attachment does not re-run migrations or ownership writes', async () => {
+  await withIsolatedDatabase(() => {
+    getConnection().pragma('query_only = ON');
+    assert.doesNotThrow(() => initializeWorkerDatabase());
+    assert.ok(getConnection().prepare('SELECT count(*) count FROM sessions').get());
   });
 });

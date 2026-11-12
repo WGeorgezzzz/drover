@@ -39,7 +39,8 @@ async function consume(client: DurableProvider, writer: ProviderRuntimeWriter, s
   if (!replayBytes) ready?.();
   try {
     for await (const { event, offset } of client.events()) {
-      const entry = state.entries.get(sessionId);
+      const candidate = state.entries.get(sessionId);
+      const entry = candidate?.client === client ? candidate : undefined;
       if (event.kind === 'turn-start') {
         spec = event.data.spec;
         terminal = false; providerError = false; finalReplyId = undefined;
@@ -110,8 +111,11 @@ async function consume(client: DurableProvider, writer: ProviderRuntimeWriter, s
       if (offset >= replayBytes) { ready?.(); ready = undefined; }
     }
   } finally {
-    state.entries.get(sessionId)?.continuation?.reject(new Error('Supervisor ended before continued turn completed'));
-    if (state.entries.get(sessionId)?.client === client) state.entries.delete(sessionId);
+    const entry = state.entries.get(sessionId);
+    if (entry?.client === client) {
+      entry.continuation?.reject(new Error('Supervisor ended before continued turn completed'));
+      state.entries.delete(sessionId);
+    }
   }
 }
 
@@ -125,9 +129,17 @@ export async function runSupervised(provider: LLMProvider, command: string, opti
     if (existing.provider !== provider || !existing.foregroundCompleted || existing.continuation) throw new Error('A supervised foreground turn is already running for this session');
     const client = existing.client || await existing.launching;
     if (!client || Number(existing.currentSpec?.userId) !== Number(writer.userId)) throw new Error('Continuation ownership mismatch');
+    // Completion can wait for local history while the SDK owner exits. The
+    // next user turn may beat the old journal consumer's final cleanup.
+    // A durable exit proves there is no live owner to receive continuation.
+    if (client.registry().state === 'exited') {
+      if (state.entries.get(sessionId) === existing) state.entries.delete(sessionId);
+      return runSupervised(provider, command, options, writer);
+    }
     const id = crypto.randomUUID();
     const spec = { mode: 'runtime', provider, command, options: { ...options, cloudcliSupervisorInitialSeq: chatRunRegistry.getRun(sessionId)?.lastSeq || 0 }, userId: writer.userId, isWebSocketWriter: writer.isWebSocketWriter };
-    const completion = new Promise<void>((resolve, reject) => { existing.continuation = { id, writer, resolve, reject }; });
+    let rejectContinuation!: (reason: unknown) => void;
+    const completion = new Promise<void>((resolve, reject) => { rejectContinuation = reject; existing.continuation = { id, writer, resolve, reject }; });
     // Observe rejection even if a transport failure occurs before awaiting it.
     void completion.catch(() => {});
     try { await client.control({ type: 'continue-turn', id, spec }); }
@@ -136,7 +148,16 @@ export async function runSupervised(provider: LLMProvider, command: string, opti
       const accepted = fs.readFileSync(path.join(client.directory, 'output.ndjson'), 'utf8').split('\n').some(line => {
         try { const event = JSON.parse(line); return event.kind === 'turn-start' && event.data.id === id; } catch { return false; }
       });
-      if (!accepted) { state.entries.get(sessionId)?.continuation?.reject(error); existing.continuation = undefined; throw error; }
+      if (!accepted) {
+        rejectContinuation(error); existing.continuation = undefined;
+        // Only re-open after both durable facts: the old owner exited and
+        // its journal never accepted this command. Never retry a lost ACK.
+        if (client.registry().state === 'exited') {
+          if (state.entries.get(sessionId) === existing) state.entries.delete(sessionId);
+          return runSupervised(provider, command, options, writer);
+        }
+        throw error;
+      }
     }
     return completion;
   }
