@@ -10,6 +10,7 @@ import { DurableProvider } from './provider-supervisor.service.js';
 import { launchSupervisedTurn, inspectSupervisedTurns } from './provider-turn-supervision.service.js';
 import { supervisedRuntimeState as state } from './provider-supervision-state.service.js';
 import { createProviderRestartLease } from './provider-restart-lease.service.js';
+import { waitForMirroredClaudeReply } from './provider-history-barrier.service.js';
 
 const restartLease = createProviderRestartLease(value => { state.draining = value; });
 export const cancelProviderRestart = (handoffId: string) => restartLease.cancel(handoffId);
@@ -32,6 +33,7 @@ async function consume(client: DurableProvider, writer: ProviderRuntimeWriter, s
   let terminal = false;
   let providerError = false;
   let settlementFailed = false;
+  let finalReplyId: string | undefined;
   const sessionId = spec.options.sessionId as string;
   const replayBytes = fs.statSync(path.join(client.directory, 'output.ndjson')).size;
   if (!replayBytes) ready?.();
@@ -40,7 +42,7 @@ async function consume(client: DurableProvider, writer: ProviderRuntimeWriter, s
       const entry = state.entries.get(sessionId);
       if (event.kind === 'turn-start') {
         spec = event.data.spec;
-        terminal = false; providerError = false;
+        terminal = false; providerError = false; finalReplyId = undefined;
         if (entry) {
           entry.currentSpec = spec; entry.foregroundCompleted = false;
           if (event.data.id !== 'initial') {
@@ -69,10 +71,22 @@ async function consume(client: DurableProvider, writer: ProviderRuntimeWriter, s
         for (const client of connectedClients) if (client.readyState === 1 && clientUserIds.get(client) === Number(spec.userId)) client.send(JSON.stringify(report));
       }
       if (event.kind === 'message') {
+        if (event.data.kind === 'text' && event.data.role === 'assistant' && typeof event.data.id === 'string') finalReplyId = event.data.id;
         if (event.data.kind === 'error') providerError = true;
         if (entry && event.data.kind === 'permission_request') entry.pending = [...entry.pending.filter(row => row.requestId !== event.data.requestId), event.data];
         if (entry && ['permission_resolved', 'permission_cancelled'].includes(event.data.kind)) entry.pending = entry.pending.filter(row => row.requestId !== event.data.requestId);
         if (event.data.kind === 'complete') {
+          if (spec.provider === 'claude' && process.env.CLAUDE_REMOTE_CLI_PATH?.trim()
+            && finalReplyId && !providerError && event.data.success !== false && !event.data.aborted) {
+            try {
+              await waitForMirroredClaudeReply({ sessionId, userId: Number(spec.userId), messageId: finalReplyId });
+            } catch (error) {
+              providerError = true;
+              event.data = { ...event.data, success: false, exitCode: 1 };
+              writer.send(createNormalizedMessage({ kind: 'error', sessionId, provider: spec.provider,
+                content: error instanceof Error ? error.message : String(error) }));
+            }
+          }
           terminal = true; finishQueue(spec, providerError ? { ...event.data, success: false } : event.data);
           if (entry) entry.foregroundCompleted = true;
         }
