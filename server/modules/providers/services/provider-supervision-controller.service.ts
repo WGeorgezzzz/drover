@@ -3,8 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 
 import { getConnection, getSessionOwnerId, messageQueueDb } from '@/modules/database/index.js';
-import { getCloudCliHomeDir } from '@/shared/index.js';
-import { createNormalizedMessage } from '@/shared/utils.js';
+import { createNormalizedMessage, getCloudCliHomeDir } from '@/shared/index.js';
 import type { AnyRecord, LLMProvider, ProviderRuntimeWriter, QueuedTurnRecord } from '@/shared/types.js';
 
 import { DurableProvider } from './provider-supervisor.service.js';
@@ -85,6 +84,10 @@ async function consume(client: DurableProvider, writer: ProviderRuntimeWriter, s
       if (event.kind === 'exit') {
         if (!terminal) {
           finishQueue(spec, { exitCode: 1 });
+          if (!providerError) {
+            writer.send(createNormalizedMessage({ kind: 'error', sessionId, provider: spec.provider,
+              content: event.data.error || `Model worker exited before replying (code ${event.data.code ?? 'unknown'}). Please retry.` }));
+          }
           writer.send({ kind: 'complete', sessionId, provider: spec.provider, exitCode: 1, success: false });
         }
         // Leave failed monitor settlement replayable on the next startup.

@@ -3,6 +3,9 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { createRequire } from 'node:module';
+import { once } from 'node:events';
+import { Worker } from 'node:worker_threads';
 
 import { closeConnection } from '@/modules/database/connection.js';
 import { initializeDatabase } from '@/modules/database/init-db.js';
@@ -105,5 +108,32 @@ test('legacy provider-keyed rows stay resolvable through both lookups', async ()
 
     assert.equal(sessionsDb.getSessionById('legacy-1')?.provider, 'opencode');
     assert.equal(sessionsDb.getSessionByProviderSessionId('legacy-1')?.session_id, 'legacy-1');
+  });
+});
+
+test('provider mapping waits for a concurrent writer instead of failing its lock upgrade', async () => {
+  await withIsolatedDatabase(async () => {
+    sessionsDb.createAppSession('app-contended', 'claude', '/workspace/demo');
+    // Another supervisor holds the write reservation. A deferred transaction
+    // can read, but cannot upgrade that read lock while this writer exists.
+    const worker = new Worker(`
+      const {parentPort,workerData}=require('node:worker_threads');
+      const Database=require(workerData.module);
+      const db=new Database(workerData.path);
+      db.exec('BEGIN IMMEDIATE');
+      parentPort.postMessage('locked');
+      setTimeout(()=>{db.exec('COMMIT');db.close();},400);
+    `, { eval: true, workerData: {
+      module: createRequire(import.meta.url).resolve('better-sqlite3'),
+      path: process.env.DATABASE_PATH,
+    } });
+    const exited = once(worker, 'exit');
+    try {
+      await once(worker, 'message');
+      sessionsDb.assignProviderSessionId('app-contended', 'provider-contended');
+      assert.equal(sessionsDb.getSessionById('app-contended')?.provider_session_id, 'provider-contended');
+    } finally {
+      await exited;
+    }
   });
 });

@@ -81,6 +81,7 @@ async function withGateway(
   }) => Promise<void>,
   rows: unknown[] = TRANSCRIPT_ROWS,
   backgroundWork = false,
+  runtimeFailure?: string,
 ): Promise<void> {
   const previousDatabasePath = process.env.DATABASE_PATH;
   const tempDirectory = await mkdtemp(path.join(os.tmpdir(), 'chat-edit-send-'));
@@ -108,6 +109,7 @@ async function withGateway(
           hasBackgroundWork: () => backgroundWork,
           run: async (runProvider: string, command: string, options: Record<string, unknown>) => {
             runs.push({ provider: runProvider, command, options });
+            if (runtimeFailure) throw new Error(runtimeFailure);
             if (holdRun) {
               await holdRun;
             }
@@ -142,6 +144,25 @@ async function waitFor(predicate:()=>boolean) {
 async function waitForRun(runs:RunCall[]) {
   await waitFor(()=>runs.length>0);
 }
+
+test('a failed runtime sends a visible error before completion and releases the session for retry', async () => {
+  await withGateway('claude', async ({ socket, runs }) => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const start = socket.frames.length;
+      socket.emit('message', JSON.stringify({ type: 'chat.send', sessionId: SESSION_ID, content: 'hello' }));
+      await waitFor(() => socket.frames.slice(start).some(frame => frame.kind === 'complete'));
+      const frames = socket.frames.slice(start);
+      const errorIndex = frames.findIndex(frame => frame.kind === 'error');
+      const completeIndex = frames.findIndex(frame => frame.kind === 'complete');
+      assert.ok(errorIndex >= 0, 'runtime failure must reach the conversation');
+      assert.match(String(frames[errorIndex]?.content), /supervisor bootstrap exited/);
+      assert.ok(completeIndex > errorIndex);
+      assert.equal(frames[completeIndex]?.success, false);
+      assert.equal(frames.filter(frame => frame.kind === 'complete').length, 1);
+    }
+    assert.equal(runs.length, 2, 'failure must not leave a stale busy session');
+  }, TRANSCRIPT_ROWS, false, 'supervisor bootstrap exited with code 1');
+});
 
 test('ordinary sends inject each new monitor run once as hidden context and preserve raw messages',async()=>{
   await withGateway('claude',async({socket,runs})=>{

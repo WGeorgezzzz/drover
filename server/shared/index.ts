@@ -1,5 +1,7 @@
 export { appendFilesInputTag, appendImagesInputTag, buildClaudeUserContent, buildCodexInputItems, normalizeImageDescriptors } from './image-attachments.js';
 export { AppError, createCompleteMessage, createNormalizedMessage } from './utils.js';
+// Websocket dispatch validates inbound JSON before starting a provider run.
+export { parseIncomingJsonObject } from './utils.js';
 // TaskMaster and Providers use the same account-scoped relay credential selection.
 export { resolveAuxiliaryRelay } from './utils.js';
 // Provider adapters use the shared verified process-tree terminator for cancellation and protocol failures.

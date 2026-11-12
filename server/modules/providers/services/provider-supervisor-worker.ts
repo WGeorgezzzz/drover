@@ -5,6 +5,9 @@ import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 
 const directory = process.argv[2];
+const checkStartupCancelled = () => {
+  if (fs.existsSync(path.join(directory, 'startup-cancelled.json'))) throw new Error('Provider startup was cancelled');
+};
 if (process.env.NEXAGENT_PROVIDER_TRACE === '1') {
   const { installProviderProcessTrace } = await import('./provider-process-trace.service.js');
   installProviderProcessTrace(directory);
@@ -93,9 +96,10 @@ const finish = (data: unknown) => {
   setTimeout(() => process.exit(0), 100).unref();
 };
 try {
+  checkStartupCancelled();
   if (spec.mode === 'runtime') {
     const { executeSupervisedTurn } = await import('./provider-turn-worker.js');
-    const result = await executeSupervisedTurn(spec, emit, handler => { control = handler; record.state = 'running'; save(); });
+    const result = await executeSupervisedTurn(spec, emit, handler => { checkStartupCancelled(); control = handler; record.state = 'running'; save(); });
     finish({ code: 0, result });
   } else {
     const child = spawn(spec.command, spec.args || [], { cwd: spec.cwd, env: process.env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });

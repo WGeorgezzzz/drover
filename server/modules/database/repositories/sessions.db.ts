@@ -294,7 +294,10 @@ export const sessionsDb = {
       ).run(providerSessionId, sessionId);
     });
 
-    merge();
+    // Reserve the write lock before the duplicate lookup. DEFERRED can read
+    // successfully then fail its lock upgrade immediately with SQLITE_BUSY,
+    // bypassing the busy timeout when another supervisor is writing.
+    merge.immediate();
   },
 
   /**

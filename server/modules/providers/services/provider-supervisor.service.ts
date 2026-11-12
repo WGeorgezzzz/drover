@@ -28,7 +28,8 @@ export class DurableProvider {
     // so stopping the web server's task/job cannot terminate its provider tree.
     // conhost alone and detached:true do not establish that ownership boundary.
     const powershell = path.join(process.env.SystemRoot || 'C:/Windows', 'System32/WindowsPowerShell/v1.0/powershell.exe');
-    const command = process.platform === 'win32' ? powershell : process.execPath;
+    const conhost = path.join(process.env.SystemRoot || 'C:/Windows', 'System32/conhost.exe');
+    const command = process.platform === 'win32' ? conhost : process.execPath;
     const quote = (value: string) => "'" + value.replaceAll("'", "''") + "'";
     env = { ...env, NEXAGENT_PROVIDER_WORKER: '1' };
     const environmentFile = path.join(directory, 'environment.json');
@@ -37,31 +38,71 @@ export class DurableProvider {
     const launchFile = path.join(directory, 'launch.ps1');
     const brokerFile = path.join(directory, 'broker.ps1');
     const registrationFile = path.join(directory, 'register.ps1');
+    const cancelledFile = path.join(directory, 'startup-cancelled.json');
+    const resultFile = path.join(directory, 'bootstrap-result.json');
+    const checkCancelled = `if(Test-Path -LiteralPath ${quote(cancelledFile)}){throw 'Provider startup was cancelled'}`;
     // Windows PowerShell 5 wraps native stderr as NativeCommandError. Stop
     // would terminate the redirected pipeline (and Node) on an SDK warning.
     // Keep setup fail-fast, then let Node's exit code own the native boundary.
-    const script = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$e=Get-Content -Raw -Encoding UTF8 -LiteralPath ${quote(environmentFile)}|ConvertFrom-Json;foreach($p in $e.PSObject.Properties){[Environment]::SetEnvironmentVariable($p.Name,[string]$p.Value,'Process')};Remove-Item -LiteralPath ${quote(environmentFile)};$ErrorActionPreference='Continue';& ${quote(process.execPath)} ${runtimeArguments.map(quote).join(' ')} *>> ${quote(path.join(directory, 'worker.log'))};exit $LASTEXITCODE`;
+    const script = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';${checkCancelled};$e=Get-Content -Raw -Encoding UTF8 -LiteralPath ${quote(environmentFile)}|ConvertFrom-Json;foreach($p in $e.PSObject.Properties){[Environment]::SetEnvironmentVariable($p.Name,[string]$p.Value,'Process')};Remove-Item -LiteralPath ${quote(environmentFile)};${checkCancelled};$ErrorActionPreference='Continue';& ${quote(process.execPath)} ${runtimeArguments.map(quote).join(' ')} *>> ${quote(path.join(directory, 'worker.log'))};exit $LASTEXITCODE`;
     // File arguments keep the command line bounded even for long/non-ASCII
     // account roots. A BOM makes Windows PowerShell 5 read UTF-8 script text.
-    const broker = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$b=${quote(path.join(directory,'broker.log'))};function Log($m){Add-Content -Encoding UTF8 -LiteralPath $b -Value ((Get-Date).ToString('o')+' '+$m)};Log ('start '+$PID);try{Start-Process -WindowStyle Hidden -FilePath ${quote(path.join(process.env.SystemRoot || 'C:/Windows','System32/conhost.exe'))} -ArgumentList @('--headless',${quote(powershell)},'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',${quote('"'+launchFile+'"')});$r=${quote(path.join(directory,'registry.json'))};for($i=0;$i -lt 300 -and -not(Test-Path -LiteralPath $r);$i++){Start-Sleep -Milliseconds 100};$workerId=(Get-Content -Raw -Encoding UTF8 -LiteralPath $r|ConvertFrom-Json).pid;Log ('wait '+$workerId);$p=[Diagnostics.Process]::GetProcessById($workerId);$h=$p.Handle;$p.WaitForExit();Log ('exit '+$p.ExitCode)}catch{Log $_.Exception.Message;throw}finally{Log 'cleanup';Unregister-ScheduledTask -TaskName ${quote(taskName)} -Confirm:$false -ErrorAction SilentlyContinue}`;
+    const broker = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$b=${quote(path.join(directory,'broker.log'))};function Log($m){Add-Content -Encoding UTF8 -LiteralPath $b -Value ((Get-Date).ToString('o')+' '+$m)};Log ('start '+$PID);try{${checkCancelled};Start-Process -WindowStyle Hidden -FilePath ${quote(conhost)} -ArgumentList @('--headless',${quote(powershell)},'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',${quote('"'+launchFile+'"')});$r=${quote(path.join(directory,'registry.json'))};for($i=0;$i -lt 300 -and -not(Test-Path -LiteralPath $r);$i++){${checkCancelled};Start-Sleep -Milliseconds 100};$workerId=(Get-Content -Raw -Encoding UTF8 -LiteralPath $r|ConvertFrom-Json).pid;Log ('wait '+$workerId);$p=[Diagnostics.Process]::GetProcessById($workerId);$h=$p.Handle;$p.WaitForExit();Log ('exit '+$p.ExitCode)}catch{Log $_.Exception.Message;throw}finally{Log 'cleanup';Unregister-ScheduledTask -TaskName ${quote(taskName)} -Confirm:$false -ErrorAction SilentlyContinue}`;
     // Scheduler starts without a console: own it headlessly before PowerShell
     // starts, so the default Windows Terminal never creates a visible window.
     const taskArguments = '--headless "'+powershell+'" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+brokerFile+'"';
-    const bootstrap = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$a=New-ScheduledTaskAction -Execute ${quote(path.join(process.env.SystemRoot || 'C:/Windows','System32/conhost.exe'))} -Argument ${quote(taskArguments)};Register-ScheduledTask -TaskName ${quote(taskName)} -Action $a -Settings (New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -Hidden) | Out-Null;Start-ScheduledTask -TaskName ${quote(taskName)}`;
+    const bootstrap = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$result=@{code=0;error=$null};try{${checkCancelled};$a=New-ScheduledTaskAction -Execute ${quote(conhost)} -Argument ${quote(taskArguments)};Register-ScheduledTask -TaskName ${quote(taskName)} -Action $a -Settings (New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -Hidden) | Out-Null;${checkCancelled};Start-ScheduledTask -TaskName ${quote(taskName)}}catch{$result.code=1;$result.error=$_.Exception.Message;Unregister-ScheduledTask -TaskName ${quote(taskName)} -Confirm:$false -ErrorAction SilentlyContinue}finally{[IO.File]::WriteAllText(${quote(resultFile)},($result|ConvertTo-Json -Compress))};exit $result.code`;
     if(process.platform === 'win32') for(const [file,text] of [[launchFile,script],[brokerFile,broker],[registrationFile,bootstrap]]) fs.writeFileSync(file, '\uFEFF'+text, {mode:0o600});
-    const args = process.platform === 'win32' ? ['-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',registrationFile] : runtimeArguments;
-    const child = spawn(command, args, { detached: process.platform !== 'win32', windowsHide: true, stdio: ['ignore', log, log], env });
+    // Even the short registration process needs its own headless console:
+    // windowsHide alone does not isolate it from the web service's console.
+    const args = process.platform === 'win32' ? ['--headless',powershell,'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',registrationFile] : runtimeArguments;
+    // Headless conhost treats a closed/NUL input as teardown, returning 0
+    // before PowerShell executes its file. Keep a real pipe open until exit.
+    const child = spawn(command, args, { detached: process.platform !== 'win32', windowsHide: true, stdio: [process.platform === 'win32' ? 'pipe' : 'ignore', log, log], env });
+    child.stdin?.on('error', () => { /* The launcher owns its exit status. */ });
     let spawnError: Error | undefined;
     child.on('error', error => { spawnError = error; });
+    child.on('exit', (code, signal) => {
+      child.stdin?.destroy();
+      fs.writeFileSync(path.join(directory, 'bootstrap-exit.json'), JSON.stringify({ code, signal, at: new Date().toISOString() }));
+      if (code !== 0) spawnError = new Error(`Provider bootstrap exited with code ${code}, signal ${signal}`);
+    });
     child.unref();
     fs.closeSync(log);
     const client = new DurableProvider(directory);
-    for (let attempt = 0; attempt < 300; attempt++) {
-      if (spawnError) throw spawnError;
-      if (fs.existsSync(path.join(directory, 'registry.json')) && client.registry().state !== 'starting') return client;
-      await new Promise(resolve => setTimeout(resolve, 100));
+    try {
+      for (let attempt = 0; attempt < 300; attempt++) {
+        if (fs.existsSync(path.join(directory, 'registry.json')) && client.registry().state !== 'starting') return client;
+        if (spawnError) throw spawnError;
+        if (fs.existsSync(resultFile)) {
+          // PowerShell publishes this before exiting; a partial write is
+          // retried on the next poll, never mistaken for a launcher failure.
+          let result: { code: number; error?: string } | undefined;
+          try { result = JSON.parse(fs.readFileSync(resultFile, 'utf8')); } catch { /* Next poll. */ }
+          if (result?.code) throw new Error(`Provider registration failed: ${result.error}`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      throw new Error('Provider supervisor did not become ready within 30 seconds');
+    } catch (error) {
+      // Fence all late startup stages before cleanup. A delayed scheduled
+      // task must never execute a prompt after the UI has reported failure.
+      fs.writeFileSync(cancelledFile, JSON.stringify({ at: new Date().toISOString() }));
+      if (process.platform === 'win32') {
+        const cleanupFile = path.join(directory, 'cancel-startup.ps1');
+        fs.writeFileSync(cleanupFile, `\uFEFFStop-ScheduledTask -TaskName ${quote(taskName)} -ErrorAction SilentlyContinue;Unregister-ScheduledTask -TaskName ${quote(taskName)} -Confirm:$false -ErrorAction SilentlyContinue`);
+        await new Promise<void>(resolve => {
+          const cleanup = spawn(conhost, ['--headless',powershell,'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',cleanupFile], { windowsHide: true, stdio: ['pipe','ignore','ignore'], env });
+          cleanup.stdin?.on('error', () => { /* Cleanup is best effort after fencing. */ });
+          const timer = setTimeout(resolve, 5000);
+          const done = () => { cleanup.stdin?.destroy(); clearTimeout(timer); resolve(); };
+          cleanup.once('error', done); cleanup.once('exit', done); cleanup.unref();
+        });
+      } else {
+        child.kill();
+      }
+      throw new Error(`${error instanceof Error ? error.message : String(error)}; retained diagnostics: ${directory}`);
     }
-    throw new Error(`Provider supervisor failed to start; retained diagnostics: ${directory}`);
   }
 
   registry(): Record<string, any> {

@@ -114,7 +114,14 @@ export function getConnection(): Database.Database {
   ensureDatabaseDirectory(dbPath);
   migrateLegacyDatabase(dbPath);
 
-  instance = new Database(dbPath);
+  instance = new Database(dbPath, { timeout: 10_000 });
+  // The web process, transcript watcher and durable provider workers share
+  // this local database. Readers must not block a worker's session writes.
+  // The first connection performs the persistent journal migration; later
+  // workers avoid trying to change journal mode while another writer runs.
+  if (instance.pragma('journal_mode', { simple: true }) !== 'wal') {
+    instance.pragma('journal_mode = WAL');
+  }
 
   // app_config must exist immediately — the auth middleware reads
   // the JWT secret at module-load time, before initializeDatabase() runs.

@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { getCurrentUserContext, withUserContext } from '@/modules/auth/index.js';
+
 import path from 'node:path';
 
 import type { WebSocket } from 'ws';
+import { getCurrentUserContext, withUserContext } from '@/modules/auth/index.js';
 
 import { getSessionOwnerId, sessionsDb, sessionWorkspaceDb } from '@/modules/database/index.js';
 import { providerModelsService, sessionsService } from '@/modules/providers/index.js';
@@ -21,7 +22,8 @@ import type {
   ProviderPermissionDecision,
   ProviderRuntimeWriter,
 } from '@/shared/types.js';
-import { parseIncomingJsonObject } from '@/shared/utils.js';
+import { createNormalizedMessage, parseIncomingJsonObject } from '@/shared/index.js';
+
 import { takeMonitorReportContext } from './monitor-report-context.js';
 
 /**
@@ -318,6 +320,11 @@ async function dispatchRun(
   } catch (error) {
     failure = error instanceof Error ? error.message : String(error);
     console.error(`[Chat] Provider runtime "${provider}" failed`, { sessionId, error: failure });
+    // Send through this run's sequenced/replayable writer before completing
+    // it. A bootstrap failure has no provider transcript or error of its own.
+    if (run.status !== 'completed') {
+      run.writer.send(createNormalizedMessage({ kind: 'error', provider, sessionId, content: failure }));
+    }
   } finally {
     // Safety net: a runtime that crashed (or resolved) without emitting its
     // terminal `complete` would otherwise leave the session stuck in
