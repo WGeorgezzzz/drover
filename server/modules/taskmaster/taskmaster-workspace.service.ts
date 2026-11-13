@@ -46,7 +46,7 @@ async function atomic(file: string, value: unknown) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   const temporary = `${file}.${randomUUID()}.tmp`;
   try { await fs.writeFile(temporary, JSON.stringify(value, null, 2) + '\n', 'utf8'); await fs.rename(temporary, file); }
-  finally { await fs.unlink(temporary).catch(() => {}); }
+  finally { await fs.unlink(temporary).catch(() => {}); readViews.delete(file); }
 }
 async function load(root: string) {
   const file = path.join(root, '.taskmaster', 'tasks', 'tasks.json');
@@ -69,6 +69,29 @@ async function load(root: string) {
   const state = (active.metadata.nexagent as State | undefined) ?? { cursors: {}, suggestions: {}, audits: [] };
   active.metadata.nexagent = state;
   return { document, tasks, state, file, tag };
+}
+
+// Read routes are polled for every registered project (the task-intelligence timer
+// re-lists all of them each minute), while a large tasks.json is mostly audit
+// history with full task clones. Readers share a compact projection that is
+// rebuilt only when tasks.json or state.json changes.
+type AuditSummary = { id: string; userId: number; sessionId: string; at: string; undone?: boolean; changes: { id: Task['id']; title: string; status: string; beforeStatus?: string }[] };
+type ReadView = { tag: string; tasks: Task[]; topics: TopicUnit[]; suggestions: State['suggestions']; audits: AuditSummary[] };
+const readViews = new Map<string, { key: string; view: ReadView }>();
+async function fileKey(file: string) {
+  try { const stat = await fs.stat(file); return `${stat.mtimeMs}:${stat.size}`; } catch { return '-'; }
+}
+async function readView(root: string): Promise<ReadView> {
+  const file = path.join(root, '.taskmaster', 'tasks', 'tasks.json');
+  const key = `${await fileKey(file)}|${await fileKey(path.join(root, '.taskmaster', 'state.json'))}`;
+  const cached = readViews.get(file);
+  if (cached?.key === key) return cached.view;
+  const data = await load(root);
+  const view: ReadView = { tag: data.tag, tasks: data.tasks, topics: data.state.topics || [], suggestions: data.state.suggestions,
+    audits: data.state.audits.map(a => ({ id: a.id, userId: a.userId, sessionId: a.sessionId, at: a.at, undone: a.undone,
+      changes: a.changes.map(c => ({ id: c.id, title: c.after.title, status: c.after.status, beforeStatus: c.before?.status })) })) };
+  readViews.set(file, { key, view });
+  return view;
 }
 
 /** TaskMaster module routes and completion hooks share atomic native writes; no subprocesses are created. */
@@ -200,8 +223,8 @@ export function createTaskmasterWorkspaceService(generate: (input: unknown) => P
       });
     },
     async globalSnapshot(root: string, userId: number) {
-      const data = await load(root);
-      return { topics:data.state.topics || [], audits: data.state.audits.filter(a => a.userId === userId && a.sessionId === 'global').slice(-30).map(a => ({ id: a.id, at: a.at, undone: a.undone, changes: a.changes.map(c => ({ id: c.id, title: c.after.title, status: c.after.status })) })) };
+      const data = await readView(root);
+      return { topics:data.topics, audits: data.audits.filter(a => a.userId === userId && a.sessionId === 'global').slice(-30).map(a => ({ id: a.id, at: a.at, undone: a.undone, changes: a.changes.map(c => ({ id: c.id, title: c.title, status: c.status })) })) };
     },
     async changeInboxTask(root: string, userId: number, taskId: string, mutate: (task: Task) => Promise<Record<string, unknown>>) {
       return exclusive(root, async () => {
@@ -241,13 +264,13 @@ export function createTaskmasterWorkspaceService(generate: (input: unknown) => P
       });
     },
     async list(root: string, userId: number) {
-      const data = await load(root);
+      const data = await readView(root);
       return { currentTag: data.tag, tasks: data.tasks.map(t => ({ ...labelInfoTask(t,root), sources: (t.sources as { userId: number }[] | undefined)?.filter(source => source.userId === userId), autoUpdate: (t.autoUpdate as { userId: number } | undefined)?.userId === userId ? t.autoUpdate : undefined } as Task)) };
     },
     async snapshot(root: string, userId: number, sessionId: string) {
-      const data = await load(root), key = `${userId}:${sessionId}`;
+      const data = await readView(root), key = `${userId}:${sessionId}`;
       return { tasks: data.tasks.filter(task => (task.sources as { userId: number; sessionId: string }[] | undefined)?.some(s => s.userId === userId && s.sessionId === sessionId)).map(t => ({ ...t, sources: (t.sources as { userId: number }[]).filter(s => s.userId === userId), autoUpdate: (t.autoUpdate as { userId: number } | undefined)?.userId === userId ? t.autoUpdate : undefined })),
-        suggestions: data.state.suggestions[key] ?? [], audits: data.state.audits.filter(a => a.userId === userId && a.sessionId === sessionId).slice(-30).map(a => ({ id: a.id, at: a.at, undone: a.undone, changes: a.changes.map(c => ({ id: c.id, beforeStatus: c.before?.status, afterStatus: c.after.status })) })) };
+        suggestions: data.suggestions[key] ?? [], audits: data.audits.filter(a => a.userId === userId && a.sessionId === sessionId).slice(-30).map(a => ({ id: a.id, at: a.at, undone: a.undone, changes: a.changes.map(c => ({ id: c.id, beforeStatus: c.beforeStatus, afterStatus: c.status })) })) };
     },
     async extract(root: string, userId: number, sessionId: string, messages: Message[], suggestOnly: boolean, confirm = false, automatic = false) {
       return exclusive(root, async () => {
