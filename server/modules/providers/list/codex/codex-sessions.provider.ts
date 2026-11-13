@@ -2380,7 +2380,7 @@ export class CodexSessionsProvider implements IProviderSessions {
         throw error;
       }
       const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[CodexProvider] Failed to load session ${sessionId}:`, message);
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') console.warn(`[CodexProvider] Failed to load session ${sessionId}:`, message);
       return { messages: [], total: 0, hasMore: false, offset: 0, limit: null };
     }
 

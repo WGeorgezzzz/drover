@@ -230,7 +230,7 @@ export function createCliService(dependencies: CliServiceDependencies): CliAppli
 
       switch (parsedArguments.command) {
         case 'start':
-          void checkForUpdates(true);
+          // Fork releases are deployed from GitHub; no npm registry lookup at startup.
           await dependencies.startServer();
           return 0;
         case 'sandbox':

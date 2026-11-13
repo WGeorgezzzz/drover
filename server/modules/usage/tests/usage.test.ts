@@ -7,7 +7,7 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 
 import { initializeUsageTables } from '../usage.db.js';
-import { scanUsageFile, usageOverview } from '../usage.service.js';
+import { scanUsageFile, usageOverview, usageSchedule } from '../usage.service.js';
 
 async function fixture() {
   const root=await fs.mkdtemp(path.join(os.tmpdir(),'usage-test-')),db=new Database(':memory:');
@@ -40,5 +40,25 @@ test('Member scope ignores requested account, fills empty buckets and preserves 
  const f=await fixture();try{for(const id of [1,2,3,99]){const file=path.join(f.root,`${id}.jsonl`);await fs.writeFile(file,lines([claude('a',id)]));await scanUsageFile(f.db,file,id,'claude');}
  const member=overview(f.db,2,'member','24h',1);assert.deepEqual(member.perUser.map(u=>u.userId),[2]);assert.deepEqual(member.series.map(s=>s.key),['2']);assert.equal(member.buckets.length,24);assert.equal(member.series[0].points.filter(p=>p.requests===0).length,23);assert.equal(member.totals.total,62);
  const admin=overview(f.db);assert.equal(admin.perUser.find(u=>u.userId===3)?.isActive,false);assert.equal(admin.perUser.find(u=>u.userId===99)?.isActive,false);assert.equal(admin.buckets.length,30);assert.equal(overview(f.db,1,'admin','7d').buckets.length,7);assert.equal(overview(f.db,1,'admin','90d').buckets.length,90);
+ }finally{await f.cleanup();}
+});
+
+test('Shanghai twice daily schedule crosses local midnight and exact boundaries',()=>{
+ for(const [now,previous,next] of [
+ ['2026-11-12T19:59:59Z','2026-11-12T08:00:00Z','2026-11-12T20:00:00Z'],
+ ['2026-11-12T20:00:00Z','2026-11-12T20:00:00Z','2026-11-13T08:00:00Z'],
+ ['2026-11-13T16:00:00Z','2026-11-13T08:00:00Z','2026-11-13T20:00:00Z']]) {
+ const slot=usageSchedule(Date.parse(now));assert.equal(new Date(slot.previous).toISOString(),new Date(previous).toISOString());assert.equal(new Date(slot.next).toISOString(),new Date(next).toISOString());
+ }
+});
+test('Concurrent reads commit once and files over 200MB resume from their persisted offset',async()=>{
+ const f=await fixture();try{
+ const file=path.join(f.root,'large.jsonl');const offset=201*1024*1024;
+ const h=await fs.open(file,'w');await h.truncate(offset);await h.close();
+ const stat=await fs.stat(file);
+ f.db.prepare('INSERT INTO usage_scan_files VALUES (?,?,?,?,?,?,?)').run(file,1,'claude',offset,stat.mtimeMs,offset,JSON.stringify({seen:{},model:'unknown'}));
+ await fs.appendFile(file,lines([claude('a',5)]));
+ await Promise.all([scanUsageFile(f.db,file,1,'claude'),scanUsageFile(f.db,file,1,'claude')]);
+ assert.equal(overview(f.db).totals.requests,1);assert.equal(overview(f.db).totals.total,65);
  }finally{await f.cleanup();}
 });

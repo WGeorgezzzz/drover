@@ -462,6 +462,15 @@ async function removeLocalServerMarker() {
 
 // Initialize database and start server
 async function startServer() {
+    const existingHealthy=await new Promise<boolean>(resolve=>{
+        const request=http.get({hostname:'127.0.0.1',port:SERVER_PORT,path:'/health',agent:false,timeout:1000},response=>{response.resume();resolve(response.statusCode===200);});
+        request.on('error',()=>resolve(false));request.on('timeout',()=>request.destroy());
+    });
+    if(existingHealthy){console.log('[Startup] Healthy instance already listening; duplicate exits.');process.exit(0);}
+    server.on('error',(error:NodeJS.ErrnoException)=>{
+        if(error.code==='EADDRINUSE')void new Promise<boolean>(resolve=>{const request=http.get({hostname:'127.0.0.1',port:SERVER_PORT,path:'/health',agent:false,timeout:1000},response=>{response.resume();resolve(response.statusCode===200);});request.on('error',()=>resolve(false));request.on('timeout',()=>request.destroy());}).then(healthy=>{if(healthy)process.exit(0);console.error('[Startup] Port occupied by an unhealthy service');process.exit(1);});
+        else {console.error('[Startup] Listen failed:',error);process.exit(1);}
+    });
     try {
         // Initialize authentication database
         await initializeDatabase();

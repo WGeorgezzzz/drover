@@ -1,4 +1,4 @@
-﻿import fs from 'node:fs';
+import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
@@ -77,6 +77,7 @@ async function consume(client: DurableProvider, writer: ProviderRuntimeWriter, s
         if (entry && event.data.kind === 'permission_request') entry.pending = [...entry.pending.filter(row => row.requestId !== event.data.requestId), event.data];
         if (entry && ['permission_resolved', 'permission_cancelled'].includes(event.data.kind)) entry.pending = entry.pending.filter(row => row.requestId !== event.data.requestId);
         if (event.data.kind === 'complete') {
+          const historyStarted=Date.now();
           if (spec.provider === 'claude' && process.env.CLAUDE_REMOTE_CLI_PATH?.trim()
             && finalReplyId && !providerError && event.data.success !== false && !event.data.aborted) {
             try {
@@ -88,6 +89,7 @@ async function consume(client: DurableProvider, writer: ProviderRuntimeWriter, s
                 content: error instanceof Error ? error.message : String(error) }));
             }
           }
+          event.data.historySyncMs=Date.now()-historyStarted;
           terminal = true; finishQueue(spec, providerError ? { ...event.data, success: false } : event.data);
           if (entry) entry.foregroundCompleted = true;
         }
@@ -126,7 +128,6 @@ export async function runSupervised(provider: LLMProvider, command: string, opti
   const { chatRunRegistry } = await import('@/modules/websocket/index.js');
   const existing = state.entries.get(sessionId);
   if (existing) {
-    if (existing.provider !== provider || !existing.foregroundCompleted || existing.continuation) throw new Error('A supervised foreground turn is already running for this session');
     const client = existing.client || await existing.launching;
     if (!client || Number(existing.currentSpec?.userId) !== Number(writer.userId)) throw new Error('Continuation ownership mismatch');
     // Completion can wait for local history while the SDK owner exits. The
@@ -136,6 +137,7 @@ export async function runSupervised(provider: LLMProvider, command: string, opti
       if (state.entries.get(sessionId) === existing) state.entries.delete(sessionId);
       return runSupervised(provider, command, options, writer);
     }
+    if (existing.provider !== provider || !existing.foregroundCompleted || existing.continuation) throw new Error('本会话仍有回合在执行，请等待完成后再发送。');
     const id = crypto.randomUUID();
     const spec = { mode: 'runtime', provider, command, options: { ...options, cloudcliSupervisorInitialSeq: chatRunRegistry.getRun(sessionId)?.lastSeq || 0 }, userId: writer.userId, isWebSocketWriter: writer.isWebSocketWriter };
     let rejectContinuation!: (reason: unknown) => void;
@@ -282,4 +284,12 @@ export async function prepareProviderRestart(handoffId?: string): Promise<AnyRec
     try { restartLease.cancel(lease.handoffId); } catch { /* A newer lease owns ingress. */ }
     throw error;
   }
+}
+
+/** Admission guard includes a still-running durable owner after UI cancellation. */
+export function isSupervisedForegroundBusy(sessionId:string):boolean {
+  const entry=state.entries.get(sessionId);
+  if(!entry)return false;
+  try{if(entry.client?.registry().state==='exited')return false;}catch{/* Retain ownership on uncertainty. */}
+  return !entry.foregroundCompleted || !!entry.continuation;
 }

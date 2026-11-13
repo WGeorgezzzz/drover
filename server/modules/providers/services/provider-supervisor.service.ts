@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import http from 'node:http';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -12,6 +13,7 @@ export class DurableProvider {
 
   static async start(root: string, spec: Record<string, unknown>, env = process.env): Promise<DurableProvider> {
     fs.mkdirSync(root, { recursive: true, mode: 0o700 });
+    const startedAt = Date.now();
     const directory = path.join(root, crypto.randomUUID());
     fs.mkdirSync(directory, { mode: 0o700 });
     fs.writeFileSync(path.join(directory, 'launch.json'), JSON.stringify(spec), { mode: 0o600, flag: 'wx' });
@@ -34,6 +36,9 @@ export class DurableProvider {
     env = { ...env, NEXAGENT_PROVIDER_WORKER: '1' };
     const environmentFile = path.join(directory, 'environment.json');
     const taskName = 'Nexagent-Provider-' + path.basename(directory);
+    const timingFile = path.join(directory,'startup-timing.jsonl');
+    fs.writeFileSync(timingFile,JSON.stringify({stage:'launch-request',at:startedAt})+'\n');
+    const stamp = (stage:string) => `[IO.File]::AppendAllText(${quote(timingFile)},('{"stage":"${stage}","at":'+[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()+'}'+[Environment]::NewLine));`;
     if (process.platform === 'win32') fs.writeFileSync(environmentFile, JSON.stringify(env), { mode: 0o600 });
     const launchFile = path.join(directory, 'launch.ps1');
     const brokerFile = path.join(directory, 'broker.ps1');
@@ -44,14 +49,17 @@ export class DurableProvider {
     // Windows PowerShell 5 wraps native stderr as NativeCommandError. Stop
     // would terminate the redirected pipeline (and Node) on an SDK warning.
     // Keep setup fail-fast, then let Node's exit code own the native boundary.
-    const script = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';${checkCancelled};$e=Get-Content -Raw -Encoding UTF8 -LiteralPath ${quote(environmentFile)}|ConvertFrom-Json;foreach($p in $e.PSObject.Properties){[Environment]::SetEnvironmentVariable($p.Name,[string]$p.Value,'Process')};Remove-Item -LiteralPath ${quote(environmentFile)};${checkCancelled};$ErrorActionPreference='Continue';& ${quote(process.execPath)} ${runtimeArguments.map(quote).join(' ')} *>> ${quote(path.join(directory, 'worker.log'))};exit $LASTEXITCODE`;
+    const script = `${stamp('launch.ps1')}$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';${checkCancelled};$e=Get-Content -Raw -Encoding UTF8 -LiteralPath ${quote(environmentFile)}|ConvertFrom-Json;foreach($p in $e.PSObject.Properties){[Environment]::SetEnvironmentVariable($p.Name,[string]$p.Value,'Process')};Remove-Item -LiteralPath ${quote(environmentFile)};${checkCancelled};$ErrorActionPreference='Continue';& ${quote(process.execPath)} ${runtimeArguments.map(quote).join(' ')} *>> ${quote(path.join(directory, 'worker.log'))};exit $LASTEXITCODE`;
     // File arguments keep the command line bounded even for long/non-ASCII
     // account roots. A BOM makes Windows PowerShell 5 read UTF-8 script text.
-    const broker = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$b=${quote(path.join(directory,'broker.log'))};function Log($m){Add-Content -Encoding UTF8 -LiteralPath $b -Value ((Get-Date).ToString('o')+' '+$m)};Log ('start '+$PID);try{${checkCancelled};Start-Process -WindowStyle Hidden -FilePath ${quote(conhost)} -ArgumentList @('--headless',${quote(powershell)},'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',${quote('"'+launchFile+'"')});$r=${quote(path.join(directory,'registry.json'))};for($i=0;$i -lt 300 -and -not(Test-Path -LiteralPath $r);$i++){${checkCancelled};Start-Sleep -Milliseconds 100};$workerId=(Get-Content -Raw -Encoding UTF8 -LiteralPath $r|ConvertFrom-Json).pid;Log ('wait '+$workerId);$p=[Diagnostics.Process]::GetProcessById($workerId);$h=$p.Handle;$p.WaitForExit();Log ('exit '+$p.ExitCode)}catch{Log $_.Exception.Message;throw}finally{Log 'cleanup';Unregister-ScheduledTask -TaskName ${quote(taskName)} -Confirm:$false -ErrorAction SilentlyContinue}`;
+    const broker = `${stamp('broker')}$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$b=${quote(path.join(directory,'broker.log'))};function Log($m){Add-Content -Encoding UTF8 -LiteralPath $b -Value ((Get-Date).ToString('o')+' '+$m)};Log ('start '+$PID);try{${checkCancelled};Start-Process -WindowStyle Hidden -FilePath ${quote(conhost)} -ArgumentList @('--headless',${quote(powershell)},'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',${quote('"'+launchFile+'"')});$r=${quote(path.join(directory,'registry.json'))};for($i=0;$i -lt 300 -and -not(Test-Path -LiteralPath $r);$i++){${checkCancelled};Start-Sleep -Milliseconds 100};$workerId=(Get-Content -Raw -Encoding UTF8 -LiteralPath $r|ConvertFrom-Json).pid;Log ('wait '+$workerId);$p=[Diagnostics.Process]::GetProcessById($workerId);$h=$p.Handle;$p.WaitForExit();Log ('exit '+$p.ExitCode)}catch{Log $_.Exception.Message;throw}finally{Log 'cleanup';Unregister-ScheduledTask -TaskName ${quote(taskName)} -Confirm:$false -ErrorAction SilentlyContinue}`;
     // Scheduler starts without a console: own it headlessly before PowerShell
     // starts, so the default Windows Terminal never creates a visible window.
     const taskArguments = '--headless "'+powershell+'" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+brokerFile+'"';
-    const bootstrap = `$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$result=@{code=0;error=$null};try{${checkCancelled};$a=New-ScheduledTaskAction -Execute ${quote(conhost)} -Argument ${quote(taskArguments)};Register-ScheduledTask -TaskName ${quote(taskName)} -Action $a -Settings (New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -Hidden) | Out-Null;${checkCancelled};Start-ScheduledTask -TaskName ${quote(taskName)}}catch{$result.code=1;$result.error=$_.Exception.Message;Unregister-ScheduledTask -TaskName ${quote(taskName)} -Confirm:$false -ErrorAction SilentlyContinue}finally{[IO.File]::WriteAllText(${quote(resultFile)},($result|ConvertTo-Json -Compress))};exit $result.code`;
+    // Scheduler COM avoids loading the ScheduledTasks CIM module in every turn.
+    // The task remains the independent owner; logon type 3 is the current interactive user.
+    const bootstrap = `${stamp('register.ps1')}$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$result=@{code=0;error=$null};$folder=$null;try{${checkCancelled};$svc=New-Object -ComObject 'Schedule.Service';$svc.Connect();$folder=$svc.GetFolder('\\');$task=$svc.NewTask(0);$task.Settings.ExecutionTimeLimit='PT0S';$task.Settings.DisallowStartIfOnBatteries=$false;$task.Settings.StopIfGoingOnBatteries=$false;$task.Settings.Hidden=$true;$action=$task.Actions.Create(0);$action.Path=${quote(conhost)};$action.Arguments=${quote(taskArguments)};$registered=$folder.RegisterTaskDefinition(${quote(taskName)},$task,6,$null,$null,3);${stamp('task-registered')}${checkCancelled};$null=$registered.Run($null);${stamp('task-started')}}catch{$result.code=1;$result.error=$_.Exception.Message;if($folder){try{$folder.DeleteTask(${quote(taskName)},0)}catch{}}}finally{[IO.File]::WriteAllText(${quote(resultFile)},($result|ConvertTo-Json -Compress))};exit $result.code`;
+
     if(process.platform === 'win32') for(const [file,text] of [[launchFile,script],[brokerFile,broker],[registrationFile,bootstrap]]) fs.writeFileSync(file, '\uFEFF'+text, {mode:0o600});
     // Even the short registration process needs its own headless console:
     // windowsHide alone does not isolate it from the web service's console.
@@ -115,12 +123,18 @@ export class DurableProvider {
   async control(operation: Record<string, unknown>): Promise<any> {
     const record = this.registry();
     const token = fs.readFileSync(path.join(this.directory, 'token'), 'utf8');
-    const response = await fetch(`http://127.0.0.1:${record.port}/control`, {
-      method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(operation), signal: AbortSignal.timeout(10_000),
+    // Control is strictly loopback. http.request bypasses inherited HTTP(S)_PROXY
+    // and Node's --use-env-proxy, including after service handoff.
+    return new Promise((resolve,reject)=>{
+      const request=http.request({hostname:'127.0.0.1',port:record.port,path:'/control',method:'POST',
+        headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},agent:false},response=>{
+        let body='';response.setEncoding('utf8');response.on('data',chunk=>{body+=chunk;});
+        response.on('end',()=>{try{if(response.statusCode!==200)throw new Error(`Supervisor ${String(operation.type)} rejected (${response.statusCode}): ${body}`);resolve(JSON.parse(body));}catch(error){reject(error);}});
+        response.on('error',reject);
+      });
+      request.setTimeout(10000,()=>request.destroy(new Error(`Supervisor ${String(operation.type)} timed out`)));
+      request.on('error',reject);request.end(JSON.stringify(operation));
     });
-    if (!response.ok) throw new Error(`Supervisor control rejected (${response.status}): ${await response.text()}`);
-    return response.json();
   }
 
   // Authentication to the recorded endpoint defeats stale/reused PID adoption.

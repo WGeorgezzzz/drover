@@ -35,7 +35,7 @@ try {
     }
   });
 } catch (e: any) {
-  console.error('No .env file found or error reading it:', e.message);
+  if (e.code !== 'ENOENT') console.warn('Error reading .env:', e.message);
 }
 
 // Keep the default database in a stable user-level location so rebuilding dist-server

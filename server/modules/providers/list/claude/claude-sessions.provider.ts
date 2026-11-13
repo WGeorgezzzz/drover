@@ -932,7 +932,7 @@ async function getSessionMessages(
       limit,
     };
   } catch (error) {
-    console.error(`Error reading messages for session ${sessionId}:`, error);
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') console.error(`Error reading messages for session ${sessionId}:`, error);
     return limit === null ? [] : { messages: [], total: 0, hasMore: false };
   }
 }

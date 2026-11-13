@@ -56,9 +56,14 @@ function parse(line: string, provider: string, state: State, offset: number): { 
 }
 
 /** Usage scanner and module tests consume complete lines only; file counts and cursor commit atomically. */
-export async function scanUsageFile(db: Database, file: string, userId: number, provider: string) {
+let serial: Promise<unknown> = Promise.resolve();
+export function scanUsageFile(db: Database, file: string, userId: number, provider: string): Promise<void> {
+  const next = serial.then(() => readUsageFile(db, file, userId, provider));
+  serial = next.catch(() => {});
+  return next;
+}
+async function readUsageFile(db: Database, file: string, userId: number, provider: string) {
   const stat = await fs.stat(file);
-  if (stat.size > 200 * 1024 * 1024) { console.warn('[Usage] Skipping file over 200 MB:', file); return; }
   const old = db.prepare('SELECT size,mtime_ms,offset FROM usage_scan_files WHERE path=?').get(file) as Omit<FileRow,'state_json'> | undefined;
   if (old && old.size === stat.size && old.mtime_ms === stat.mtimeMs) return;
   // Session JSONL files are append-only; a timestamp-only touch must not
@@ -122,9 +127,10 @@ async function* files(root: string, provider: string): AsyncGenerator<string> {
 }
 let active: Promise<void> | null = null;
 let scannedAt: string | null = null;
-let initial: ReturnType<typeof setTimeout> | undefined;
-let periodic: ReturnType<typeof setInterval> | undefined;
+const warned = new Set<string>();
 let stopping = false;
+let scheduled: ReturnType<typeof setTimeout> | undefined;
+let nextScanAt: string | null = null;
 let scanStats: { durationMs: number; peakRss: number; files: number; errors: number } | null = null;
 /** Routes coalesce manual scans with the startup/periodic scan so only one scan runs at a time. */
 export function rescanUsage(): Promise<void> {
@@ -146,8 +152,8 @@ export function rescanUsage(): Promise<void> {
             try { for await (const file of files(root, provider)) {
               if (stopping) return;
               try { await scanUsageFile(db,file,user.id,provider); count++; }
-              catch (error) { errors++; console.warn('[Usage] File scan failed:',file,error); }
-            } } catch (error) { errors++; console.warn('[Usage] Directory scan failed:',root,error); }
+              catch (error) { errors++; warnOnce(file,error); }
+            } } catch (error) { errors++; warnOnce(root,error); }
           }
         }
       }
@@ -160,15 +166,40 @@ export function rescanUsage(): Promise<void> {
   })().finally(() => { active = null; });
   return active;
 }
-/** Server lifecycle starts scanning after 30 seconds and then every ten minutes. */
-export function initializeUsage() {
-  stopping = false;
-  const run = () => { void rescanUsage().catch(e => console.error('[Usage]',e)); };
-  initial = setTimeout(run,30000); initial.unref();
-  periodic = setInterval(run,600000); periodic.unref();
+function warnOnce(file: string, error: unknown) {
+  if ((error as NodeJS.ErrnoException).code === 'ENOENT' || warned.has(file)) return;
+  warned.add(file); console.warn('[Usage] Incremental read failed:', file, error);
 }
-/** Server shutdown stops future work and lets the current read close cleanly. */
-export function closeUsage() { stopping = true; clearTimeout(initial); clearInterval(periodic); }
+/** Fixed UTC+08 schedule; independent of the Windows host timezone and DST. */
+export function usageSchedule(now = Date.now()) {
+  const shifted = now + 8 * 3600000;
+  const midnight = Math.floor(shifted / 86400000) * 86400000 - 8 * 3600000;
+  const slots = [-1,0,1].flatMap(day => [4,16].map(hour => midnight + day * 86400000 + hour * 3600000));
+  return { previous: Math.max(...slots.filter(t => t <= now)), next: Math.min(...slots.filter(t => t > now)) };
+}
+function armUsageSchedule() {
+  if(stopping)return;
+  const slot=usageSchedule(); nextScanAt=new Date(slot.next).toISOString();
+  console.log('[Usage] Next scheduled scan:',nextScanAt,'(Asia/Shanghai 04:00/16:00)');
+  scheduled=setTimeout(()=>{
+    if(stopping)return;
+    const db=getConnection();
+    // Persist the attempted slot before scanning: a restart never replays multiple missed slots.
+    db.prepare("INSERT OR REPLACE INTO app_config(key,value) VALUES ('usage_schedule_slot',?)").run(String(slot.next));
+    void rescanUsage().catch(error=>warnOnce('scheduled',error)).finally(armUsageSchedule);
+  },Math.max(1,slot.next-Date.now()));
+  scheduled.unref();
+}
+export function initializeUsage() {
+  stopping=false; if(scheduled)clearTimeout(scheduled);
+  const db=getConnection(),slot=usageSchedule();
+  const previous=db.prepare("SELECT value FROM app_config WHERE key='usage_schedule_slot'").get() as {value:string}|undefined;
+  db.prepare("INSERT OR REPLACE INTO app_config(key,value) VALUES ('usage_schedule_slot',?)").run(String(slot.previous));
+  // First installation establishes the schedule without a startup scan.
+  if(previous && Number(previous.value)<slot.previous)void rescanUsage().catch(error=>warnOnce('catch-up',error));
+  armUsageSchedule();
+}
+export function closeUsage() { stopping=true; if(scheduled)clearTimeout(scheduled);scheduled=undefined;nextScanAt=null; }
 
 /** Authenticated routes and isolated tests obtain a server-enforced account scope and zero-filled time buckets. */
 export function usageOverview(db: Database, identity: { id: number; role: string }, range: string, groupBy: string, requestedId?: number, now = Date.now()) {
@@ -203,5 +234,5 @@ export function usageOverview(db: Database, identity: { id: number; role: string
     add(series.get(key)!.points[index],row); add(totals,row);
   }
   for(const user of perUser)user.topModel=[...(models.get(user.userId)||new Map()).entries()].sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
-  return {range,buckets,series:[...series.values()],totals,perUser,scannedAt:scannedAt||(db.prepare("SELECT value FROM app_config WHERE key='usage_scanned_at'").get() as {value:string}|undefined)?.value||null,scanning:!!active,scanStats};
+  return {range,buckets,series:[...series.values()],totals,perUser,scannedAt:scannedAt||(db.prepare("SELECT value FROM app_config WHERE key='usage_scanned_at'").get() as {value:string}|undefined)?.value||null,scanning:!!active,scanStats,nextScanAt};
 }

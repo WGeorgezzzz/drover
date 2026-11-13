@@ -6,7 +6,7 @@ import type { WebSocket } from 'ws';
 import { getCurrentUserContext, withUserContext } from '@/modules/auth/index.js';
 
 import { getSessionOwnerId, sessionsDb, sessionWorkspaceDb } from '@/modules/database/index.js';
-import { providerModelsService, sessionsService } from '@/modules/providers/index.js';
+import { providerModelsService, sessionsService, isSupervisedForegroundBusy } from '@/modules/providers/index.js';
 import { chatRunRegistry } from '@/modules/websocket/services/chat-run-registry.service.js';
 import { connectedClients, WS_OPEN_STATE, clientUserIds } from '@/modules/websocket/services/websocket-state.service.js';
 import {
@@ -234,6 +234,11 @@ async function dispatchRun(
     return {started:false,error};
   }
 
+  if(isSupervisedForegroundBusy(sessionId)){
+    const error='本会话仍有回合在执行，请等待完成后再发送。';
+    if(ws)sendProtocolError(ws,'RUN_IN_PROGRESS',error,sessionId);
+    return {started:false,error};
+  }
   const run = chatRunRegistry.startRun({
     appSessionId: sessionId,
     provider,
@@ -786,7 +791,7 @@ export function handleChatConnection(
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error('[ERROR] Chat WebSocket error:', message);
+      console.warn('[Chat] Request rejected:', {type: (()=>{try{return JSON.parse(String(rawMessage)).type;}catch{return 'invalid';}})(),error:message,cause:error instanceof Error ? String(error.cause||'') : ''});
       sendProtocolError(ws, 'REQUEST_REJECTED', message);
     }
   });

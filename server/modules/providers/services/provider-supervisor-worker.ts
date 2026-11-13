@@ -5,6 +5,8 @@ import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 
 const directory = process.argv[2];
+const timing=(stage:string)=>fs.appendFileSync(path.join(directory,'startup-timing.jsonl'),JSON.stringify({stage,at:Date.now()})+'\n');
+timing('worker-entry');
 const checkStartupCancelled = () => {
   if (fs.existsSync(path.join(directory, 'startup-cancelled.json'))) throw new Error('Provider startup was cancelled');
 };
@@ -48,6 +50,7 @@ const save = () => {
 };
 const emit = (kind: string, data: unknown) => {
   if (terminal) return;
+  if(kind==='message' && sequence < 10)timing('event:'+String((data as Record<string,unknown>).kind));
   fs.writeSync(journal, JSON.stringify({ seq: ++sequence, kind, data }) + '\n');
   fs.fsyncSync(journal);
   if (kind === 'turn-start') {
@@ -99,7 +102,7 @@ try {
   checkStartupCancelled();
   if (spec.mode === 'runtime') {
     const { executeSupervisedTurn } = await import('./provider-turn-worker.js');
-    const result = await executeSupervisedTurn(spec, emit, handler => { checkStartupCancelled(); control = handler; record.state = 'running'; save(); });
+    const result = await executeSupervisedTurn(spec, emit, handler => { checkStartupCancelled(); control = handler; record.state = 'running'; save(); timing('worker-registered'); });
     finish({ code: 0, result });
   } else {
     const child = spawn(spec.command, spec.args || [], { cwd: spec.cwd, env: process.env, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });

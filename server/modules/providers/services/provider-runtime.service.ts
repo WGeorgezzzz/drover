@@ -189,7 +189,7 @@ export function createProviderRuntimeService(
 
     async abort(providerName: LLMProvider, sessionId: string): Promise<boolean> {
       const owned = supervision ? supervisedRuntimeState.entries.get(sessionId) : undefined;
-      if (owned) { const client = owned.client || await owned.launching; return Boolean(await client?.control({ type: 'abort' })); }
+      if (owned) { const client = owned.client || await owned.launching; if(!client || client.registry().state==='exited'){supervisedRuntimeState.entries.delete(sessionId);return false;}return Boolean(await client.control({ type: 'abort' })); }
       return Boolean(await dependencies.resolveProvider(providerName).runtime.abort(sessionId));
     },
 
@@ -202,7 +202,7 @@ export function createProviderRuntimeService(
      */
     async forceStop(providerName: LLMProvider, sessionId: string): Promise<{ killedPids: number[] }> {
       const owned = supervision ? supervisedRuntimeState.entries.get(sessionId) : undefined;
-      if (owned) { const client = owned.client || await owned.launching; return client!.control({ type: 'force-stop' }); }
+      if (owned) { const client = owned.client || await owned.launching;if(!client || client.registry().state==='exited'){supervisedRuntimeState.entries.delete(sessionId);return {killedPids:[]};} return client.control({ type: 'force-stop' }); }
       const { runtime } = dependencies.resolveProvider(providerName);
       // Snapshot before interrupt: a fast abort can remove the shell and its
       // MSYS ancestry before the forced kill gets a chance to enumerate it.

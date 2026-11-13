@@ -72,16 +72,13 @@ export function createCliApplication(): CliApplication {
     output,
     sandboxService,
     getLatestPackageVersion: async () => {
-      // Yield first so the default `start` command can begin loading the server
-      // before this best-effort npm registry check runs.
-      await new Promise<void>((resolve) => setImmediate(resolve));
-      return execSync(
-        'npm show nexagent version',
-        { encoding: 'utf8', windowsHide: true },
-      ).trim();
+      const response=await fetch('https://api.github.com/repos/WGeorgezzzz/drover/releases/latest', {signal:AbortSignal.timeout(5000)});
+      if(!response.ok)return packageMetadata.version;
+      const release=await response.json() as {tag_name?:string};
+      return release.tag_name?.replace(/^v/,'') || packageMetadata.version;
     },
     updateGlobalPackage: () => {
-      execSync('npm update -g nexagent', { stdio: 'inherit', windowsHide: true });
+      output.log('Install releases from https://github.com/WGeorgezzzz/drover/releases');
     },
     startServer: async () => {
       // The server executable is an entrypoint rather than a feature module,
