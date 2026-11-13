@@ -1043,13 +1043,26 @@ async function queryClaudeSDK(command, options = {}, ws, context) {
   const processSettled = new Promise((resolve) => { markProcessSettled = resolve; });
 
   try {
+    const preparationStartedAt = Date.now();
     const resolvedModel = await context.resolveResumeModel(sessionId, options.model);
     let effortModels = CLAUDE_PREDEFINED_MODELS;
-    try {
-      effortModels = await context.getProviderModels();
-    } catch (error) {
-      console.warn('[Claude SDK] Unable to load provider models for effort validation:', error);
-    }
+    let effortModelsLoaded = false;
+    const ensureEffortModels = async (effort) => {
+      // No catalog can change the outcome for an unset/default effort. Avoid a
+      // separate native CLI handshake on the ordinary chat startup path.
+      // Retained queries can still request an explicit effort on a later turn.
+      if (effortModelsLoaded || typeof effort !== 'string' || effort === 'default') return;
+      effortModelsLoaded = true;
+      const startedAt = Date.now();
+      try {
+        effortModels = await context.getProviderModels();
+      } catch (error) {
+        console.warn('[Claude SDK] Unable to load provider models for effort validation:', error);
+      } finally {
+        console.log('[Claude SDK timing]', JSON.stringify({sessionId, phase:'effort-models', at:Date.now(), durationMs:Date.now()-startedAt}));
+      }
+    };
+    await ensureEffortModels(options.effort);
 
     const sdkOptions = mapCliOptionsToSDK({
       ...options,
@@ -1194,6 +1207,7 @@ async function queryClaudeSDK(command, options = {}, ws, context) {
 
     // The SDK's own `query`, unless the caller supplies one (tests script the
     // stream to drive the hold logic below without a CLI process).
+    console.log('[Claude SDK timing]', JSON.stringify({sessionId, phase:'query-ready', at:Date.now(), preparationMs:Date.now()-preparationStartedAt, effortModelsLoaded}));
     const createQuery = context.createQuery ?? query;
     let heldPrompt = createHeldPromptStream(promptMessages, sessionKey());
     releasePromptStream = heldPrompt.release;
@@ -1254,6 +1268,7 @@ async function queryClaudeSDK(command, options = {}, ws, context) {
       let messages;
       try {
         messages = await buildPromptMessages(nextCommand, nextOptions.images, nextOptions.files, options.cwd);
+        await ensureEffortModels(nextOptions.effort);
         await applyLiveClaudeSettings(
           queryInstance, liveSettings, nextOptions,
           resolveClaudeEffort(nextOptions.model ?? liveSettings.model ?? sdkOptions.model, nextOptions.effort, effortModels),

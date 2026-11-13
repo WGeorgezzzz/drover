@@ -33,6 +33,9 @@ type Scripted = {
   prompts: unknown[];
   modes: string[];
   context: () => Promise<unknown>;
+  catalogLoads: number;
+  sdkOptions: Record<string, unknown>;
+  flags: Record<string, unknown>[];
 };
 
 /** A stand-in for the SDK query: yields what the test emits, and reads the held prompt to notice its release. */
@@ -57,9 +60,13 @@ function createScriptedQuery(): { createQuery: NonNullable<ProviderRuntimeContex
     prompts,
     modes,
     context: async () => ({}),
+    catalogLoads: 0,
+    sdkOptions: {},
+    flags: [],
   };
 
   const createQuery: NonNullable<ProviderRuntimeContext['createQuery']> = ({ prompt, options }) => {
+    script.sdkOptions = options as unknown as Record<string, unknown>;
     script.context = options.hooks!.UserPromptSubmit![0].hooks[0] as never;
     void (async () => {
       for await (const message of prompt) { prompts.push(message); }
@@ -84,6 +91,7 @@ function createScriptedQuery(): { createQuery: NonNullable<ProviderRuntimeContex
     return Object.assign(iterator, {
       interrupt: async () => {},
       setPermissionMode: async (mode: string) => { modes.push(mode); },
+      applyFlagSettings: async (flags: Record<string, unknown>) => { script.flags.push(flags); },
       stopTask: async (taskId: string) => { stopped.push(taskId); },
     });
   };
@@ -103,7 +111,7 @@ async function withRun(
   const context: ProviderRuntimeContext = {
     resolveProviderSessionId: () => null,
     resolveResumeModel: async () => undefined,
-    getProviderModels: async () => CLAUDE_PREDEFINED_MODELS as never,
+    getProviderModels: async () => { script.catalogLoads++; return CLAUDE_PREDEFINED_MODELS as never; },
     normalizeMessage: (raw, sessionId) => sessions.normalizeMessage(raw, sessionId),
     isProviderInstalled: async () => true,
     createQuery,
@@ -170,6 +178,43 @@ const taskNotification = (taskId: string, toolUseId: string, status: string) => 
   type: 'system', subtype: 'task_notification', session_id: NATIVE_ID, task_id: taskId, tool_use_id: toolUseId, status, summary: `Task ${taskId} ${status}`, output_file: '',
 });
 const result = () => ({ type: 'result', subtype: 'success', session_id: NATIVE_ID, result: 'launched', duration_ms: 1, num_turns: 1 });
+
+test('default effort starts the actual query without a separate model discovery CLI', async () => {
+  for (const effort of [undefined, 'default']) {
+    await withRun(async ({script}) => {
+      assert.equal(script.catalogLoads, 0);
+      assert.equal(script.sdkOptions.effort, undefined);
+      script.emit(init()); script.emit(result());
+    }, {effort});
+  }
+});
+
+test('explicit initial effort still uses the connected model capabilities', async () => {
+  await withRun(async ({script}) => {
+    assert.equal(script.catalogLoads, 1);
+    assert.equal(script.sdkOptions.effort, 'xhigh');
+    assert.equal((script.sdkOptions.settings as Record<string, unknown>).ultracode, true);
+    script.emit(init()); script.emit(result());
+  }, {model:'opus', effort:'ultracode'});
+});
+
+test('a retained query loads capabilities lazily before its first explicit effort change', async () => {
+  await withRun(async ({script, sent, continueRun}) => {
+    assert.equal(script.catalogLoads, 0);
+    script.emit(init());
+    script.emit(toolUse('effort-tool', 'Bash', {}));
+    script.emit(taskStarted('effort-task', 'effort-tool', 'local_bash'));
+    script.emit(result());
+    await waitFor(() => sent.some(message => message.kind === 'complete'));
+    const continuation = continueRun({send:()=>{}, userId:null}, {model:'opus', effort:'ultracode'});
+    await waitFor(() => script.prompts.length === 2);
+    assert.equal(script.catalogLoads, 1);
+    assert.deepEqual(script.flags, [{effortLevel:'xhigh', ultracode:true, enableWorkflows:true}]);
+    script.emit(result());
+    await continuation;
+    script.emit(taskNotification('effort-task', 'effort-tool', 'stopped'));
+  }, {model:'opus'});
+});
 
 test('live additions reuse the current prompt stream and unrelated results cannot finish them',async()=>{
   await withRun(async({script,sent})=>{
