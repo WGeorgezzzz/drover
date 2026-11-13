@@ -1255,6 +1255,62 @@ export async function extractFirstValidJsonlData<T>(
   return null;
 }
 
+/**
+ * Visits JSONL lines from the end of a file, newest first, reading fixed-size
+ * chunks so tail lookups on multi-hundred-MB transcripts never hold the whole
+ * file in memory. Return true from the visitor to stop early.
+ */
+export async function scanJsonlLinesFromEnd(
+  filePath: string,
+  visit: (line: string) => boolean | void,
+  chunkSize = 1024 * 1024
+): Promise<void> {
+  const file = await fs.promises.open(filePath, 'r');
+  try {
+    let position = (await file.stat()).size;
+    let carry = Buffer.alloc(0);
+    while (position > 0) {
+      const start = Math.max(0, position - chunkSize);
+      const chunk = Buffer.alloc(position - start);
+      const { bytesRead } = await file.read(chunk, 0, chunk.length, start);
+      position = start;
+      const buffer = carry.length ? Buffer.concat([chunk.subarray(0, bytesRead), carry]) : chunk.subarray(0, bytesRead);
+      let end = buffer.length;
+      while (end > 0) {
+        const newline = buffer.lastIndexOf(10, end - 1);
+        if (newline < 0) break;
+        const line = buffer.toString('utf8', newline + 1, end).trim();
+        end = newline;
+        if (line && visit(line) === true) return;
+      }
+      // Copy the partial head line so the rest of this chunk can be collected.
+      carry = Buffer.from(buffer.subarray(0, end));
+    }
+    const line = carry.toString('utf8').trim();
+    if (line) visit(line);
+  } finally {
+    await file.close();
+  }
+}
+
+/**
+ * Visits JSONL lines from the start of a file through a stream, so full-history
+ * scans keep memory bounded by the longest line rather than the file size.
+ */
+export async function scanJsonlLines(filePath: string, visit: (line: string) => void): Promise<void> {
+  const fileStream = fs.createReadStream(filePath);
+  const lineReader = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
+  try {
+    for await (const line of lineReader) {
+      const trimmed = line.trim();
+      if (trimmed) visit(trimmed);
+    }
+  } finally {
+    lineReader.close();
+    fileStream.destroy();
+  }
+}
+
 // ---------------------------
 //----------------- CLAUDE TRANSCRIPT ROW UTILITIES ------------
 /**

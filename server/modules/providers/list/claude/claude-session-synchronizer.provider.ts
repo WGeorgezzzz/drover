@@ -1,7 +1,6 @@
 import { getCurrentUserContext } from '@/modules/auth/index.js';
 import os from 'node:os';
 import path from 'node:path';
-import { readFile } from 'node:fs/promises';
 import { getClaudeConfigDir } from '@/shared/index.js';
 
 import { sessionsDb } from '@/modules/database/index.js';
@@ -11,6 +10,7 @@ import {
   findFilesRecursivelyCreatedAfter,
   normalizeSessionName,
   readFileTimestamps,
+  scanJsonlLines,
 } from '@/shared/utils.js';
 import type { IProviderSessionSynchronizer } from '@/shared/interfaces.js';
 import { completeJsonlOffset, readAppendedJsonl } from '@/shared/utils.js';
@@ -197,6 +197,9 @@ export class ClaudeSessionSynchronizer implements IProviderSessionSynchronizer {
    * Claude writes `custom-title` immediately before `ai-title`, so a reverse
    * scan that returns its first hit would always lose the manual rename.
    *
+   * Lines are streamed and only title-bearing rows are parsed, so long
+   * transcripts are never loaded whole.
+   *
    * Returns undefined on a missing or unreadable file so sync can continue.
    */
   private async extractSessionTitle(
@@ -204,24 +207,20 @@ export class ClaudeSessionSynchronizer implements IProviderSessionSynchronizer {
     sessionId: string
   ): Promise<string | undefined> {
     try {
-      const content = await readFile(filePath, 'utf8');
-      const lines = content.split(/\r?\n/);
-
       let foundCustomTitle: string | undefined;
       let foundAiTitle: string | undefined;
       let foundLastPrompt: string | undefined;
 
-      for (let index = 0; index < lines.length; index += 1) {
-        const line = lines[index]?.trim();
-        if (!line) {
-          continue;
+      await scanJsonlLines(filePath, (line) => {
+        if (!line.includes('custom-title') && !line.includes('ai-title') && !line.includes('last-prompt')) {
+          return;
         }
 
         let parsed: unknown;
         try {
           parsed = JSON.parse(line);
         } catch {
-          continue;
+          return;
         }
 
         const data = parsed as Record<string, unknown>;
@@ -229,7 +228,7 @@ export class ClaudeSessionSynchronizer implements IProviderSessionSynchronizer {
         const eventSessionId = typeof data.sessionId === 'string' ? data.sessionId : undefined;
 
         if (eventSessionId !== sessionId) {
-          continue;
+          return;
         }
 
         if (eventType === 'custom-title') {
@@ -248,7 +247,7 @@ export class ClaudeSessionSynchronizer implements IProviderSessionSynchronizer {
             foundLastPrompt = prompt;
           }
         }
-      }
+      });
 
       return foundCustomTitle || foundAiTitle || foundLastPrompt;
     } catch {

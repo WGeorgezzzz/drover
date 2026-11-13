@@ -1,5 +1,3 @@
-import { readFile } from 'node:fs/promises';
-
 import { query, type ModelInfo } from '@anthropic-ai/claude-agent-sdk';
 
 import { sessionsDb } from '@/modules/database/index.js';
@@ -14,6 +12,7 @@ import {
   isPlaceholderProviderModel,
   stripAnsiSequences,
   getClaudeConfigDir,
+  scanJsonlLinesFromEnd,
 } from '@/shared/utils.js';
 import { resolveClaudeCodeExecutablePath } from '@/shared/claude-cli-path.js';
 import { loadSupervisedClaudeModels } from '../../services/claude-supervised-spawn.service.js';
@@ -283,25 +282,23 @@ const readClaudeSessionModelFromJsonl = async (
   sessionId: string,
   jsonlPath: string,
 ): Promise<ProviderCurrentActiveModel | null> => {
-  const content = await readFile(jsonlPath, 'utf8');
-  const lines = content
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  for (let index = lines.length - 1; index >= 0; index -= 1) {
+  // Chunked tail read: the newest model row is near the end of long transcripts.
+  let found: ProviderCurrentActiveModel | null = null;
+  await scanJsonlLinesFromEnd(jsonlPath, (line) => {
     try {
-      const event = JSON.parse(lines[index]) as ClaudeInitEvent;
+      const event = JSON.parse(line) as ClaudeInitEvent;
       const model = extractClaudeEventModel(event, sessionId);
       if (model) {
-        return { model };
+        found = { model };
+        return true;
       }
     } catch {
       // Skip malformed JSONL lines that can happen during concurrent writes.
     }
-  }
+    return false;
+  });
 
-  return null;
+  return found;
 };
 
 export class ClaudeProviderModels implements IProviderModels {

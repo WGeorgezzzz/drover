@@ -1,6 +1,5 @@
 import os from 'node:os';
 import path from 'node:path';
-import { readFile } from 'node:fs/promises';
 
 import { getCurrentUserContext } from '@/modules/auth/index.js';
 import { sessionsDb } from '@/modules/database/index.js';
@@ -10,6 +9,7 @@ import {
   findFilesRecursivelyCreatedAfter,
   normalizeSessionName,
   readFileTimestamps,
+  scanJsonlLinesFromEnd,
 } from '@/shared/utils.js';
 import type { IProviderSessionSynchronizer } from '@/shared/interfaces.js';
 import { completeJsonlOffset, readAppendedJsonl } from '@/shared/utils.js';
@@ -194,22 +194,20 @@ export class CodexSessionSynchronizer implements IProviderSessionSynchronizer {
     return typeof source === 'object' && source !== null && 'subagent' in source;
   }
 
+  /** Reads backwards in chunks; rollouts reach hundreds of MB and must not be loaded whole. */
   private async extractLastAgentMessageFromEnd(filePath: string): Promise<string | undefined> {
+    let found: string | undefined;
     try {
-      const content = await readFile(filePath, 'utf8');
-      const lines = content.split(/\r?\n/);
-
-      for (let index = lines.length - 1; index >= 0; index -= 1) {
-        const line = lines[index]?.trim();
-        if (!line) {
-          continue;
+      await scanJsonlLinesFromEnd(filePath, (line) => {
+        if (!line.includes('task_complete')) {
+          return false;
         }
 
         let parsed: unknown;
         try {
           parsed = JSON.parse(line);
         } catch {
-          continue;
+          return false;
         }
 
         const data = parsed as Record<string, unknown>;
@@ -221,13 +219,15 @@ export class CodexSessionSynchronizer implements IProviderSessionSynchronizer {
           : undefined;
 
         if (eventType === 'event_msg' && payloadType === 'task_complete' && lastAgentMessage?.trim()) {
-          return lastAgentMessage;
+          found = lastAgentMessage;
+          return true;
         }
-      }
+        return false;
+      });
     } catch {
       // Ignore missing/unreadable files so sync can continue.
     }
 
-    return undefined;
+    return found;
   }
 }
