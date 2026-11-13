@@ -41,8 +41,8 @@ test('abrupt client death preserves independent worker, byte-exact stdout/stderr
     [...(process.platform === 'win32' ? ['--headless', process.execPath] : []), ...controllerArgs, controllerFile],
     { windowsHide: true, stdio: ['pipe', log, log] });
   fs.closeSync(log);
-  controller.stdin.on('error', () => {});
-  controller.once('exit', () => controller.stdin.destroy());
+  controller.stdin?.on('error', () => {});
+  controller.once('exit', () => controller.stdin?.destroy());
   await until(() => fs.existsSync(marker));
   const client = new DurableProvider(JSON.parse(fs.readFileSync(marker, 'utf8')).directory);
   if (process.platform === 'win32') {
