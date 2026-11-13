@@ -132,7 +132,7 @@ let stopping = false;
 let scheduled: ReturnType<typeof setTimeout> | undefined;
 let nextScanAt: string | null = null;
 let scanStats: { durationMs: number; peakRss: number; files: number; errors: number } | null = null;
-/** Routes coalesce manual scans with the startup/periodic scan so only one scan runs at a time. */
+/** Manual scans coalesce with scheduled scans and missed-slot catch-up. */
 export function rescanUsage(): Promise<void> {
   if (active) return active;
   active = (async () => {

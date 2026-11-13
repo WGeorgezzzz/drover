@@ -98,8 +98,9 @@ async function verify(c,before){
 }
 async function rollback(backup){
  backup=path.resolve(backup);assert(backup.startsWith(path.resolve(root)+path.sep),'Backup must be inside this task directory');const original=read(path.join(backup,'primary-service.json')),current=read(cfgPath);
- assert.equal(norm(current.runtime),norm(target),'Refuse to roll back a different deployment');await interruptManaged(current);await stop(current);replaceLink(original.runtime);write(cfgPath,original);desktopRestore(backup);const c=await start();write(path.join(path.dirname(cfgPath),'active-release.json'),{status:'rolled_back',commit:read(path.join(c.runtime,'release-manifest.json')).git,runtime:c.runtime,pid:c.pid,at:new Date().toISOString()});write(path.join(root,'deployment-status.json'),{status:'rolled_back',backup,runtime:c.runtime,pid:c.pid,databaseRestored:false,reason:'Current database and later writes are preserved; additive quota history tables are retained',at:new Date().toISOString()});
+ assert.equal(norm(current.runtime),norm(target),'Refuse to roll back a different deployment');await interruptManaged(current);await stop(current);replaceLink(original.runtime);write(cfgPath,original);restoreRunner(backup);desktopRestore(backup);const c=await start();write(path.join(path.dirname(cfgPath),'active-release.json'),{status:'rolled_back',commit:read(path.join(c.runtime,'release-manifest.json')).git,runtime:c.runtime,pid:c.pid,at:new Date().toISOString()});write(path.join(root,'deployment-status.json'),{status:'rolled_back',backup,runtime:c.runtime,pid:c.pid,databaseRestored:false,reason:'Current database and later writes are preserved; additive quota history tables are retained',at:new Date().toISOString()});
 }
+function restoreRunner(backup){for(const file of ['run-primary.cjs','rotating-log.cjs','primary-launcher.json']){const saved=path.join(backup,file);if(fs.existsSync(saved))fs.copyFileSync(saved,path.join(path.dirname(cfgPath),file));}}
 async function activate(){
  check();const c=read(cfgPath);if(norm(c.runtime)===norm(target))throw Error('Target is already active; inspect deployment-status.json');if(!process.argv.includes('--force'))await waitIdle(c);
  const backup=path.join(root,'activation-backup-'+new Date().toISOString().replaceAll(':','-'));fs.mkdirSync(backup);fs.copyFileSync(cfgPath,path.join(backup,'primary-service.json'));
@@ -115,7 +116,7 @@ async function activate(){
   const result={commit:read(path.join(target,'release-manifest.json')).git,status:'active',runtime:target,pid:current.pid,previousRuntime:c.runtime,backup,checks,at:new Date().toISOString()};write(path.join(path.dirname(cfgPath),'active-release.json'),result);write(path.join(root,'deployment-status.json'),result);console.log(JSON.stringify(result));
  }catch(error){
   let rollbackError;
-  try{if(changed){const current=read(cfgPath);await stop(current);replaceLink(c.runtime);write(cfgPath,c);desktopRestore(backup);}if(stopped)await start();}catch(e){rollbackError=e.message;}
+  try{if(changed){const current=read(cfgPath);await stop(current);replaceLink(c.runtime);write(cfgPath,c);desktopRestore(backup);}if(stopped){restoreRunner(backup);await start();}}catch(e){rollbackError=e.message;}
   write(path.join(root,'deployment-status.json'),{status:rollbackError?'rollback_failed':'rolled_back',backup,error:error.message,rollbackError,databaseRestored:false,at:new Date().toISOString()});throw error;
  }
 }

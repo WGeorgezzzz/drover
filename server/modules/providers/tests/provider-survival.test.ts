@@ -9,6 +9,10 @@ import test from 'node:test';
 
 import { DurableProvider } from '../services/provider-supervisor.service.js';
 
+const serviceURL = new URL('../services/provider-supervisor.service.js', import.meta.url);
+if (!fs.existsSync(serviceURL)) serviceURL.pathname = serviceURL.pathname.replace(/\.js$/, '.ts');
+const controllerArgs = [createRequire(import.meta.url).resolve('tsx/cli'), '--tsconfig', path.resolve('server/tsconfig.json')];
+
 const resultsRoot = process.env.PROVIDER_SURVIVAL_RESULTS || fs.mkdtempSync(path.join(os.tmpdir(), 'provider-survival-'));
 fs.mkdirSync(resultsRoot, { recursive: true });
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -27,21 +31,29 @@ async function write(client: DurableProvider, data: unknown) {
 test('abrupt client death preserves independent worker, byte-exact stdout/stderr, EOF and durable replay', { timeout: 60000 }, async () => {
   const root = fs.mkdtempSync(path.join(resultsRoot, 'stream-'));
   const marker = path.join(root, 'client.json');
-  const moduleURL = new URL('../services/provider-supervisor.service.js', import.meta.url).href;
+  const moduleURL = serviceURL.href;
   const program = `let i=0;const t=setInterval(()=>{process.stdout.write(i+':中文🙂\\n');process.stderr.write(i+':err\\n');if(++i===100){clearInterval(t);process.stdin.resume();}},20);process.stdin.on('end',()=>process.exit(0));`;
   const script = `import fs from 'node:fs';import {DurableProvider} from ${JSON.stringify(moduleURL)};const c=await DurableProvider.start(${JSON.stringify(root)},{command:process.execPath,args:['-e',${JSON.stringify(program)}]});fs.writeFileSync(${JSON.stringify(marker)},JSON.stringify({directory:c.directory,pid:process.pid}));setInterval(()=>{},1000);`;
-  const controller = spawn(process.execPath, ['--input-type=module', '-e', script], { windowsHide: true, stdio: 'ignore' });
+  const controllerFile = path.join(root, 'controller.mjs');
+  fs.writeFileSync(controllerFile, script);
+  const log = fs.openSync(path.join(root, 'controller.log'), 'a');
+  const controller = spawn(process.platform === 'win32' ? 'conhost.exe' : process.execPath,
+    [...(process.platform === 'win32' ? ['--headless', process.execPath] : []), ...controllerArgs, controllerFile],
+    { windowsHide: true, stdio: ['pipe', log, log] });
+  fs.closeSync(log);
+  controller.stdin.on('error', () => {});
+  controller.once('exit', () => controller.stdin.destroy());
   await until(() => fs.existsSync(marker));
   const client = new DurableProvider(JSON.parse(fs.readFileSync(marker, 'utf8')).directory);
   if (process.platform === 'win32') {
     const registration = fs.readFileSync(path.join(client.directory, 'register.ps1'), 'utf8');
-    assert.match(registration, /New-ScheduledTaskAction -Execute '[^']*System32[\\/]conhost\.exe'/);
+    assert.match(registration, /\$action\.Path='[^']*System32[\\/]conhost\.exe'/);
     assert.match(registration, /--headless "[^"\r\n]*powershell\.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File/);
     assert.doesNotMatch(registration, /-WindowStyle/);
   }
   const original = client.registry();
   await until(() => output(client).includes('3:中文'));
-  controller.kill('SIGKILL'); await once(controller, 'exit');
+  process.kill(JSON.parse(fs.readFileSync(marker, 'utf8')).pid, 'SIGKILL'); await once(controller, 'exit');
   await until(() => output(client).includes('99:中文'));
   assert.equal(await client.identity(), true);
   assert.equal(client.registry().pid, original.pid);
@@ -113,7 +125,7 @@ test('Windows Stop-ScheduledTask preserves supervisor and output outside the sto
   const root = fs.mkdtempSync(path.join(resultsRoot, 'scheduled-'));
   const name = 'Nexagent-Survival-Test-' + path.basename(root);
   const marker = path.join(root, 'client.json');
-  const moduleURL = new URL('../services/provider-supervisor.service.js', import.meta.url).href;
+  const moduleURL = serviceURL.href;
   const program = `let i=0;setInterval(()=>process.stdout.write((i++)+':scheduled\\n'),100);`;
   const controllerPath = path.join(root, 'controller.mjs');
   fs.writeFileSync(controllerPath, `import fs from 'node:fs';import {DurableProvider} from ${JSON.stringify(moduleURL)};const c=await DurableProvider.start(${JSON.stringify(root)},{command:process.execPath,args:['-e',${JSON.stringify(program)}]});fs.writeFileSync(${JSON.stringify(marker)},JSON.stringify({directory:c.directory,pid:process.pid}));setInterval(()=>{},1000);`);
@@ -134,12 +146,12 @@ public static void Main(string[] args) {
 IntPtr job=CreateJobObject(IntPtr.Zero,null);IntPtr info=Marshal.AllocHGlobal(144);
 for(int i=0;i<144;i++)Marshal.WriteByte(info,i,0);Marshal.WriteInt32(info,16,0x2000);
 if(!SetInformationJobObject(job,9,info,144))throw new Exception("job flags "+Marshal.GetLastWin32Error());
-Process p=Process.Start(new ProcessStartInfo(args[0],"\\\""+args[1]+"\\\""){UseShellExecute=false,CreateNoWindow=true});
+Process p=Process.Start(new ProcessStartInfo(args[0],String.Join(" ",Array.ConvertAll(Array.FindAll(args,(s)=>true),s=>"\\\""+s+"\\\"")).Substring(args[0].Length+3)){UseShellExecute=false,CreateNoWindow=true});
 if(!AssignProcessToJobObject(job,p.Handle))throw new Exception("assign job "+Marshal.GetLastWin32Error());p.WaitForExit();GC.KeepAlive(job);
 }}`;
     ps(`Add-Type -TypeDefinition ${quote(source)} -OutputAssembly ${quote(harness)} -OutputType WindowsApplication`);
-    const args = `"${process.execPath}" "${controllerPath}"`;
-    ps(`$a=New-ScheduledTaskAction -Execute ${quote(harness)} -Argument ${quote(args)};Register-ScheduledTask -TaskName ${quote(name)} -Action $a -Settings (New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 5) -Hidden) | Out-Null;Start-ScheduledTask -TaskName ${quote(name)}`);
+    const args = ['C:/Windows/System32/conhost.exe', '--headless', process.execPath, ...controllerArgs, controllerPath].map(value => `"${value}"`).join(' ');
+    ps(`$a=New-ScheduledTaskAction -Execute ${quote(harness)} -Argument ${quote(args)};Register-ScheduledTask -TaskName ${quote(name)} -Action $a -Settings (New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 5) -Hidden -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries) | Out-Null;Start-ScheduledTask -TaskName ${quote(name)}`);
     await until(() => fs.existsSync(marker));
     client = new DurableProvider(JSON.parse(fs.readFileSync(marker, 'utf8')).directory);
     await until(() => output(client!).includes('3:scheduled'));
