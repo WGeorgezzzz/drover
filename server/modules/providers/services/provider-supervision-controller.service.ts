@@ -231,7 +231,12 @@ export async function recoverProviderSupervision(): Promise<string[]> {
         });
       });
       const owned = state.entries.get(sessionId);
-      if (adopted && owned) owned.pending = await client.control({ type: 'pending-approvals' });
+      if (adopted && owned) {
+        // An adopted owner can finish between journal replay and this query;
+        // its consumer settles the turn from the journal, so startup goes on.
+        try { owned.pending = await client.control({ type: 'pending-approvals' }); }
+        catch (error) { if (await client.identity()) throw error; }
+      }
       continue;
     }
     // Never launch a second owner while an authenticated endpoint is merely
