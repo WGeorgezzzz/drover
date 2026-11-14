@@ -390,7 +390,7 @@ async function queryCodex(
           if(monitor&&message.method==='item/tool/call'&&message.params?.tool==='cloudcli_monitor'){void monitor.execute(message.params.arguments).then(result=>reply({success:true,contentItems:[{type:'inputText',text:JSON.stringify(result)}]}),error=>reply({success:false,contentItems:[{type:'inputText',text:String(error.message||error)}]}));return true;}
           const superagentTool=message.method==='item/tool/call'?superagentTools.find(entry=>entry.name===message.params?.tool):undefined;
           if(superagentTool){void superagentTool.execute(message.params.arguments).then(result=>reply({success:true,contentItems:[{type:'inputText',text:JSON.stringify(result)}]}),error=>reply({success:false,contentItems:[{type:'inputText',text:String(error.message||error)}]}));return true;}
-          return permissions.request(sessionKey() || '', message, ws, reply);
+          return permissions.request(sessionKey() || '', message, ws, reply, options.cloudcliDeferredDecisionId);
         },
         onRequestResolved: id => permissions.cancel(sessionKey() || '', id),
         input: turnInput as string | AnyRecord[],

@@ -108,6 +108,13 @@ export const messageQueueDb = {
   finish(row: QueuedTurnRecord, status: 'succeeded'|'failed'|'interrupted', error: string|null): void {
     const db=getConnection(), now=new Date().toISOString();
     db.transaction(() => {
+      // Both independent provider owners and their journal consumers settle here.
+      // A saved question ends this turn without implying permission was granted.
+      if(status!=='succeeded' && process.env.DROVER_ALWAYS_ON!=='0' && db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='agent_decisions'").get()) {
+        const deferred=db.prepare("SELECT 1 FROM agent_decisions WHERE user_id=? AND target=? AND json_extract(context,'$.queueRunId')=? LIMIT 1")
+          .get(row.user_id,row.session_id,row.run_id);
+        if(deferred){status='succeeded';error=null;}
+      }
       const changed=db.prepare(`UPDATE message_queue SET status=?,error=?,finished_at=?,revision=revision+1
         WHERE id=? AND run_id=? AND status='running'`).run(status,error,now,row.id,row.run_id);
       if (!changed.changes) return;

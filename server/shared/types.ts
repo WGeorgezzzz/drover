@@ -1767,3 +1767,12 @@ export type InfohubRecord = {
 
 /** TaskMaster's HTTP adapter and source projection share the InfoHub unit shape, including the optimistic update token. */
 export type InfohubUnit={id:number;title:string;kind:string;status:string;summary?:string;priority?:string;due_at?:number|null;updated_at:number;revision?:string;for_me?:number|boolean;tags?:string[];parents?:{id:number;title:string;kind?:string}[];messages?:{id:number;source:string;channel_name?:string;link?:string;text?:string}[]};
+//----------------- DURABLE AGENT INBOX ------------
+/** Persisted user-scoped event. Payload stays serialized until its owning feature consumes it;
+ * lease_owner is a fencing token, never authorization to replay external side effects. */
+export type InboxEvent = {
+  id:string; user_id:number; source:string; source_id:string; target:string; payload:string; payload_hash:string;
+  status:'pending'|'processing'|'done'|'failed'|'dead'; attempts:number; available_at:number;
+  lease_owner:string|null; lease_until:number|null; error:string|null; created_at:number; updated_at:number;
+};
+// ---------------------------

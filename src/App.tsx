@@ -10,6 +10,7 @@ import { PluginsProvider } from '@/modules/plugins';
 import { ProjectWorkspaceRoute } from '@/modules/project-workspace';
 import { i18n } from '@/modules/i18n';
 import { DesktopUpdateBanner } from '@/shared/ui/DesktopUpdateBanner';
+import { AlwaysOnInbox } from '@/modules/always-on';
 import { NotificationCenter } from '@/modules/notifications';
 
 const DEPLOYMENT_ASSET_DIRECTORIES = new Set(['assets', 'static', 'icons', 'images']);
@@ -125,6 +126,7 @@ export default function App() {
                   <Router basename={routerBasename}>
                     <NotificationCenter />
                     <Routes>
+                      <Route path="/inbox" element={<AlwaysOnInbox />} />
                       <Route path="/" element={<ProjectWorkspaceRoute />} />
                       <Route path="/remote/h200/:remoteId" element={<ProjectWorkspaceRoute />} />
                       <Route path="/tasks" element={<ProjectWorkspaceRoute />} />

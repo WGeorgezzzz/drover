@@ -1,5 +1,6 @@
+import { alwaysOnEnabled, enqueueInbox, registerInboxHandler } from '@/modules/always-on/index.js';
 import { withUserContext } from '@/modules/auth/index.js';
-import { getSessionOwnerId, scheduledMessagesDb, sessionDraftsDb } from '@/modules/database/index.js';
+import { getConnection, getSessionOwnerId, scheduledMessagesDb, sessionDraftsDb } from '@/modules/database/index.js';
 import type { QueuedSessionMessageRecord, ScheduledMessageRow } from '@/modules/database/index.js';
 import { chatRunRegistry, runDetachedChatTurn } from '@/modules/websocket/index.js';
 import type { ProviderRuntimeGateway } from '@/modules/websocket/index.js';
@@ -157,6 +158,14 @@ export async function dispatchDueScheduledMessages(
   runtime: ProviderRuntimeGateway,
   now: Date = new Date(),
 ): Promise<number> {
+  if(alwaysOnEnabled()) {
+    const due=getConnection().transaction(()=>{
+      const claimed=scheduledMessagesDb.claimDue(now);
+      for(const row of claimed)enqueueInbox({userId:row.user_id,source:'scheduled',sourceId:row.id,target:row.session_id,payload:row});
+      return claimed;
+    })();
+    return due.length;
+  }
   // Claimed before any of them runs, so a long turn cannot let the next poll
   // pick the same message up again.
   const due = scheduledMessagesDb.claimDue(now);
@@ -185,6 +194,14 @@ export function initializeScheduledMessageDispatcher(runtime: ProviderRuntimeGat
     return;
   }
 
+  registerInboxHandler('scheduled',async events=>{
+    // Keep the legacy timer receipt; inbox owns delivery/retry rather than this poll.
+    const { messageQueueService } = await import('@/modules/message-queue/index.js');
+    for(const event of events) {
+      const row=JSON.parse(event.payload) as ScheduledMessageRow;
+      messageQueueService.enqueue(event.user_id,{sessionId:event.target,requestId:'scheduled:'+row.id,content:row.content,options:readOptions(row.options)});
+    }
+  });
   const poll = () => {
     // A pass that overruns the interval must not be started again underneath
     // itself; the claim is transactional but the runs are not.

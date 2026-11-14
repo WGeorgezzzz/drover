@@ -1,7 +1,8 @@
+import { alwaysOnEnabled, enqueueInbox, registerInboxHandler, InboxTargetBusy } from '@/modules/always-on/index.js';
 import { monitorSourceOwns } from './monitor-source.js';
 import { withUserContext } from '@/modules/auth/index.js';
 import { assertOwnedSession } from '@/modules/access-control/index.js';
-import { monitorsDb } from '@/modules/database/index.js';
+import { monitorsDb, getConnection } from '@/modules/database/index.js';
 import { sessionsService, providerTokenUsageService } from '@/modules/providers/index.js';
 import { chatRunRegistry, connectedClients, clientUserIds, runDetachedChatTurn, type ProviderRuntimeGateway } from '@/modules/websocket/index.js';
 import { createNormalizedMessage } from '@/shared/index.js';
@@ -16,20 +17,32 @@ let timer: ReturnType<typeof setInterval>|null=null;
 export function shouldIsolateMonitor(runMode:unknown,contextTokens:number):boolean{return runMode!=='original'||contextTokens>120_000;}
 
 /** Used by server startup and monitor tests; claims runs before any provider is awaited. */
-export async function dispatchMonitors(runtime: ProviderRuntimeGateway,now=new Date()): Promise<number> {
+export async function dispatchMonitors(runtime: ProviderRuntimeGateway,now=new Date(), selectedId?:string,inboxEventId?:string): Promise<number> {
   await pollMonitorProbes(now);
-  const due=monitorsDb.due(now);
+  const due=monitorsDb.due(now).filter(row=>!selectedId||row.id===selectedId);
+  if(alwaysOnEnabled()&&!selectedId) {
+    for(const row of due) {
+      if(monitorSourceOwns(row.id))continue;
+      enqueueInbox({userId:row.user_id,source:'monitor',sourceId:row.id+':'+row.next_run_at,target:row.session_id,payload:{monitorId:row.id}});
+    }
+    return due.length;
+  }
   if(!due.length)return 0;
   // Include CLI sessions outside this service; a separate terminal may own the same transcript.
   const busySessions=new Set((await sessionsService.listRunningSessions()).map(session=>session.sessionId));
   const jobs: Promise<void>[]=[];
   for(const row of due) {
-    if(monitorSourceOwns(row.id))continue;
+    if(monitorSourceOwns(row.id)){if(selectedId)throw new InboxTargetBusy('监测原执行者仍在运行');continue;}
     if(busySessions.has(row.session_id)||chatRunRegistry.isProcessing(row.session_id)||runtime.hasBackgroundWork(row.session_id)) {
+      if(selectedId)throw new InboxTargetBusy('目标会话忙碌，保留到期事件');
       monitorsDb.defer(row.id,now);
       continue;
     }
-    const runId=monitorsDb.claim(row.id,now);
+    const runId=getConnection().transaction(()=>{
+      const claimed=monitorsDb.claim(row.id,now);
+      if(claimed&&inboxEventId)getConnection().prepare('INSERT INTO agent_monitor_events(event_id,run_id) VALUES(?,?)').run(inboxEventId,claimed);
+      return claimed;
+    })();
     if(!runId) continue;
     busySessions.add(row.session_id);
     const job=Promise.resolve().then(() => withUserContext(row.user_id, async () => {
@@ -104,6 +117,16 @@ export async function dispatchMonitors(runtime: ProviderRuntimeGateway,now=new D
 export function initializeMonitors(runtime: ProviderRuntimeGateway, protectedSessions: string[] = []): void {
   if(timer) return;
   monitorsDb.recover(new Date(), protectedSessions);
+  registerInboxHandler('monitor',async events=>{
+    for(const event of events){
+      const receipt=()=>getConnection().prepare('SELECT r.status,r.error FROM agent_monitor_events e JOIN monitor_runs r ON r.id=e.run_id WHERE e.event_id=?').get(event.id) as {status:string;error:string}|undefined;
+      const previous=receipt();
+      if(!previous)await dispatchMonitors(runtime,new Date(),JSON.parse(event.payload).monitorId,event.id);
+      const result=receipt();
+      if(result?.status==='running')throw new InboxTargetBusy('持久化监测执行者仍在运行，等待原回执');
+      if(result&&!['succeeded','skipped'].includes(result.status))throw new Error(result.error||'原监测执行失败；保留事件且不盲目重放副作用');
+    }
+  });
   const poll=()=>void dispatchMonitors(runtime).catch(error=>console.error('[Monitors]',error));
   timer=setInterval(poll,15_000);
   timer.unref?.();

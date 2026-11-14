@@ -1,3 +1,4 @@
+import { consumeDeferredPermission } from '@/modules/always-on/index.js';
 import { getCurrentUserContext } from '@/modules/auth/index.js';
 /**
  * Claude SDK Integration
@@ -1146,6 +1147,8 @@ async function queryClaudeSDK(command, options = {}, ws, context) {
         }
       }
 
+      const resumed=consumeDeferredPermission(Number(ws?.userId),sessionId,toolName,input,options.cloudcliDeferredDecisionId);
+      if(resumed!==undefined)return resumed?{behavior:'allow',updatedInput:input}:{behavior:'deny',message:'用户已拒绝此项工具请求'};
       const requestId = createRequestId();
       ws.send(createNormalizedMessage({ kind: 'permission_request', requestId, toolId: context?.toolUseID, toolName, input, sessionId: capturedSessionId || sessionId || null, provider: 'claude' }));
       emitNotification(createNotificationEvent({

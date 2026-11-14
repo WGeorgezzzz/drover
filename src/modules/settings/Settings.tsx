@@ -1,6 +1,7 @@
 import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { X } from '@/shared/icons';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { ProviderLoginModal } from '@/modules/provider-auth';
@@ -202,6 +203,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }: Set
         <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-4 py-3 md:px-5">
           <h2 className="text-base font-semibold text-foreground">{t('title')}</h2>
           <div className="flex items-center gap-2">
+            <Link className="text-sm underline" to="/inbox" onClick={onClose}>常驻收件箱</Link>
             {saveStatus === 'success' && (
               <span className="animate-in fade-in text-xs text-muted-foreground">{t('saveStatus.success')}</span>
             )}

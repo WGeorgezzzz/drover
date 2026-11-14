@@ -1,7 +1,8 @@
-import { createHash } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 
+import { alwaysOnEnabled, enqueueInbox, registerInboxHandler, InboxTargetBusy } from '@/modules/always-on/index.js';
 import { withUserContext } from '@/modules/auth/index.js';
-import { getSessionOwnerId, messageQueueDb, sessionDraftsDb, sessionsDb } from '@/modules/database/index.js';
+import { getConnection, getSessionOwnerId, messageQueueDb, sessionDraftsDb, sessionsDb } from '@/modules/database/index.js';
 import { sessionsService } from '@/modules/providers/index.js';
 import { chatRunRegistry, runDetachedChatTurn } from '@/modules/websocket/index.js';
 import type { ProviderRuntimeGateway } from '@/modules/websocket/index.js';
@@ -78,6 +79,11 @@ async function executeClaim(row: QueuedTurnRecord, runtime: ProviderRuntimeGatew
 /** Startup polls this bounded pass; tests await it to verify exact outcomes and FIFO ordering. */
 export async function dispatchMessageQueue(runtime: ProviderRuntimeGateway): Promise<number> {
   importLegacyQueuedMessages();
+  if(alwaysOnEnabled()) {
+    const rows=getConnection().prepare("SELECT * FROM message_queue WHERE status='queued' AND delivery_mode='queued' LIMIT 1000").all() as QueuedTurnRecord[];
+    for(const row of rows)enqueueInbox({userId:row.user_id,source:'queue',sourceId:row.id+':'+row.revision,target:row.session_id,payload:{queueId:row.id}});
+    return rows.length;
+  }
   const candidates=messageQueueDb.heads();
   if (!candidates.length) return 0;
   // Respect a CLI session owned by another server or terminal, too.
@@ -125,6 +131,56 @@ export function wakeMessageQueue(): void {
 export function initializeMessageQueue(runtime: ProviderRuntimeGateway, protectedSessions: string[] = []): void {
   if (activeRuntime) return;
   activeRuntime = runtime;
+  registerInboxHandler('queue',async events=>{
+    const db=getConnection(), first=events[0];
+    if(chatRunRegistry.isProcessing(first.target) || runtime.hasBackgroundWork(first.target)) throw new InboxTargetBusy('目标会话仍有模型任务，等待原执行者释放');
+    if((await sessionsService.listRunningSessions(true)).some(session=>session.sessionId===first.target))throw new InboxTargetBusy('目标会话仍由外部 CLI 持有');
+    if(db.prepare('SELECT 1 FROM session_workspace WHERE user_id=? AND session_id=? AND queue_paused=1').get(first.user_id,first.target))throw new InboxTargetBusy('用户已暂停此会话队列');
+    const queueIds=[...new Set(events.map(event=>JSON.parse(event.payload).queueId as string))];
+    const settleMembers=(leader:QueuedTurnRecord)=>db.transaction(()=>{
+      if(!['succeeded','failed','interrupted'].includes(leader.status))return;
+      const members=db.prepare('SELECT member_id FROM agent_queue_batches WHERE leader_id=? AND leader_run_id=?').all(leader.id,leader.run_id) as {member_id:string}[];
+      for(const {member_id}of members){
+        const member=messageQueueDb.get(first.user_id,member_id);
+        if(!member||member.status!=='queued')continue;
+        const runId=randomUUID(),at=leader.finished_at||new Date().toISOString();
+        db.prepare('UPDATE message_queue SET status=?,run_id=?,attempt_count=attempt_count+1,started_at=?,finished_at=?,error=?,revision=revision+1 WHERE id=? AND status=\'queued\'')
+          .run(leader.status,runId,leader.started_at,at,leader.error,member_id);
+        db.prepare('INSERT INTO message_queue_attempts(id,message_id,attempt,status,started_at,finished_at,error) VALUES(?,?,?,?,?,?,?)')
+          .run(runId,member_id,member.attempt_count+1,leader.status,leader.started_at||at,at,leader.error);
+      }
+    })();
+    const rows=queueIds.flatMap(id=>{
+      const row=messageQueueDb.get(first.user_id,id);
+      if(!row || row.status==='succeeded' || row.status==='cancelled')return [];
+      const batch=db.prepare('SELECT leader_id FROM agent_queue_batches WHERE member_id=?').get(id) as {leader_id:string}|undefined;
+      if(batch){const leader=messageQueueDb.get(first.user_id,batch.leader_id);if(leader){settleMembers(leader);if(messageQueueDb.get(first.user_id,id)?.status==='succeeded')return [];}throw new Error('合并执行的原回执待核对，请显式重试');}
+      if(row.status==='running')throw new InboxTargetBusy('原 provider 回执尚未确认，不重放');
+      if(row.status!=='queued')throw new Error('先前模型执行结果不确定，请显式重试原消息');
+      return [row];
+    }).sort((a,b)=>a.position-b.position||a.sequence-b.sequence);
+    // Merge only equivalent provider options; preserve models, attachments and provenance.
+    for(let i=0;i<rows.length;) {
+      const group=[rows[i++]];
+      while(i<rows.length && rows[i].options===group[0].options)group.push(rows[i++]);
+      const claimed=db.transaction(()=>{
+        const runId=randomUUID(),at=new Date().toISOString();
+        db.prepare("UPDATE message_queue SET status='running',run_id=?,attempt_count=attempt_count+1,started_at=?,revision=revision+1 WHERE id=? AND status='queued'").run(runId,at,group[0].id);
+        db.prepare("INSERT INTO message_queue_attempts(id,message_id,attempt,status,started_at) VALUES(?,?,?,'running',?)").run(runId,group[0].id,group[0].attempt_count+1,at);
+        for(const member of group.slice(1))db.prepare('INSERT INTO agent_queue_batches(member_id,leader_id,leader_run_id) VALUES(?,?,?)').run(member.id,group[0].id,runId);
+        return messageQueueDb.get(first.user_id,group[0].id)!;
+      })();
+      const leader={...claimed,content:group.length===1?group[0].content:'以下是同一目标合并到达的事件列表，请逐项处理：\n'+JSON.stringify(group.map(row=>({id:row.id,content:row.content})))};
+      await executeClaim(leader,runtime);
+      const final=messageQueueDb.get(first.user_id,leader.id)!;
+      settleMembers(final);
+      if(final.status==='queued'){
+        db.prepare('DELETE FROM agent_queue_batches WHERE leader_id=? AND leader_run_id=?').run(leader.id,leader.run_id);
+        throw new InboxTargetBusy('尚未启动模型，等待会话释放');
+      }
+      if(final.status!=='succeeded')throw new Error(final.error||'模型未确认完成');
+    }
+  });
   registerMessageQueueWakeup(wakeMessageQueue);
   messageQueueDb.recover(protectedSessions);
   scheduleDispatch(0);
