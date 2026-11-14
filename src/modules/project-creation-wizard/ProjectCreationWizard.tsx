@@ -1,4 +1,5 @@
 import { Button } from '@/shared/ui/Button';
+import { DialogSurface } from '@/shared/ui/Dialog';
 import { useCallback, useMemo, useState } from 'react';
 import { FolderPlus, X } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
@@ -133,7 +134,7 @@ export default function ProjectCreationWizard({
   );
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 top-0 z-[60] flex items-center justify-center bg-overlay/50 p-0 backdrop-blur-sm sm:p-4">
+    <DialogSurface onClose={() => { if (!isCreating) onClose(); }} className="flex items-center justify-center p-0 sm:p-4">
       <div className="h-full w-full overflow-y-auto rounded-none border-0 border-border bg-card shadow-xl dark:border-border dark:bg-background sm:h-auto sm:max-w-2xl sm:rounded-lg sm:border">
         <div className="flex items-center justify-between border-b border-border p-6 dark:border-border">
           <div className="flex items-center gap-3">
@@ -202,6 +203,6 @@ export default function ProjectCreationWizard({
           onCreate={handleCreate}
         />
       </div>
-    </div>
+    </DialogSurface>
   );
 }
