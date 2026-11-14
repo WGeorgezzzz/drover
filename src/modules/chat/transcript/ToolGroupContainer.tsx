@@ -1,5 +1,6 @@
+import { Button } from '@/shared/ui/Button';
 import { memo, useMemo, useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight } from '@/shared/icons';
 
 import type { ChatMessage, ClaudePermissionSuggestion, PermissionGrantResult, LLMProvider,DiffLine,DiffStats,Project,ToolGroupItem } from '@/shared/types';
 import { getToolConfig } from '@/modules/chat/tools';
@@ -115,7 +116,7 @@ function ToolGroupContainer({
 
   return (
     <div className="chat-message tool px-3 sm:px-0" data-message-timestamp={group.timestamp || undefined}>
-      <button
+      <Button variant="ghost" size="compact"
         type="button"
         className={`group flex w-full items-center gap-2 border-l-2 ${borderClass} rounded-r-md bg-muted/25 px-3 py-2 text-left transition-colors hover:bg-muted/40 dark:bg-muted/10 dark:hover:bg-muted/20`}
         onClick={() => setIsExpanded((current) => !current)}
@@ -139,7 +140,7 @@ function ToolGroupContainer({
           </>
         )}
         {groupDiffStats && <DiffStatsBadge stats={groupDiffStats} className="ml-auto pl-2" />}
-      </button>
+      </Button>
 
       {showChildren && (
         <div className="mt-2 space-y-3 sm:space-y-4">

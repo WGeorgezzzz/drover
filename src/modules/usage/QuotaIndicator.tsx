@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import { useQuota } from '@/modules/usage/hooks/useQuota';
 
 /** Sidebar uses relay quota first and local subscriptions only when that source has no values. */
@@ -30,8 +31,8 @@ export function QuotaIndicator({ onOpen }: { onOpen: () => void }) {
       detail: failed ? `读取失败（上次 ${age(at)}）` : age(at) };
   });
   const warnings = data?.pool?.data?.warnings || [];
-  return <button type="button" data-testid="quota-indicator" onClick={onOpen} className={`mb-1 w-full rounded-lg px-2 py-1.5 text-left text-[11px] ${warnings.length ? 'bg-red-500/10 text-red-700 dark:text-red-300' : 'bg-muted/40 text-muted-foreground'}`}>
+  return <Button variant="ghost" size="compact" type="button" data-testid="quota-indicator" onClick={onOpen} className={`mb-1 w-full rounded-lg px-2 py-1.5 text-left text-[11px] ${warnings.length ? 'bg-destructive/10 text-destructive dark:text-destructive' : 'bg-muted/40 text-muted-foreground'}`}>
     <span className="flex flex-wrap gap-x-1">{rows.every(row => row.percent === null) ? '用量未连接 · 点击设置' : rows.map((row, index) => <span key={row.provider}>{index > 0 && <span aria-hidden="true"> · </span>}<span title={row.detail} className={row.stale ? 'opacity-60' : undefined}>{row.provider === 'claude' ? 'Claude' : 'Codex'} {row.windows}</span></span>)}</span>
-    {warnings.map((warning, index) => <span key={index} className="mt-0.5 block break-words text-red-600 dark:text-red-300">{warning}</span>)}
-  </button>;
+    {warnings.map((warning, index) => <span key={index} className="mt-0.5 block break-words text-destructive dark:text-destructive">{warning}</span>)}
+  </Button>;
 }

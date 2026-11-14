@@ -2,7 +2,7 @@
   "notConfigured": {
     "title": "TaskMaster AI yapılandırılmamış",
     "description": "TaskMaster, karmaşık projeleri AI destekli yardımla yönetilebilir görevlere böler",
-    "whatIsTitle": "🎯 TaskMaster nedir?",
+    "whatIsTitle": "TaskMaster nedir?",
     "features": {
       "aiPowered": "AI Destekli Görev Yönetimi: Karmaşık projeleri yönetilebilir alt görevlere böl",
       "prdTemplates": "PRD Şablonları: Ürün Gereksinim Belgelerinden görev üret",
@@ -35,7 +35,7 @@
         "description": "AI asistanına görevler üzerinde çalışmaya başlamasını, durumlarını güncellemesini ve proje geliştikçe yeni görevler eklemesini söyle."
       }
     },
-    "tip": "💡 İpucu: TaskMaster'ın AI destekli görev üretiminden en iyi şekilde faydalanmak için bir PRD ile başla"
+    "tip": "İpucu: TaskMaster'ın AI destekli görev üretiminden en iyi şekilde faydalanmak için bir PRD ile başla"
   },
   "setupModal": {
     "title": "TaskMaster Kurulumu",
@@ -49,20 +49,20 @@
     "title": "TaskMaster'a Başlarken",
     "subtitle": "Verimli görev yönetimi için rehberin",
     "examples": {
-      "parsePRD": "💬 Örnek:\n\"Claude Task Master ile yeni bir proje başlattım. .taskmaster/docs/prd.txt altında bir PRD'm var. Bunu ayrıştırıp ilk görevleri kurmama yardım eder misin?\"",
-      "expandTask": "💬 Örnek:\n\"Görev 5 karmaşık görünüyor. Bunu alt görevlere bölebilir misin?\"",
-      "addTask": "💬 Örnek:\n\"Lütfen Cloudinary kullanarak kullanıcı profil resmi yükleme özelliği için yeni bir görev ekle, en iyi yaklaşımı araştır.\""
+      "parsePRD": "Örnek:\n\"Claude Task Master ile yeni bir proje başlattım. .taskmaster/docs/prd.txt altında bir PRD'm var. Bunu ayrıştırıp ilk görevleri kurmama yardım eder misin?\"",
+      "expandTask": "Örnek:\n\"Görev 5 karmaşık görünüyor. Bunu alt görevlere bölebilir misin?\"",
+      "addTask": "Örnek:\n\"Lütfen Cloudinary kullanarak kullanıcı profil resmi yükleme özelliği için yeni bir görev ekle, en iyi yaklaşımı araştır.\""
     },
     "moreExamples": "Daha fazla örnek ve kullanım deseni →",
     "proTips": {
-      "title": "💡 Pro İpuçları",
+      "title": "Pro İpuçları",
       "search": "Belirli görevleri hızlıca bulmak için arama çubuğunu kullan",
       "views": "Kanban, Liste ve Izgara görünümleri arasında geçiş yapmak için görünüm düğmelerini kullan",
       "filters": "Belirli görev durumlarına veya önceliklere odaklanmak için filtreleri kullan",
       "details": "Detaylı bilgi görmek ve alt görevleri yönetmek için herhangi bir göreve tıkla"
     },
     "learnMore": {
-      "title": "📚 Daha Fazla Öğren",
+      "title": "Daha Fazla Öğren",
       "description": "TaskMaster AI, geliştiriciler için inşa edilmiş ileri seviye bir görev yönetim sistemidir. Dokümantasyona, örneklere bak ve projeye katkıda bulun.",
       "githubButton": "GitHub'da Görüntüle"
     }
@@ -99,12 +99,12 @@
     "grid": "Izgara görünümü"
   },
   "kanban": {
-    "pending": "📋 Yapılacak",
-    "inProgress": "🚀 Sürüyor",
-    "done": "✅ Tamamlandı",
-    "blocked": "🚫 Engellendi",
-    "deferred": "⏳ Ertelendi",
-    "cancelled": "❌ İptal Edildi",
+    "pending": "Yapılacak",
+    "inProgress": "Sürüyor",
+    "done": "Tamamlandı",
+    "blocked": "Engellendi",
+    "deferred": "Ertelendi",
+    "cancelled": "İptal Edildi",
     "noTasksYet": "Henüz görev yok",
     "tasksWillAppear": "Görevler burada görünecek",
     "moveTasksHere": "Başlayan görevleri buraya taşı",

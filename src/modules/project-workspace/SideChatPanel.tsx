@@ -1,5 +1,8 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
+import { Select } from '@/shared/ui/Select';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Archive, ArrowUpRight, Check, Loader2, MessageSquarePlus, Pencil, Plus, RotateCcw, X } from 'lucide-react';
+import { Archive, ArrowUpRight, Check, Loader2, MessageSquarePlus, Pencil, Plus, RotateCcw, X } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { ChatInterface } from '@/modules/chat';
@@ -121,38 +124,38 @@ export function SideChatPanel({parent,project,ws,sendMessage,draft,onDraftConsum
     <header className="flex h-12 shrink-0 items-center gap-1.5 border-b border-border px-3">
       <MessageSquarePlus size={16} className="shrink-0 text-muted-foreground"/>
       <h2 className="shrink-0 text-sm font-medium">{t('sideChat.title')}</h2>
-      <select aria-label={t('sideChat.choose')} className="ml-auto min-w-0 max-w-36 rounded-md bg-transparent p-1 text-xs"
+      <Select aria-label={t('sideChat.choose')} className="ml-auto min-w-0 max-w-36 rounded-md bg-transparent p-1 text-xs"
         value={selected?.id||''} onChange={event=>setSelectedId(event.target.value)}>
         {!selected&&<option value="">{t('sideChat.noActive')}</option>}
         {activeRows.map(row=><option key={row.id} value={row.id}>{row.title}</option>)}
-      </select>
-      <button disabled={pending} className="workspace-icon-button shrink-0" aria-label={t('sideChat.new')} onClick={()=>void create()}><Plus size={16}/></button>
-      <button className="workspace-icon-button shrink-0" aria-label={t('sideChat.close')} onClick={onClose}><X size={16}/></button>
+      </Select>
+      <Button variant="ghost" size="compact" disabled={pending} className="workspace-icon-button shrink-0" aria-label={t('sideChat.new')} onClick={()=>void create()}><Plus size={16}/></Button>
+      <Button variant="ghost" size="compact" className="workspace-icon-button shrink-0" aria-label={t('sideChat.close')} onClick={onClose}><X size={16}/></Button>
     </header>
     <div className="shrink-0 border-b border-border/60 px-3 py-2">
       <p className="text-xs leading-relaxed text-muted-foreground">{t('sideChat.context')}</p>
       {selected&&<div className="mt-1 flex items-center justify-end gap-1">
-        <button className="workspace-icon-button" disabled={pending} aria-label={t('sideChat.rename')} onClick={()=>setRename({id:selected.id,text:selected.title})}><Pencil size={13}/></button>
-        <button className="workspace-icon-button" disabled={pending} aria-label={t('sideChat.archive')} onClick={()=>void action(selected,{action:'archive'})}><Archive size={13}/></button>
-        <button className="workspace-icon-button" disabled={pending} aria-label={t('sideChat.openFull')} onClick={()=>void action(selected,{action:'promote'})}><ArrowUpRight size={14}/></button>
+        <Button variant="ghost" size="compact" className="workspace-icon-button" disabled={pending} aria-label={t('sideChat.rename')} onClick={()=>setRename({id:selected.id,text:selected.title})}><Pencil size={13}/></Button>
+        <Button variant="ghost" size="compact" className="workspace-icon-button" disabled={pending} aria-label={t('sideChat.archive')} onClick={()=>void action(selected,{action:'archive'})}><Archive size={13}/></Button>
+        <Button variant="ghost" size="compact" className="workspace-icon-button" disabled={pending} aria-label={t('sideChat.openFull')} onClick={()=>void action(selected,{action:'promote'})}><ArrowUpRight size={14}/></Button>
       </div>}
       {rename&&<form className="mt-2 flex gap-1" onSubmit={event=>{event.preventDefault();const row=rows.find(value=>value.id===rename.id);if(row)void action(row,{title:rename.text});}}>
-        <input aria-label={t('sideChat.rename')} maxLength={120} className="min-w-0 flex-1 rounded border bg-background px-2 py-1 text-xs"
+        <UnifiedInput aria-label={t('sideChat.rename')} maxLength={120} className="min-w-0 flex-1 rounded border bg-background px-2 py-1 text-xs"
           value={rename.text} onChange={event=>setRename({...rename,text:event.target.value})}/>
-        <button disabled={pending||!rename.text.trim()} aria-label={t('sideChat.save')}><Check size={16}/></button>
+        <Button variant="ghost" size="compact" disabled={pending||!rename.text.trim()} aria-label={t('sideChat.save')}><Check size={16}/></Button>
       </form>}
       {rows.some(row=>row.status!=='active')&&<details className="mt-1 text-xs text-muted-foreground">
         <summary className="cursor-pointer">{t('sideChat.history')}</summary>
         <div className="max-h-24 overflow-auto">{rows.filter(row=>row.status!=='active').map(row=><div key={row.id} className="mt-2 flex items-center gap-2">
           <span className="min-w-0 flex-1 truncate">{row.title} · {t(`sideChat.status.${row.status}`)}</span>
-          {row.status==='archived'&&<button aria-label={t('sideChat.restore')} onClick={()=>void action(row,{action:'restore'})}><RotateCcw size={13}/></button>}
-          {row.status==='promoted'&&<button aria-label={t('sideChat.openFull')} onClick={()=>onPromote(row.child_session_id)}><ArrowUpRight size={13}/></button>}
+          {row.status==='archived'&&<Button variant="ghost" size="compact" aria-label={t('sideChat.restore')} onClick={()=>void action(row,{action:'restore'})}><RotateCcw size={13}/></Button>}
+          {row.status==='promoted'&&<Button variant="ghost" size="compact" aria-label={t('sideChat.openFull')} onClick={()=>onPromote(row.child_session_id)}><ArrowUpRight size={13}/></Button>}
           {row.status==='failed'&&<span title={row.error||''}>{t('sideChat.failed')}</span>}
         </div>)}</div>
       </details>}
     </div>
     {error&&<div role="alert" className="m-3 rounded-lg border border-destructive/20 p-3 text-xs">
-      <p>{error}</p><button className="mt-2 rounded border px-2 py-1" onClick={()=>{setError('');setAttempt(value=>value+1);}}>{t('sideChat.retry')}</button>
+      <p>{error}</p><Button variant="ghost" size="compact" className="mt-2 rounded border px-2 py-1" onClick={()=>{setError('');setAttempt(value=>value+1);}}>{t('sideChat.retry')}</Button>
     </div>}
     {loading?<div role="status" className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground"><Loader2 size={16} className="animate-spin"/>{t('sideChat.loading')}</div>
       :selected?<div className="min-h-0 flex-1"><ChatInterface key={selected.child_session_id} isSideChat isActive
@@ -161,7 +164,7 @@ export function SideChatPanel({parent,project,ws,sendMessage,draft,onDraftConsum
         onNavigateToSession={onPromote} draftInsertion={draft} onDraftInserted={onDraftConsumed} onReturnReply={onReturnReply}
         showThinking={showThinking} showRawParameters={showRawParameters} sendByCtrlEnter={sendByCtrlEnter}/></div>
       :<div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-sm text-muted-foreground">
-        <p>{t('sideChat.noActive')}</p><button className="rounded-lg border px-3 py-2" disabled={pending} onClick={()=>void create()}>{t('sideChat.new')}</button>
+        <p>{t('sideChat.noActive')}</p><Button variant="ghost" size="compact" className="rounded-lg border px-3 py-2" disabled={pending} onClick={()=>void create()}>{t('sideChat.new')}</Button>
       </div>}
   </aside>;
 }

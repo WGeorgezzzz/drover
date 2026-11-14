@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -46,6 +47,6 @@ export function UsageChart({series,buckets,metric,area}:{series:UsageSeries[];bu
       </div>}
       {!series.length&&<div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">{t('usage.empty')}</div>}
     </div>
-    <div className="flex flex-wrap gap-x-4 gap-y-2">{groups.map((s,i)=><button type="button" key={s.key} aria-pressed={!hidden.has(s.key)} onClick={()=>setHidden(old=>{const next=new Set(old);if(next.has(s.key))next.delete(s.key);else next.add(s.key);return next;})} className={`flex max-w-full items-center gap-1.5 text-xs ${hidden.has(s.key)?'opacity-40':''}`}><span className="h-2 w-2 shrink-0 rounded-full" style={{background:COLORS[i]}}/><span className="truncate">{s.label}</span></button>)}</div>
+    <div className="flex flex-wrap gap-x-4 gap-y-2">{groups.map((s,i)=><Button variant="ghost" size="compact" type="button" key={s.key} aria-pressed={!hidden.has(s.key)} onClick={()=>setHidden(old=>{const next=new Set(old);if(next.has(s.key))next.delete(s.key);else next.add(s.key);return next;})} className={`flex max-w-full items-center gap-1.5 text-xs ${hidden.has(s.key)?'opacity-40':''}`}><span className="h-2 w-2 shrink-0 rounded-full" style={{background:COLORS[i]}}/><span className="truncate">{s.label}</span></Button>)}</div>
   </div>;
 }

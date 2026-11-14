@@ -24,7 +24,8 @@
     "fullscreen": "Fullscreen",
     "close": "Close",
     "previewMarkdown": "Preview markdown",
-    "editMarkdown": "Edit markdown"
+    "editMarkdown": "Edit markdown",
+    "openInModal": "Open in modal"
   },
   "footer": {
     "lines": "Lines:",

@@ -1,3 +1,5 @@
+import { Check as UnifiedCheck, Copy as UnifiedCopy } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import { cleanMonitorReport } from '@/modules/chat/utils/monitorReport';
 import type { Components } from 'react-markdown';
 import React, { createContext, memo, useContext, useMemo, useState } from 'react';
@@ -103,7 +105,7 @@ const CodeBlock = ({ node: _node, className, children, forceBlock, ...props }: C
     if(!insideLink && isInlineFileReference(raw)) {
       const reference = _node?.properties?.['data-local-reference'] ?? raw;
       const directories = JSON.parse(_node?.properties?.['data-local-directories'] ?? '[]');
-      return <LocalFileLink fileReference={reference} directories={directories} href="#" title={reference} className="cursor-pointer whitespace-pre-wrap break-words rounded-md border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[0.875em] text-blue-600 underline decoration-blue-400/50 underline-offset-2 hover:bg-primary/10 dark:text-blue-400"
+      return <LocalFileLink fileReference={reference} directories={directories} href="#" title={reference} className="cursor-pointer whitespace-pre-wrap break-words rounded-md border border-primary/20 bg-primary/5 px-1.5 py-0.5 font-mono text-[0.875em] text-primary underline decoration-primary/50 underline-offset-2 hover:bg-primary/10 dark:text-primary"
         onPreview={openFileInEditor}>{children}</LocalFileLink>;
     }
     return (
@@ -126,11 +128,11 @@ const CodeBlock = ({ node: _node, className, children, forceBlock, ...props }: C
   }
 
   return (
-    <div className="group my-3 overflow-hidden rounded-xl border border-border bg-muted/50 shadow-sm dark:bg-zinc-900">
+    <div className="group my-3 overflow-hidden rounded-xl border border-border bg-muted/50 shadow-sm dark:bg-background">
       {/* Label row shares the block's background — no divider, ChatGPT-style */}
       <div className="flex items-center justify-between px-4 pt-2">
         <span className="select-none text-xs text-muted-foreground">{languageLabel}</span>
-        <button
+        <Button variant="ghost" size="compact"
           type="button"
           onClick={() =>
             copyTextToClipboard(raw).then((success) => {
@@ -141,35 +143,18 @@ const CodeBlock = ({ node: _node, className, children, forceBlock, ...props }: C
             })
           }
           className={`rounded-md p-1 transition-opacity focus-visible:opacity-100 ${copied
-            ? 'text-green-600 opacity-100 dark:text-green-500'
+            ? 'text-success opacity-100 dark:text-success'
             : 'text-muted-foreground opacity-0 hover:text-foreground group-hover:opacity-100'
             }`}
           title={copied ? t('codeBlock.copied') : t('codeBlock.copyCode')}
           aria-label={copied ? t('codeBlock.copied') : t('codeBlock.copyCode')}
         >
           {copied ? (
-            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <UnifiedCheck className="h-4 w-4" />
           ) : (
-            <svg
-              className="h-4 w-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
-            </svg>
+            <UnifiedCopy className="h-4 w-4" />
           )}
-        </button>
+        </Button>
       </div>
 
       <SyntaxHighlighter
@@ -313,7 +298,7 @@ function MarkdownBodyRenderer({ children, breaks = false, components: overrides 
               // An abbreviated name must be resolved before the editor can open it.
               directories={JSON.parse(node?.properties?.['data-local-directories'] ?? '[]')}
               onPreview={parseLocalFileLink(fileRef).path.endsWith('/') ? undefined : openFileInEditor}
-              className="cursor-pointer text-blue-600 hover:underline dark:text-blue-400"
+              className="cursor-pointer text-primary hover:underline dark:text-primary"
               onClick={(event) => {
                 event.preventDefault();
                 // Normalized once for every branch below: the href arrives
@@ -336,7 +321,7 @@ function MarkdownBodyRenderer({ children, breaks = false, components: overrides 
         return (
           <a
             href={href}
-            className="text-blue-600 hover:underline dark:text-blue-400"
+            className="text-primary hover:underline dark:text-primary"
             target="_blank"
             rel="noopener noreferrer"
           >

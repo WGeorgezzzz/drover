@@ -29,5 +29,5 @@ test('empty pool falls back to retained local Codex and preserves red pool warni
   setup(); fixture.data!.pool!.data!.accounts = []; fixture.data!.pool!.data!.warnings = ['号池告警'];
   render(<QuotaIndicator onOpen={() => {}}/>);
   expect(screen.getByTestId('quota-indicator').textContent).toContain('Claude 5h 18% / 7天 — · Codex 5h — / 7天 6%');
-  expect(screen.getByText('号池告警').className).toContain('text-red');
+  expect(screen.getByText('号池告警').className).toContain('text-destructive');
 });

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Mic, Square, Loader2 } from 'lucide-react';
+import { Mic, Square, Loader2 } from '@/shared/icons';
 
 import { PromptInputButton } from '@/modules/chat/composer/PromptInput';
 import type { VoiceInputState } from '@/shared/types';
@@ -19,7 +19,7 @@ export default function VoiceInputButton({ state, onToggle, errorMsg }: Props) {
 
   const icon =
     state === 'recording' ? (
-      <Square className="text-red-500" />
+      <Square className="text-destructive" />
     ) : state === 'transcribing' ? (
       <Loader2 className="animate-spin" />
     ) : (
@@ -29,7 +29,7 @@ export default function VoiceInputButton({ state, onToggle, errorMsg }: Props) {
   return (
     <span className="relative inline-flex">
       {errorMsg && (
-        <span className="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-red-600 px-2 py-1 text-xs text-white shadow-lg">
+        <span className="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap rounded bg-destructive px-2 py-1 text-xs text-primary-foreground shadow-lg">
           {errorMsg}
         </span>
       )}

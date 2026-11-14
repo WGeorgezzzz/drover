@@ -1,4 +1,5 @@
-import { Volume2, Loader2, Square } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { Volume2, Loader2, Square } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { useTts } from '@/modules/chat/hooks/useTts';
@@ -23,16 +24,16 @@ const MessageSpeakControl = ({ content }: { content: string }) => {
   return (
     <span className="relative inline-flex">
       {error && (
-        <span className="absolute bottom-full left-1/2 z-10 mb-1 max-w-[240px] -translate-x-1/2 whitespace-normal rounded bg-red-600 px-2 py-1 text-center text-xs text-white shadow-lg">
+        <span className="absolute bottom-full left-1/2 z-10 mb-1 max-w-[240px] -translate-x-1/2 whitespace-normal rounded bg-destructive px-2 py-1 text-center text-xs text-primary-foreground shadow-lg">
           {error}
         </span>
       )}
-      <button
+      <Button variant="ghost" size="compact"
         type="button"
         onClick={toggle}
         title={title}
         aria-label={title}
-        className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+        className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-muted-foreground transition-colors hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-muted-foreground"
       >
         {state === 'playing' ? (
           <Square className="h-3.5 w-3.5" />
@@ -41,7 +42,7 @@ const MessageSpeakControl = ({ content }: { content: string }) => {
         ) : (
           <Volume2 className="h-3.5 w-3.5" />
         )}
-      </button>
+      </Button>
     </span>
   );
 };

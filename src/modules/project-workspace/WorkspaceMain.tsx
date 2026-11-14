@@ -1,6 +1,8 @@
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
+import { Button } from '@/shared/ui/Button';
 import React, { useCallback, useEffect, type Dispatch, type SetStateAction, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X } from '@/shared/icons';
 
 import { ChatInterface } from '@/modules/chat';
 import { FileTree } from '@/modules/file-tree';
@@ -136,7 +138,7 @@ function WorkspaceMain({
     && ['shell', 'files', 'git', 'browser'].includes(activeTab);
   const panelClass = splitPane ? 'workspace-pane flex h-full min-w-0 shrink-0 flex-col overflow-hidden border-l border-border' : 'h-full w-full overflow-hidden';
   const panelStyle = splitPane ? { width: `${workspaceSplit.percent}%` } : undefined;
-  const paneHeader=splitPane?<div className="flex h-9 shrink-0 items-center justify-between border-b border-border/60 px-3 text-xs text-muted-foreground"><span>{t(`ui.panes.${activeTab}`)}</span><button type="button" className="workspace-icon-button" aria-label={t('desktop.closePane')} onClick={()=>setActiveTab('chat')}><X size={14}/></button></div>:null;
+  const paneHeader=splitPane?<div className="flex h-9 shrink-0 items-center justify-between border-b border-border/60 px-3 text-xs text-muted-foreground"><span>{t(`ui.panes.${activeTab}`)}</span><Button variant="ghost" size="compact" type="button" className="workspace-icon-button" aria-label={t('desktop.closePane')} onClick={()=>setActiveTab('chat')}><X size={14}/></Button></div>:null;
   const openWorkspaceFile = useCallback((filePath: string) => {
     if (handleFileOpen(filePath) && isClaude) setActiveTab('chat');
   }, [handleFileOpen, isClaude, setActiveTab]);
@@ -214,16 +216,16 @@ function WorkspaceMain({
         displayOptions={isClaude&&<details className="workspace-display-menu relative shrink-0 self-center">
           <summary aria-label={t('ui.displayOptions')} title={t('ui.displayOptions')} className="workspace-icon-button cursor-pointer list-none"><SlidersHorizontal size={16}/></summary>
           <div className="workspace-view-options absolute right-0 top-full z-50 mt-2 flex w-56 flex-col gap-3 rounded-xl border border-border bg-popover p-3 text-xs text-muted-foreground shadow-lg" data-testid="claude-workspace-controls">
-          {!isMobile && <label className="flex items-center gap-1.5"><input type="checkbox" checked={splitEnabled} onChange={event => {
+          {!isMobile && <label className="flex items-center gap-1.5"><UnifiedCheckbox  checked={splitEnabled} onChange={event => {
             setSplitEnabled(event.target.checked);
             localStorage.setItem('claude-workspace-split', String(event.target.checked));
           }} />{t('desktop.sideBySide', 'Side by side')}</label>}
-          <label className="flex items-center gap-1.5"><input type="checkbox" checked={showThinking} onChange={event => setPreference('showThinking',event.target.checked)} />{t('desktop.showThinking', 'Show thinking')}</label>
-          <label className="flex items-center gap-1.5"><input type="checkbox" checked={showRawParameters} onChange={event => setPreference('showRawParameters',event.target.checked)} />{t('desktop.showParameters', 'Show tool parameters')}</label>
-          {(activeTab !== 'chat' || editingFile) && <button type="button" className="ml-auto rounded px-2 py-1 hover:bg-muted" onClick={() => {
+          <label className="flex items-center gap-1.5"><UnifiedCheckbox  checked={showThinking} onChange={event => setPreference('showThinking',event.target.checked)} />{t('desktop.showThinking', 'Show thinking')}</label>
+          <label className="flex items-center gap-1.5"><UnifiedCheckbox  checked={showRawParameters} onChange={event => setPreference('showRawParameters',event.target.checked)} />{t('desktop.showParameters', 'Show tool parameters')}</label>
+          {(activeTab !== 'chat' || editingFile) && <Button variant="ghost" size="compact" type="button" className="ml-auto rounded px-2 py-1 hover:bg-muted" onClick={() => {
             if (editingFile) handleCloseEditor();
             else setActiveTab('chat');
-          }}>{t('desktop.closePane', 'Close pane')}</button>}
+          }}>{t('desktop.closePane', 'Close pane')}</Button>}
           </div>
         </details>}
       />

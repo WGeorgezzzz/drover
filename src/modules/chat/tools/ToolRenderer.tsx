@@ -1,3 +1,4 @@
+import { Check as UnifiedCheck } from '@/shared/icons';
 import React, { memo, useMemo, useCallback } from 'react';
 
 import type { DiffLine, Project,ToolStatus } from '@/shared/types';
@@ -288,10 +289,8 @@ export const ToolRenderer: React.FC<ToolRendererProps> = memo(({
       case 'success-message': {
         const msg = displayConfig.getMessage?.(parsedData) || 'Success';
         contentComponent = (
-          <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
-            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+          <div className="flex items-center gap-1.5 text-xs text-success dark:text-success">
+            <UnifiedCheck className="h-3 w-3" />
             {msg}
           </div>
         );

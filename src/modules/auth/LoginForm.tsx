@@ -1,7 +1,9 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { useCallback, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Lock, User } from 'lucide-react';
+import { Loader2, Lock, User } from '@/shared/icons';
 
 import { useAuth } from '@/modules/auth/context/AuthContext';
 import AuthErrorAlert from '@/modules/auth/AuthErrorAlert';
@@ -90,9 +92,9 @@ export default function LoginForm() {
         />
 
         <AuthErrorAlert errorMessage={errorMessage || sessionError || ''} />
-        {remoteLogin&&<label className="block space-y-2 text-sm"><span>二次验证码（仅管理员需要）</span><input aria-label="二次验证码" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={formState.otp} onChange={e=>updateField('otp',e.target.value)} className="w-full rounded-lg border bg-background p-3"/></label>}
+        {remoteLogin&&<label className="block space-y-2 text-sm"><span>二次验证码（仅管理员需要）</span><UnifiedInput aria-label="二次验证码" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={formState.otp} onChange={e=>updateField('otp',e.target.value)} className="w-full rounded-lg border bg-background p-3"/></label>}
 
-        <button
+        <Button variant="ghost" size="compact"
           type="submit"
           disabled={isSubmitting}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-primary/30 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-card active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
@@ -105,7 +107,7 @@ export default function LoginForm() {
           ) : (
             t('login.submit')
           )}
-        </button>
+        </Button>
       </form>
     </AuthScreenLayout>
   );

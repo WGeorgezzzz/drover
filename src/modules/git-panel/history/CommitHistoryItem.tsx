@@ -1,4 +1,5 @@
-import { ChevronDown, ChevronRight, GitBranch, Tag } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { ChevronDown, ChevronRight, GitBranch, Tag } from '@/shared/icons';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -73,7 +74,7 @@ export default function CommitHistoryItem({
     <div className="flex border-b border-border last:border-0">
       {graphRow && <CommitGraphStrip row={graphRow} />}
       <div className="min-w-0 flex-1">
-      <button
+      <Button variant="ghost" size="compact"
         type="button"
         aria-expanded={isExpanded}
         className="flex w-full cursor-pointer items-start border-0 bg-transparent p-3 text-left transition-colors hover:bg-accent/50"
@@ -104,7 +105,7 @@ export default function CommitHistoryItem({
             </span>
           </div>
         </div>
-      </button>
+      </Button>
 
       {isExpanded && diff && (
         <div className="bg-muted/50">
@@ -137,11 +138,11 @@ export default function CommitHistoryItem({
                 </div>
                 <div>
                   <div className="text-muted-foreground/60">{t('git:history.added')}</div>
-                  <div className="font-semibold text-green-600 dark:text-green-400">+{fileSummary.totalInsertions}</div>
+                  <div className="font-semibold text-success dark:text-success">+{fileSummary.totalInsertions}</div>
                 </div>
                 <div>
                   <div className="text-muted-foreground/60">{t('git:history.removed')}</div>
-                  <div className="font-semibold text-red-600 dark:text-red-400">-{fileSummary.totalDeletions}</div>
+                  <div className="font-semibold text-destructive dark:text-destructive">-{fileSummary.totalDeletions}</div>
                 </div>
               </div>
             )}
@@ -173,11 +174,11 @@ export default function CommitHistoryItem({
                       </span>
                       <span className="flex-shrink-0 font-mono text-muted-foreground/60">
                         {file.insertions > 0 && (
-                          <span className="text-green-600 dark:text-green-400">+{file.insertions}</span>
+                          <span className="text-success dark:text-success">+{file.insertions}</span>
                         )}
                         {file.insertions > 0 && file.deletions > 0 && '/'}
                         {file.deletions > 0 && (
-                          <span className="text-red-600 dark:text-red-400">-{file.deletions}</span>
+                          <span className="text-destructive dark:text-destructive">-{file.deletions}</span>
                         )}
                       </span>
                     </div>

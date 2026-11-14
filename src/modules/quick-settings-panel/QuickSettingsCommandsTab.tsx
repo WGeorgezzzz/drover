@@ -1,5 +1,7 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import type { SlashCommand } from '@/shared/types';
@@ -85,7 +87,7 @@ export default function QuickSettingsCommandsTab({
           {t(group.labelKey)}
         </h4>
         {group.commands.map((command, index) => (
-          <button
+          <Button variant="ghost" size="compact"
             // A project and a user command can share a name (the server does
             // not dedupe them), so the position disambiguates the key.
             key={`${group.key}-${index}-${command.name}`}
@@ -98,7 +100,7 @@ export default function QuickSettingsCommandsTab({
             {command.description && (
               <span className="line-clamp-2 text-xs text-muted-foreground">{command.description}</span>
             )}
-          </button>
+          </Button>
         ))}
       </div>
     ));
@@ -109,7 +111,7 @@ export default function QuickSettingsCommandsTab({
       <div className="border-b border-border p-3">
         <label className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2 py-1.5 focus-within:border-primary">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <input
+          <UnifiedInput
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}

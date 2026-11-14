@@ -354,5 +354,33 @@
   "brand": {
     "name": "驭手",
     "tagline": "一处驾驭所有 Agent"
+  },
+  "desktop": {
+    "updated": "桌面端已更新",
+    "restart": "点此重启桌面端"
+  },
+  "sessionMonitor": {
+    "title": "会话监测",
+    "close": "关闭会话监测",
+    "paused": "已暂停",
+    "backoff": "失败 / 退避中",
+    "running": "正在运行",
+    "enabled": "已启用",
+    "succeeded": "成功",
+    "failed": "失败",
+    "interrupted": "中断",
+    "never": "尚未执行",
+    "pauseSchedule": "暂停期间不调度",
+    "actionFailed": "操作失败",
+    "badgePaused": "监测：已暂停",
+    "badgeEnabled": "监测：已启用",
+    "badgeBackoff": "监测：失败 / 退避中",
+    "next": "下次（本地）：",
+    "result": "最近结果：",
+    "hint": "下次执行时间按本地时区显示。暂停或停止不会中断已经运行的一轮。",
+    "resume": "恢复",
+    "pause": "暂停",
+    "runNow": "立即运行",
+    "stop": "停止"
   }
 }

@@ -1,3 +1,5 @@
+import { Check as UnifiedCheck } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import { useTranslation } from 'react-i18next';
 
 const loadAllOverlayAnimationStyle = `
@@ -45,15 +47,13 @@ export default function LoadAllMessagesOverlay({
     >
       <style>{loadAllOverlayAnimationStyle}</style>
       {loadAllJustFinished ? (
-        <div className="flex items-center space-x-2 rounded-full bg-green-600 px-4 py-1.5 text-xs font-medium text-white shadow-lg dark:bg-green-500">
-          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
+        <div className="flex items-center space-x-2 rounded-full bg-success px-4 py-1.5 text-xs font-medium text-primary-foreground shadow-lg dark:bg-success">
+          <UnifiedCheck className="h-3 w-3" />
           <span>{t('session.messages.allLoaded')}</span>
         </div>
       ) : (
-        <button
-          className="pointer-events-auto flex items-center space-x-2 rounded-full bg-blue-600 px-4 py-1.5 text-xs font-medium text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-blue-700 disabled:cursor-wait disabled:opacity-75 dark:bg-blue-500 dark:hover:bg-blue-600"
+        <Button variant="ghost" size="compact"
+          className="pointer-events-auto flex items-center space-x-2 rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground shadow-lg transition-all duration-200 hover:scale-105 hover:bg-primary disabled:cursor-wait disabled:opacity-75 dark:bg-primary dark:hover:bg-primary"
           onClick={onLoadAllMessages}
           disabled={isLoadingAllMessages}
         >
@@ -65,7 +65,7 @@ export default function LoadAllMessagesOverlay({
               ? t('session.messages.loadingAll')
               : <>{t('session.messages.loadAll')} {totalMessages > 0 && `(${totalMessages})`}</>}
           </span>
-        </button>
+        </Button>
       )}
     </div>
   );

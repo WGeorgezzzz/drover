@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Braces, Download, FileCode2, FileText, Loader2 } from 'lucide-react';
+import { Braces, Download, FileCode2, FileText, Loader2 } from '@/shared/icons';
 
 import { ActionMenu } from '@/shared/ui';
 import type { ChatMessage, DiffLine, LLMProvider, Project } from '@/shared/types';

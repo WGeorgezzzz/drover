@@ -1,3 +1,5 @@
+import { Check as UnifiedCheck, Copy as UnifiedCopy, ChevronDown as UnifiedChevronDown } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -74,22 +76,18 @@ export const OneLineDisplay: React.FC<OneLineDisplayProps> = ({
   };
 
   const renderCopyButton = () => (
-    <button
+    <Button variant="ghost" size="compact"
       onClick={handleAction}
       className="ml-1 flex-shrink-0 text-muted-foreground/40 opacity-0 transition-all hover:text-muted-foreground group-hover:opacity-100"
       title={t('chat:misc.copyToClipboard')}
       aria-label={t('chat:misc.copyToClipboard')}
     >
       {copied ? (
-        <svg className="h-3 w-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
+        <UnifiedCheck className="h-3 w-3 text-success" />
       ) : (
-        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-        </svg>
+        <UnifiedCopy className="h-3 w-3" />
       )}
-    </button>
+    </Button>
   );
 
   // Legacy terminal-configured tools share the compact, theme-aware shell row.
@@ -106,13 +104,13 @@ export const OneLineDisplay: React.FC<OneLineDisplayProps> = ({
       <div className={`group flex items-center gap-1.5 border-l-2 ${colorScheme.border} my-0.5 py-0.5 pl-3`}>
         <span className="flex-shrink-0 text-xs text-muted-foreground">{label || toolName}</span>
         <span className="text-[10px] text-muted-foreground/40">/</span>
-        <button
+        <Button variant="ghost" size="compact"
           onClick={handleAction}
           className="truncate font-mono text-xs text-primary transition-colors hover:text-primary/80 hover:underline"
           title={value}
         >
           {displayName}
-        </button>
+        </Button>
         {status && <ToolStatusBadge status={status} className="ml-auto" />}
       </div>
     );
@@ -138,9 +136,7 @@ export const OneLineDisplay: React.FC<OneLineDisplayProps> = ({
             href={`#tool-result-${toolId}`}
             className="flex flex-shrink-0 items-center gap-0.5 text-[11px] text-primary transition-colors hover:text-primary/80"
           >
-            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
+            <UnifiedChevronDown className="h-3 w-3" />
           </a>
         )}
       </div>

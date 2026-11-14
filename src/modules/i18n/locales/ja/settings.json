@@ -264,7 +264,7 @@
     "title": "APIキー",
     "description": "外部APIにアクセスするためのAPIキーを生成します。",
     "newKey": {
-      "alertTitle": "⚠️ APIキーを保存してください",
+      "alertTitle": "APIキーを保存してください",
       "alertMessage": "このキーが表示されるのは今回限りです。安全な場所に保管してください。",
       "iveSavedIt": "保存しました"
     },

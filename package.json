@@ -71,7 +71,8 @@
     "postinstall": "node scripts/fix-node-pty.js && node scripts/fix-codex-windows-console.mjs",
     "prepare": "husky",
     "desktop:workbench:stage": "node scripts/release/prepare-workbench.mjs",
-    "desktop:workbench:win": "npm run build && npm run desktop:workbench:stage && electron-builder --projectDir .desktop-build/workbench --win nsis --x64 --publish never"
+    "desktop:workbench:win": "npm run build && npm run desktop:workbench:stage && electron-builder --projectDir .desktop-build/workbench --win nsis --x64 --publish never",
+    "prebuild:client": "node scripts/release/generate-launcher-icons.cjs"
   },
   "build": {
     "appId": "ai.cloudcli.desktop",

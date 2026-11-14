@@ -6,8 +6,8 @@ type WebPushState = {
   permission: NotificationPermission | 'unsupported';
   isSubscribed: boolean;
   isLoading: boolean;
-  subscribe: () => Promise<void>;
-  unsubscribe: () => Promise<void>;
+  subscribe: () => Promise<boolean>;
+  unsubscribe: () => Promise<boolean>;
 };
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -50,13 +50,13 @@ export function useWebPush(): WebPushState {
   }, [permission]);
 
   const subscribe = useCallback(async () => {
-    if (permission === 'unsupported') return;
+    if (permission === 'unsupported') return false;
     setIsLoading(true);
 
     try {
       const perm = await Notification.requestPermission();
       setPermission(perm);
-      if (perm !== 'granted') return;
+      if (perm !== 'granted') return false;
 
       const keyRes = await api.settings.push.vapidPublicKey();
       const { publicKey } = await keyRes.json();
@@ -74,8 +74,10 @@ export function useWebPush(): WebPushState {
       });
 
       setIsSubscribed(true);
+      return true;
     } catch (err) {
       console.error('Push subscribe failed:', err);
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -92,8 +94,10 @@ export function useWebPush(): WebPushState {
         await api.settings.push.unsubscribe(endpoint);
       }
       setIsSubscribed(false);
+      return true;
     } catch (err) {
       console.error('Push unsubscribe failed:', err);
+      return false;
     } finally {
       setIsLoading(false);
     }

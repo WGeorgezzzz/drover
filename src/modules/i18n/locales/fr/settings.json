@@ -264,7 +264,7 @@
     "title": "Clés API",
     "description": "Générez des clés API pour accéder à l'API externe depuis d'autres applications.",
     "newKey": {
-      "alertTitle": "⚠️ Sauvegardez votre clé API",
+      "alertTitle": "Sauvegardez votre clé API",
       "alertMessage": "C'est la seule fois que vous verrez cette clé. Stockez-la en lieu sûr.",
       "iveSavedIt": "Je l'ai sauvegardée"
     },

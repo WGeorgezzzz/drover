@@ -63,6 +63,7 @@ export class DesktopNotificationsController {
     getAuthToken,
     getIconPath,
     openNotificationTarget,
+    shouldSuppressNotification = () => false,
     onChange,
   }) {
     this.settingsPath = settingsPath;
@@ -75,11 +76,14 @@ export class DesktopNotificationsController {
     this.getAuthToken = getAuthToken;
     this.getIconPath = getIconPath;
     this.openNotificationTarget = openNotificationTarget;
+    this.shouldSuppressNotification = shouldSuppressNotification;
     this.onChange = onChange;
     this.settings = { enabled: false };
     this.connections = new Map();
     this.lastEvent = null;
     this.lastError = null;
+    this.seenNotifications = new Set();
+    this.lastNotification = null;
   }
 
   getState() {
@@ -98,6 +102,7 @@ export class DesktopNotificationsController {
       connectedTargets,
       lastEvent: this.lastEvent,
       lastError: this.lastError,
+      lastNotification: this.lastNotification,
     };
   }
 
@@ -307,13 +312,19 @@ export class DesktopNotificationsController {
   }
 
   showNativeNotification(target, payload) {
-    if (!Notification.isSupported()) return false;
+    const tag = payload.data?.tag;
+    if (tag && this.seenNotifications.has(tag)) return false;
+    if (tag) {
+      this.seenNotifications.add(tag);
+      if (this.seenNotifications.size > 2000) this.seenNotifications.delete(this.seenNotifications.values().next().value);
+    }
+    if (!Notification.isSupported() || this.shouldSuppressNotification?.(target, payload)) return false;
 
     const notification = new Notification({
       title: payload.title || this.appName,
       body: payload.body || '',
       icon: this.getIconPath?.(),
-      silent: false,
+      silent: Boolean(payload.data?.silent),
     });
 
     notification.on('click', () => {
@@ -328,9 +339,22 @@ export class DesktopNotificationsController {
       });
     });
 
-    notification.show();
-    this.lastEvent = 'notification-shown';
+    notification.on('show', () => {
+      this.lastEvent = 'notification-shown';
+      this.lastNotification = { status: 'shown', tag, sessionId: payload.data?.sessionId || null, at: new Date().toISOString() };
+      this.lastError = null;
+      this.onChange?.();
+    });
+    notification.on('failed', (_event, error) => {
+      this.lastEvent = 'notification-failed';
+      this.lastNotification = { status: 'failed', tag, at: new Date().toISOString() };
+      this.lastError = String(error || 'Native notification delivery failed.');
+      this.onChange?.();
+    });
+    this.lastEvent = 'notification-requested';
+    this.lastNotification = { status: 'requested', tag, at: new Date().toISOString() };
     this.lastError = null;
+    notification.show();
     this.onChange?.();
     return true;
   }

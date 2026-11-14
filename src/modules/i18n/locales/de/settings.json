@@ -264,7 +264,7 @@
     "title": "API-Schlüssel",
     "description": "Generiere API-Schlüssel, um von anderen Anwendungen auf die externe API zuzugreifen.",
     "newKey": {
-      "alertTitle": "⚠️ API-Schlüssel speichern",
+      "alertTitle": "API-Schlüssel speichern",
       "alertMessage": "Dies ist das einzige Mal, dass du diesen Schlüssel siehst. Speichere ihn sicher.",
       "iveSavedIt": "Ich habe ihn gespeichert"
     },

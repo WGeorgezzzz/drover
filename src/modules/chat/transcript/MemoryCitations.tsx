@@ -1,5 +1,6 @@
+import { Button } from '@/shared/ui/Button';
 import { memo, useState } from 'react';
-import { BookMarked, ChevronRight } from 'lucide-react';
+import { BookMarked, ChevronRight } from '@/shared/icons';
 
 import type { MemoryCitation } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -24,7 +25,7 @@ export const MemoryCitations = memo(({ citations }: { citations: MemoryCitation[
 
   return (
     <div className="mt-2">
-      <button
+      <Button variant="ghost" size="compact"
         type="button"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((previous) => !previous)}
@@ -35,7 +36,7 @@ export const MemoryCitations = memo(({ citations }: { citations: MemoryCitation[
           Used {citations.length} {citations.length === 1 ? 'memory' : 'memories'}
         </span>
         <ChevronRight className={cn('h-3 w-3 flex-shrink-0 transition-transform duration-150', isOpen && 'rotate-90')} />
-      </button>
+      </Button>
 
       {isOpen && (
         <ul className="mt-1 space-y-1 border-l border-border/60 pl-2.5">

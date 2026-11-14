@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import {
   ArrowRightLeft,
   Check,
@@ -8,7 +9,7 @@ import {
   RefreshCw,
   Trash2,
   X,
-} from 'lucide-react';
+} from '@/shared/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -91,13 +92,13 @@ function WorktreeRow({ worktree, isMobile, isBusy, onOpen, onMerge, onRemove }: 
         <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
           <span className="shrink-0 font-mono">{shortWorktreePath(worktree.path)}</span>
           {worktree.ahead > 0 && (
-            <span className="shrink-0 text-green-600 dark:text-green-400">↑{worktree.ahead}</span>
+            <span className="shrink-0 text-success dark:text-success">↑{worktree.ahead}</span>
           )}
           {worktree.behind > 0 && (
             <span className="shrink-0 text-primary">↓{worktree.behind}</span>
           )}
           {worktree.changedFileCount > 0 && (
-            <span className="shrink-0 text-amber-600 dark:text-amber-400">
+            <span className="shrink-0 text-warning dark:text-warning">
               {t('git:worktrees.changeCount', { count: worktree.changedFileCount })}
             </span>
           )}
@@ -119,17 +120,17 @@ function WorktreeRow({ worktree, isMobile, isBusy, onOpen, onMerge, onRemove }: 
           <Check className="h-4 w-4 text-primary" />
         ) : (
           <>
-            <button
+            <Button variant="ghost" size="compact"
               onClick={onOpen}
               className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               title={t('git:worktrees.switchTo', { name: branchLabel })}
             >
               <ArrowRightLeft className="h-3 w-3" />
               {t('git:worktrees.open')}
-            </button>
+            </Button>
             {!worktree.isMain && (
               <>
-                <button
+                <Button variant="ghost" size="compact"
                   onClick={onMerge}
                   disabled={!worktree.branch || worktree.ahead === 0}
                   className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
@@ -140,14 +141,14 @@ function WorktreeRow({ worktree, isMobile, isBusy, onOpen, onMerge, onRemove }: 
                   }
                 >
                   <GitMerge className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button variant="ghost" size="compact"
                   onClick={onRemove}
                   className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   title={t('git:worktrees.removeTitle', { branch: branchLabel })}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                </Button>
               </>
             )}
           </>
@@ -209,21 +210,21 @@ export default function WorktreesView({
             : t('git:worktrees.count', { count: linkedWorktreeCount })}
         </span>
         <div className="flex items-center gap-1.5">
-          <button
+          <Button variant="ghost" size="compact"
             onClick={() => void refreshWorktrees()}
             className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             title={t('git:worktrees.refreshTitle')}
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
-          <button
+          </Button>
+          <Button variant="ghost" size="compact"
             onClick={() => setShowNewWorktreeModal(true)}
             disabled={!worktreeData}
             className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus className="h-3.5 w-3.5" />
             {t('git:worktrees.newWorktree')}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -231,13 +232,13 @@ export default function WorktreesView({
       {actionError && (
         <div className="flex items-start gap-2 border-b border-destructive/30 bg-destructive/10 px-4 py-2.5">
           <p className="min-w-0 flex-1 break-words text-xs text-destructive">{actionError}</p>
-          <button
+          <Button variant="ghost" size="compact"
             onClick={clearActionError}
             className="shrink-0 text-destructive/70 transition-colors hover:text-destructive"
             title={t('git:worktrees.dismiss')}
           >
             <X className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -265,14 +266,14 @@ export default function WorktreesView({
                 {t('git:worktrees.explainerDescription')}
               </p>
             </div>
-            <button
+            <Button variant="ghost" size="compact"
               onClick={() => setShowNewWorktreeModal(true)}
               disabled={!worktreeData}
               className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus className="h-3.5 w-3.5" />
               {t('git:worktrees.createFirst')}
-            </button>
+            </Button>
           </div>
         )}
       </div>

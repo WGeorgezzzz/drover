@@ -27,19 +27,19 @@ export default function AgentSelectorSection({
 }: AgentSelectorSectionProps) {
   return (
     <div className="flex-shrink-0 border-b border-border px-3 py-2 md:px-4 md:py-3">
-      <PillBar className="w-full md:w-auto">
+      <PillBar className="flex w-full overflow-x-auto">
         {agents.map((agent) => {
           const dotColor =
-            agent === 'claude' ? 'bg-blue-500' :
-            agent === 'cursor' ? 'bg-purple-500' :
-            agent === 'opencode' ? 'bg-zinc-500' : 'bg-foreground/60';
+            agent === 'claude' ? 'bg-primary' :
+            agent === 'cursor' ? 'bg-primary' :
+            agent === 'opencode' ? 'bg-muted' : 'bg-foreground/60';
 
           return (
             <Pill
               key={agent}
               isActive={selectedAgent === agent}
               onClick={() => onSelectAgent(agent)}
-              className="min-w-0 flex-1 justify-center md:flex-initial"
+              className="shrink-0 justify-center"
             >
               <LLMProviderLogo provider={agent} className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{AGENT_NAMES[agent]}</span>

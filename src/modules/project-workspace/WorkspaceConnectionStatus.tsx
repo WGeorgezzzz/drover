@@ -1,4 +1,4 @@
-import { WifiOff } from 'lucide-react';
+import { WifiOff } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { useWebSocket } from '@/shared/context/WebSocketContext';
@@ -31,7 +31,7 @@ export default function WorkspaceConnectionStatus() {
         <span
           aria-hidden="true"
           title={description}
-          className="inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300"
+          className="inline-flex flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning dark:text-warning"
         >
           <WifiOff className="h-3.5 w-3.5 flex-shrink-0" />
           <span className="sm:hidden xl:inline">{t('status.reconnecting')}</span>

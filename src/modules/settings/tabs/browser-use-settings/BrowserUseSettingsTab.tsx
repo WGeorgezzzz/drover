@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2 } from '@/shared/icons';
 
 import { Button } from '@/shared/ui';
 import { api, readApiJson, ApiRequestError } from '@/shared/api';
-import SettingsCard from '@/modules/settings/SettingsCard';
-import SettingsRow from '@/modules/settings/SettingsRow';
-import SettingsSection from '@/modules/settings/SettingsSection';
+import SettingsCard from '@/shared/ui/SettingsCard';
+import SettingsRow from '@/shared/ui/SettingsRow';
+import SettingsSection from '@/shared/ui/SettingsSection';
 import SettingsToggle from '@/modules/settings/SettingsToggle';
 
 type BrowserUseSettings = {
@@ -187,7 +187,7 @@ export default function BrowserUseSettingsTab() {
             )}
 
             {error && (
-              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
+              <div className="rounded-md border border-destructive bg-destructive/10 px-3 py-2 text-sm text-destructive dark:border-destructive/50 dark:bg-destructive/30 dark:text-destructive">
                 {error}
               </div>
             )}

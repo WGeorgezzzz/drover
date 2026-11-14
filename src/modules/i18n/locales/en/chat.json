@@ -1,6 +1,10 @@
 {
   "harnessModes": {
-    "modes": { "default": "Workspace", "plan": "Read only", "bypassPermissions": "Full access" },
+    "modes": {
+      "default": "Workspace",
+      "plan": "Read only",
+      "bypassPermissions": "Full access"
+    },
     "descriptions": {
       "default": "Read and write workspace files. Commands use the local sandbox; requests for extra permissions are refused.",
       "plan": "Read files without modifying them.",
@@ -236,7 +240,8 @@
       "title": "Replacing an earlier message",
       "filesNotReverted": "files the agent already changed are not reverted",
       "cancel": "Cancel"
-    }
+    },
+    "noConfirmation": "No confirmation"
   },
   "providerSelection": {
     "title": "Choose Your AI Assistant",

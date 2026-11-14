@@ -1,5 +1,5 @@
 import type { DragEvent, ReactNode, RefObject } from 'react';
-import { AlertTriangle, Folder, Search } from 'lucide-react';
+import { AlertTriangle, Folder, Search } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import type { FileTreeNode, FileTreeViewMode } from '@/shared/types';

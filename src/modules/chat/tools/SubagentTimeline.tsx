@@ -1,5 +1,6 @@
+import { Button } from '@/shared/ui/Button';
 import { memo, useState } from 'react';
-import { Brain, MessageSquareText } from 'lucide-react';
+import { Brain, MessageSquareText } from '@/shared/icons';
 
 import type { DiffLine, Project, SubagentActivity } from '@/shared/types';
 import { cn } from '@/shared/utils';
@@ -93,13 +94,13 @@ export const SubagentTimeline = memo(({ activity, activityCount, onFileOpen, cre
       )}
 
       {hiddenCount > 0 && (
-        <button
+        <Button variant="ghost" size="compact"
           type="button"
           onClick={() => setRenderLimit((previous) => previous + INITIALLY_RENDERED_ACTIVITIES * 4)}
           className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           Show {hiddenCount} more {hiddenCount === 1 ? 'step' : 'steps'}
-        </button>
+        </Button>
       )}
 
       {untransmittedCount > 0 && hiddenCount === 0 && (

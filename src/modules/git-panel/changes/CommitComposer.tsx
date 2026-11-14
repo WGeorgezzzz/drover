@@ -1,4 +1,5 @@
-import { Check, ChevronDown, GitCommit } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { Check, ChevronDown, GitCommit } from '@/shared/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -81,26 +82,26 @@ export default function CommitComposer({
     >
       {isMobile && isCollapsed ? (
         <div className="border-b border-border/60 px-4 py-2">
-          <button
+          <Button variant="ghost" size="compact"
             onClick={() => setIsCollapsed(false)}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90"
           >
             <GitCommit className="h-4 w-4" />
             <span>{t('git:composer.commitFiles', { count: selectedFileCount })}</span>
             <ChevronDown className="h-3 w-3" />
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="border-b border-border/60 px-4 py-3">
           {isMobile && (
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">{t('git:composer.title')}</span>
-              <button
+              <Button variant="ghost" size="compact"
                 onClick={() => setIsCollapsed(true)}
                 className="rounded-lg p-1 transition-colors hover:bg-accent"
               >
                 <ChevronDown className="h-4 w-4 rotate-180" />
-              </button>
+              </Button>
             </div>
           )}
 
@@ -122,14 +123,14 @@ export default function CommitComposer({
             <span className="text-sm text-muted-foreground">
               {t('git:composer.filesSelected', { count: selectedFileCount })}
             </span>
-            <button
+            <Button variant="ghost" size="compact"
               onClick={requestCommitConfirmation}
               disabled={!commitMessage.trim() || selectedFileCount === 0 || isCommitting}
               className="flex items-center space-x-1 rounded-lg bg-primary px-3 py-1.5 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Check className="h-3 w-3" />
               <span>{isCommitting ? t('git:composer.committing') : t('git:composer.commit')}</span>
-            </button>
+            </Button>
           </div>
         </div>
       )}

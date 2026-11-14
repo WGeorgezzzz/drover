@@ -12,7 +12,7 @@ import {
   Search,
   Upload,
   X,
-} from 'lucide-react';
+} from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/shared/utils';
@@ -69,12 +69,12 @@ const PROVIDER_SKILL_PATHS: Record<Exclude<SkillsProvider, 'opencode'>, string> 
 };
 
 const SCOPE_BADGE_CLASSES: Record<SkillsScope, string> = {
-  user: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-  plugin: 'border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300',
-  repo: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-  project: 'border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300',
-  admin: 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300',
-  system: 'border-slate-500/30 bg-slate-500/10 text-slate-700 dark:text-slate-300',
+  user: 'border-success/30 bg-success/10 text-success dark:text-success',
+  plugin: 'border-primary/30 bg-primary/10 text-primary dark:text-primary',
+  repo: 'border-warning/30 bg-warning/10 text-warning dark:text-warning',
+  project: 'border-warning/30 bg-warning/10 text-warning dark:text-warning',
+  admin: 'border-destructive/30 bg-destructive/10 text-destructive dark:text-destructive',
+  system: 'border-border/30 bg-muted/10 text-foreground dark:text-muted-foreground',
 };
 
 const SCOPE_ORDER: SkillsScope[] = ['user', 'plugin', 'repo', 'project', 'admin', 'system'];
@@ -412,7 +412,7 @@ export default function ProviderSkills({ selectedProvider, currentProjects }: Pr
           }}
         />
         <div className="flex flex-col items-center justify-center gap-3 py-4 text-center">
-          <FileUp className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
+          <FileUp className="h-7 w-7 text-muted-foreground" />
           <div className="space-y-1">
             <div className="text-sm font-medium text-foreground">{t('skillsPage.upload.dropTitle')}</div>
             <div className="text-sm text-muted-foreground">
@@ -486,13 +486,13 @@ export default function ProviderSkills({ selectedProvider, currentProjects }: Pr
 
       {providerPath && (
         <div className="space-y-2">
-          <button
+          <Button variant="ghost" size="compact"
             type="button"
             className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             onClick={() => setShowInstallPath((current) => !current)}
           >
             {showInstallPath ? t('skillsPage.upload.hideInstallLocation') : t('skillsPage.upload.whereToInstall')}
-          </button>
+          </Button>
           {showInstallPath && (
             <div className="rounded-lg border border-border/60 bg-muted/15 p-3">
               <code className="block whitespace-normal break-all text-xs text-foreground">{providerPath}</code>
@@ -508,7 +508,7 @@ export default function ProviderSkills({ selectedProvider, currentProjects }: Pr
     <div className="min-w-0 space-y-4 overflow-x-hidden">
       <div className="flex min-w-0 items-start gap-3">
         <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-muted/20 text-muted-foreground">
-          <FileCode2 className="h-4 w-4" strokeWidth={1.7} />
+          <FileCode2 className="h-4 w-4" />
         </div>
         <div className="min-w-0 space-y-1">
           <h3 className="text-lg font-medium text-foreground">{t('tabs.skills', { defaultValue: 'Skills' })}</h3>
@@ -531,14 +531,14 @@ export default function ProviderSkills({ selectedProvider, currentProjects }: Pr
               className="h-9 w-full pl-9 pr-9"
             />
             {searchQuery && (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={() => setSearchQuery('')}
                 aria-label={t('skillsPage.clearSearch')}
                 className="absolute right-1.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <X className="h-3.5 w-3.5" />
-              </button>
+              </Button>
             )}
           </div>
           <Button
@@ -610,8 +610,8 @@ export default function ProviderSkills({ selectedProvider, currentProjects }: Pr
                 <div className={cn(
                   'max-h-24 overflow-y-auto whitespace-pre-wrap rounded-lg border px-3 py-2 text-sm',
                   submitError || loadError
-                    ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-200'
-                    : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+                    ? 'border-destructive bg-destructive/10 text-destructive dark:border-destructive/60 dark:bg-destructive/20 dark:text-destructive'
+                    : 'border-success/30 bg-success/10 text-success dark:text-success',
                 )}>
                   {submitError || loadError || t('skillsPage.savedSuccessfully')}
                 </div>
@@ -650,13 +650,13 @@ export default function ProviderSkills({ selectedProvider, currentProjects }: Pr
       </Dialog>
 
       {!isAddDialogOpen && (submitError || loadError) && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800/60 dark:bg-red-900/20 dark:text-red-200">
+        <div className="rounded-lg border border-destructive bg-destructive/10 px-3 py-2 text-sm text-destructive dark:border-destructive/60 dark:bg-destructive/20 dark:text-destructive">
           {submitError || loadError}
         </div>
       )}
 
       {justInstalled && saveStatus === 'success' && !isAddDialogOpen && (
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+        <div className="inline-flex items-center gap-2 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-xs font-medium text-success dark:text-success">
           <CheckCircle2 className="h-4 w-4" />
           {t('skillsPage.savedSuccessfully')}
         </div>

@@ -1,6 +1,7 @@
+import { Button } from '@/shared/ui/Button';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ImageOff } from 'lucide-react';
+import { ImageOff } from '@/shared/icons';
 
 import { api } from '@/shared/api';
 import { useMarkdownWorkspaceProjectId } from '@/modules/chat/context/MarkdownWorkspaceContext';
@@ -133,7 +134,7 @@ export function MarkdownImage({ node: _node, src, alt, title }: MarkdownImagePro
 
   return (
     <>
-      <button
+      <Button variant="ghost" size="compact"
         type="button"
         onClick={() => setExpanded(true)}
         aria-label={t('chat:misc.expandImage', { name: label })}
@@ -146,7 +147,7 @@ export function MarkdownImage({ node: _node, src, alt, title }: MarkdownImagePro
           loading="lazy"
           className="block max-h-96 max-w-full cursor-zoom-in object-contain"
         />
-      </button>
+      </Button>
       {expanded && <ImageLightbox src={resolved} alt={label} onClose={() => setExpanded(false)} />}
     </>
   );

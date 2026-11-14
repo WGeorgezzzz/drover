@@ -1,4 +1,5 @@
-import { ChevronLeft, ChevronRight, PanelRightOpen } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { ChevronLeft, ChevronRight, PanelRightOpen } from '@/shared/icons';
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -116,12 +117,12 @@ export default function WorkspaceHeader({
             onRenameSession={onRenameSession}
           />
           <WorkspaceConnectionStatus />
-          {onOpenSideChat && <button type="button" className="workspace-icon-button shrink-0"
+          {onOpenSideChat && <Button variant="ghost" size="compact" type="button" className="workspace-icon-button shrink-0"
             aria-label={t('chat:sideChat.open')} aria-pressed={Boolean(sideChatOpen)}
             title={`${t('chat:sideChat.open')} (Ctrl+Alt+S)`}
             onMouseDown={event => event.preventDefault()} onClick={onOpenSideChat}>
             <PanelRightOpen size={17}/>
-          </button>}
+          </Button>}
         </div>
 
         <div className="min-w-0 flex-1 sm:flex-none sm:shrink-0">
@@ -150,24 +151,24 @@ export default function WorkspaceHeader({
             )}
 
             {canScrollLeft && (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={() => scrollTabs(-1)}
                 aria-label={t('navigation.scrollTabsLeft', { defaultValue: 'Scroll tabs left' })}
                 className="absolute left-1 top-1/2 z-20 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md border border-border/70 bg-background/95 text-muted-foreground shadow-sm outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/60 sm:flex"
               >
                 <ChevronLeft className="h-4 w-4" />
-              </button>
+              </Button>
             )}
             {canScrollRight && (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={() => scrollTabs(1)}
                 aria-label={t('navigation.scrollTabsRight', { defaultValue: 'Scroll tabs right' })}
                 className="absolute right-1 top-1/2 z-20 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md border border-border/70 bg-background/95 text-muted-foreground shadow-sm outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/60 sm:flex"
               >
                 <ChevronRight className="h-4 w-4" />
-              </button>
+              </Button>
             )}
           </div>
         </div>

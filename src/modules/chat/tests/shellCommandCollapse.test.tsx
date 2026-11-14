@@ -14,10 +14,10 @@ describe.each(['Bash', 'PowerShell'])('%s command collapse', (toolName) => {
     );
     const toggle = getByRole('button', { expanded: false });
     expect(container.querySelector('pre')).toBeNull();
-    expect(container.querySelector('.bg-gray-900')).toBeNull();
+    expect(container.querySelector('.bg-background')).toBeNull();
     fireEvent.click(toggle);
     expect(container.querySelector('pre')?.textContent).toBe('command output');
-    expect(container.querySelector('.bg-gray-900, .bg-black, .text-green-400')).toBeNull();
+    expect(container.querySelector('.bg-background, .bg-overlay, .text-success')).toBeNull();
     fireEvent.click(toggle);
     expect(container.querySelector('pre')).toBeNull();
   });
@@ -28,7 +28,7 @@ describe.each(['Bash', 'PowerShell'])('%s command collapse', (toolName) => {
         toolInput={{ command: 'echo first\necho second' }} />,
     );
     expect(container.querySelector('.truncate')?.textContent).toBe('echo first\necho second');
-    expect(container.querySelector('.bg-gray-900')).toBeNull();
+    expect(container.querySelector('.bg-background')).toBeNull();
   });
 });
 
@@ -38,7 +38,7 @@ it('legacy terminal configuration also uses a collapsed neutral row', () => {
   expect(container.querySelector('pre')).toBeNull();
   fireEvent.click(getByRole('button', { expanded: false }));
   expect(container.querySelector('pre')?.textContent).toBe('legacy output');
-  expect(container.querySelector('.bg-gray-900, .bg-black, .text-green-400')).toBeNull();
+  expect(container.querySelector('.bg-background, .bg-overlay, .text-success')).toBeNull();
 });
 
 it('nested Claude command history stays compact and neutral too', () => {
@@ -48,5 +48,5 @@ it('nested Claude command history stays compact and neutral too', () => {
   expect(container.querySelector('pre')).toBeNull();
   fireEvent.click(getByRole('button', { expanded: false }));
   expect(container.querySelector('pre')?.textContent).toBe('nested output');
-  expect(container.querySelector('.bg-gray-900, .bg-black, .text-green-400')).toBeNull();
+  expect(container.querySelector('.bg-background, .bg-overlay, .text-success')).toBeNull();
 });

@@ -1,3 +1,5 @@
+import { Button } from '@/shared/ui/Button';
+import { Select } from '@/shared/ui/Select';
 import { useTranslation } from 'react-i18next';
 
 import type { TaskBoardSortField, TaskBoardSortOrder } from '@/shared/types';
@@ -41,14 +43,14 @@ export default function TaskFiltersPanel({
   }
 
   return (
-    <div className="space-y-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+    <div className="space-y-4 rounded-lg bg-muted p-4 dark:bg-background">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('filters.status')}</label>
-          <select
+          <label className="mb-1 block text-sm font-medium text-foreground dark:text-muted-foreground">{t('filters.status')}</label>
+          <Select
             value={statusFilter}
             onChange={(event) => onStatusFilterChange(event.target.value)}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
+            className="w-full rounded-md border border-border bg-card px-3 py-2 dark:border-border dark:bg-background"
           >
             <option value="all">{t('filters.allStatuses')}</option>
             {statuses.map((status) => (
@@ -56,15 +58,15 @@ export default function TaskFiltersPanel({
                 {t(`statuses.${status}`, status)}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('filters.priority')}</label>
-          <select
+          <label className="mb-1 block text-sm font-medium text-foreground dark:text-muted-foreground">{t('filters.priority')}</label>
+          <Select
             value={priorityFilter}
             onChange={(event) => onPriorityFilterChange(event.target.value)}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
+            className="w-full rounded-md border border-border bg-card px-3 py-2 dark:border-border dark:bg-background"
           >
             <option value="all">{t('filters.allPriorities')}</option>
             {priorities.map((priority) => (
@@ -72,18 +74,18 @@ export default function TaskFiltersPanel({
                 {t(`priorities.${priority}`, priority)}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('filters.sortBy')}</label>
-          <select
+          <label className="mb-1 block text-sm font-medium text-foreground dark:text-muted-foreground">{t('filters.sortBy')}</label>
+          <Select
             value={`${sortField}-${sortOrder}`}
             onChange={(event) => {
               const [field, order] = event.target.value.split('-') as [TaskBoardSortField, TaskBoardSortOrder];
               onSortConfigChange(field, order);
             }}
-            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 dark:border-gray-600 dark:bg-gray-800"
+            className="w-full rounded-md border border-border bg-card px-3 py-2 dark:border-border dark:bg-background"
           >
             <option value="id-asc">{t('sort.idAsc')}</option>
             <option value="id-desc">{t('sort.idDesc')}</option>
@@ -93,17 +95,17 @@ export default function TaskFiltersPanel({
             <option value="status-desc">{t('sort.statusDesc')}</option>
             <option value="priority-asc">{t('sort.priorityAsc')}</option>
             <option value="priority-desc">{t('sort.priorityDesc')}</option>
-          </select>
+          </Select>
         </div>
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-sm text-muted-foreground dark:text-muted-foreground">
           {t('filters.showing', { filtered: filteredTaskCount, total: totalTaskCount })}
         </div>
-        <button onClick={onClearFilters} className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+        <Button variant="ghost" size="compact" onClick={onClearFilters} className="text-sm font-medium text-primary hover:text-primary dark:text-primary dark:hover:text-primary">
           {t('filters.clearFilters')}
-        </button>
+        </Button>
       </div>
     </div>
   );

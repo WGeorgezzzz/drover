@@ -1,4 +1,5 @@
-import { GitBranch, Loader2 } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { GitBranch, Loader2 } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 type GitRepositoryErrorStateProps = {
@@ -35,7 +36,7 @@ export default function GitRepositoryErrorState({
           <p className="mb-6 max-w-md text-center text-sm leading-relaxed">
             {t('git:errorState.noRepoDescription')}
           </p>
-          <button
+          <Button variant="ghost" size="compact"
             onClick={onInitRepository}
             disabled={isInitializingRepository}
             className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
@@ -51,7 +52,7 @@ export default function GitRepositoryErrorState({
                 {t('git:errorState.runGitInit')}
               </>
             )}
-          </button>
+          </Button>
           {initError && (
             <p className="mt-4 max-w-md text-center text-sm leading-relaxed text-destructive">
               {initError}

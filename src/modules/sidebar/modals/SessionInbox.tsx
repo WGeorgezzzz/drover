@@ -1,6 +1,8 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Inbox, RefreshCw, X } from 'lucide-react';
+import { Inbox, RefreshCw, X } from '@/shared/icons';
 
 import { WorkspaceSessionRow } from '@/modules/sidebar/WorkspaceSessionRow';
 import { Dialog, DialogContent } from '@/shared/ui';
@@ -56,27 +58,27 @@ export function SessionInbox({ onSelect }: { onSelect: (projectId: string | null
   };
 
   return <>
-    <button type="button" onClick={() => setOpen(true)} className="mt-1 flex w-full items-center justify-between rounded px-2 py-2 text-xs text-muted-foreground hover:bg-muted">
+    <Button variant="ghost" size="compact" type="button" onClick={() => setOpen(true)} className="mt-1 flex w-full items-center justify-between rounded px-2 py-2 text-xs text-muted-foreground hover:bg-muted">
       <span className="flex items-center gap-2"><Inbox size={14}/>{t('inbox.title')}</span><span>{counts.unread + counts.attention > 0 ? entries.filter(row => row.unread || needsAttention(row)).length : ''}</span>
-    </button>
+    </Button>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent wrapperClassName="z-[80]" initialFocusRef={searchRef} aria-label={t('inbox.title')} className="flex max-h-[85dvh] w-[calc(100vw-1.5rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0">
         <header className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
           <div><h2 className="text-base font-semibold">{t('inbox.title')}</h2><p className="mt-1 text-xs text-muted-foreground">{t('inbox.description')}</p></div>
-          <button type="button" aria-label={t('inbox.close')} onClick={() => setOpen(false)} className="rounded p-1 hover:bg-muted"><X size={18}/></button>
+          <Button variant="ghost" size="compact" type="button" aria-label={t('inbox.close')} onClick={() => setOpen(false)} className="rounded p-1 hover:bg-muted"><X size={18}/></Button>
         </header>
         <div className="space-y-3 border-b border-border px-5 py-3">
-          <div className="flex flex-wrap gap-1">{(['all', 'unread', 'attention', 'pinned'] as const).map(key => <button key={key} type="button" aria-pressed={filter === key}
+          <div className="flex flex-wrap gap-1">{(['all', 'unread', 'attention', 'pinned'] as const).map(key => <Button variant="ghost" size="compact" key={key} type="button" aria-pressed={filter === key}
             onClick={() => setFilter(key)} className={`rounded-md px-3 py-1.5 text-xs ${filter === key ? 'bg-muted font-semibold text-foreground' : 'text-muted-foreground hover:bg-muted/60'}`}>
             {t(`inbox.filters.${key}`)} <span>{counts[key]}</span>
-          </button>)}</div>
-          <input ref={searchRef} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('inbox.search')} aria-label={t('inbox.search')}
+          </Button>)}</div>
+          <UnifiedInput ref={searchRef} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('inbox.search')} aria-label={t('inbox.search')}
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"/>
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span role="status">{t('inbox.count', { count: rows.length })}</span>
             <div className="flex items-center gap-3">
-              <button type="button" disabled={busy || unread.length === 0} onClick={() => void write(unread.map(row => ({ row, input: { unread: false, readThrough: row.lastActivityAt } })))} className="hover:underline disabled:opacity-40">{t('inbox.markVisibleRead', { count: unread.length })}</button>
-              <button type="button" aria-label={t('workspace.retry')} onClick={() => void state.refresh()} className="rounded p-1 hover:bg-muted"><RefreshCw size={14}/></button>
+              <Button variant="ghost" size="compact" type="button" disabled={busy || unread.length === 0} onClick={() => void write(unread.map(row => ({ row, input: { unread: false, readThrough: row.lastActivityAt } })))} className="hover:underline disabled:opacity-40">{t('inbox.markVisibleRead', { count: unread.length })}</Button>
+              <Button variant="ghost" size="compact" type="button" aria-label={t('workspace.retry')} onClick={() => void state.refresh()} className="rounded p-1 hover:bg-muted"><RefreshCw size={14}/></Button>
             </div>
           </div>
           {(failure || state.error) && <p role="alert" className="text-xs text-destructive">{failure || t('workspace.loadFailed')}</p>}
@@ -90,7 +92,7 @@ export function SessionInbox({ onSelect }: { onSelect: (projectId: string | null
                 {row.projectPath || t('inbox.noProject')} · {row.provider}
               </>}/>
                 <div className="mb-2 ml-8 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                  {row.approvalCount > 0 && <span className="text-amber-600 dark:text-amber-400">{t('workspace.waitingApproval', { count: row.approvalCount })}</span>}
+                  {row.approvalCount > 0 && <span className="text-warning dark:text-warning">{t('workspace.waitingApproval', { count: row.approvalCount })}</span>}
                   {row.blockedCount > 0 && <span className="text-destructive">{t('workspace.blocked', { count: row.blockedCount })}</span>}
                   {row.queuePaused && row.queuedCount > 0 && <span>{t('workspace.paused', { count: row.queuedCount })}</span>}
                   {!row.queuePaused && row.queuedCount > 0 && <span>{t('inbox.queued', { count: row.queuedCount })}</span>}

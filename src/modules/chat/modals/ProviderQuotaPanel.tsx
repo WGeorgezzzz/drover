@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import { useEffect, useState } from 'react';
 import { startVisiblePolling } from '@/shared/utils';
 import { api } from '@/shared/api';
@@ -57,7 +58,7 @@ export function ProviderQuotaPanel() {
               {window.label}：{window.remaining !== undefined ? `${window.remaining.toLocaleString()} ${window.unit || ''}`
                 : window.remainingPercent != null ? `${Number(window.remainingPercent.toFixed(1))}%` : '未提供'}
             </div>) : <><span>{STATUS[row.status] || row.status}</span><p className="mt-1 max-w-72 text-muted-foreground">{row.note}</p>
-              {row.status === 'login_required' && ['claude', 'cursor'].includes(row.provider) && <button type="button" className="mt-1 underline" onClick={() => void openLogin(row.provider)}>打开专用登录窗口</button>}
+              {row.status === 'login_required' && ['claude', 'cursor'].includes(row.provider) && <Button variant="ghost" size="compact" type="button" className="mt-1 underline" onClick={() => void openLogin(row.provider)}>打开专用登录窗口</Button>}
               {row.lastSuccess && <p className="mt-1 text-muted-foreground">上次成功：{dateLabel(row.lastSuccess.checkedAt)}（历史值）{row.lastSuccess.windows.map(w => ` ${w.label} ${w.remaining ?? w.remainingPercent ?? '—'}${w.unit || '%'}`).join('；')}</p>}</>}</td>
             <td className="py-2 text-muted-foreground">{row.status === 'ok' ? row.windows.map((window, i) => <div key={i}>{window.resetLabel || dateLabel(window.resetsAt)}</div>) : '—'}</td>
           </tr>)}</tbody>

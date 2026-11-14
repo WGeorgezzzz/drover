@@ -1,6 +1,7 @@
+import { Button as UnifiedButton } from '@/shared/ui/Button';
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Loader2, type LucideIcon } from 'lucide-react';
+import { ChevronDown, Loader2, type LucideIcon } from '@/shared/icons';
 
 import { cn } from '@/shared/utils';
 import { Button } from '@/shared/ui/Button';
@@ -141,7 +142,7 @@ export function ActionMenu({
         return (
           <React.Fragment key={item.key}>
             {item.showDividerBefore && <div className="mx-2 my-1 h-px bg-border" />}
-            <button
+            <UnifiedButton variant="ghost" size="compact"
               type="button"
               role="menuitem"
               disabled={item.disabled || item.loading}
@@ -152,7 +153,7 @@ export function ActionMenu({
                 item.disabled || item.loading
                   ? 'cursor-not-allowed opacity-50'
                   : item.isDanger
-                    ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950'
+                    ? 'text-destructive hover:bg-destructive/10 dark:text-destructive dark:hover:bg-destructive'
                     : 'hover:bg-accent',
               )}
             >
@@ -169,7 +170,7 @@ export function ActionMenu({
                   </span>
                 )}
               </span>
-            </button>
+            </UnifiedButton>
           </React.Fragment>
         );
       })}

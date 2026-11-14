@@ -139,8 +139,8 @@ describe('what a Bash command changed', () => {
     const added = rows.find((row) => row.textContent === '+TWO');
     const context = rows.find((row) => row.textContent === 'one');
 
-    expect(removed?.lastElementChild?.className).toContain('text-red-800');
-    expect(added?.lastElementChild?.className).toContain('text-green-800');
+    expect(removed?.lastElementChild?.className).toContain('text-destructive');
+    expect(added?.lastElementChild?.className).toContain('text-success');
     expect(context?.lastElementChild?.className).not.toMatch(/red|green/);
   });
 

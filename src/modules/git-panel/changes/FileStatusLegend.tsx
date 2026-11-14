@@ -1,4 +1,5 @@
-import { ChevronDown, ChevronRight, Info } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { ChevronDown, ChevronRight, Info } from '@/shared/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -26,14 +27,14 @@ export default function FileStatusLegend({ isMobile }: FileStatusLegendProps) {
 
   return (
     <div className="border-b border-border/60">
-      <button
+      <Button variant="ghost" size="compact"
         onClick={() => setIsOpen((previous) => !previous)}
         className="flex w-full items-center justify-center gap-1 bg-muted/30 px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
       >
         <Info className="h-3 w-3" />
         <span>{t('git:legend.title')}</span>
         {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-      </button>
+      </Button>
 
       {isOpen && (
         <div className="bg-muted/30 px-4 py-3 text-sm">

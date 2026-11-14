@@ -11,7 +11,7 @@ import {
   Terminal,
   User,
   type LucideIcon,
-} from 'lucide-react';
+} from '@/shared/icons';
 
 type CommandMenuCommand = {
   name: string;
@@ -69,12 +69,12 @@ const namespaceIcons: Record<string, LucideIcon> = {
 };
 
 const namespaceAccentClasses: Record<string, string> = {
-  frequent: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200',
-  builtin: 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-400/20 dark:bg-sky-400/10 dark:text-sky-200',
-  skill: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200',
-  project: 'border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-400/20 dark:bg-indigo-400/10 dark:text-indigo-200',
-  user: 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200',
-  other: 'border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-500/20 dark:bg-gray-500/10 dark:text-gray-200',
+  frequent: 'border-warning bg-warning/10 text-warning dark:border-warning/20 dark:bg-warning/10 dark:text-warning',
+  builtin: 'border-primary bg-primary/10 text-primary dark:border-primary/20 dark:bg-primary/10 dark:text-primary',
+  skill: 'border-success bg-success/10 text-success dark:border-success/20 dark:bg-success/10 dark:text-success',
+  project: 'border-primary bg-primary/10 text-primary dark:border-primary/20 dark:bg-primary/10 dark:text-primary',
+  user: 'border-destructive bg-destructive/10 text-destructive dark:border-destructive/20 dark:bg-destructive/10 dark:text-destructive',
+  other: 'border-border bg-muted text-muted-foreground dark:border-border/20 dark:bg-muted/10 dark:text-foreground',
 };
 
 const MENU_EDGE_GAP = 16;
@@ -290,7 +290,7 @@ export default function CommandMenu({
                   <span className="absolute bottom-1.5 left-1.5 top-1.5 w-0.5 rounded-full bg-primary" />
                 )}
                 <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border ${accentClass}`}>
-                  <NamespaceIcon aria-hidden="true" size={14} strokeWidth={2.2} />
+                  <NamespaceIcon aria-hidden="true" size={14} />
                 </span>
                 <div className="min-w-0 flex-1 pr-1">
                   <div className={`flex min-w-0 items-center gap-2 ${command.description ? 'mb-1' : 'mb-0'}`}>
@@ -317,7 +317,7 @@ export default function CommandMenu({
                 </div>
                 {isSelected && (
                   <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded border border-primary/30 bg-card text-primary shadow-sm">
-                    <CornerDownLeft aria-hidden="true" size={13} strokeWidth={2.2} />
+                    <CornerDownLeft aria-hidden="true" size={13} />
                   </span>
                 )}
               </div>

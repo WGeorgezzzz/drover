@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
-import { Mail, MailOpen, MoreHorizontal, Pin, PinOff } from 'lucide-react';
+import { Mail, MailOpen, MoreHorizontal, Pin, PinOff } from '@/shared/icons';
 import { SessionRow } from '@/modules/sidebar/SessionRow';
 import SessionOptions from '@/modules/sidebar/SessionOptions';
 import { useSessionRowActions } from '@/modules/sidebar/context/SessionRowActionsContext';

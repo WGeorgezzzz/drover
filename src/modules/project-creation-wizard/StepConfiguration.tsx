@@ -48,7 +48,7 @@ export default function StepConfiguration({
   return (
     <div className="space-y-4">
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="mb-2 block text-sm font-medium text-foreground dark:text-muted-foreground">
           {t('projectWizard.step2.newPath')}
         </label>
 
@@ -59,13 +59,13 @@ export default function StepConfiguration({
           onAdvanceToConfirm={onAdvanceToConfirm}
         />
 
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
           {t('projectWizard.step2.newHelp')}
         </p>
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="mb-2 block text-sm font-medium text-foreground dark:text-muted-foreground">
           {t('projectWizard.step2.githubUrl')}
         </label>
         <Input
@@ -76,7 +76,7 @@ export default function StepConfiguration({
           className="w-full"
           disabled={isCreating}
         />
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
           {t('projectWizard.step2.githubHelp')}
         </p>
       </div>

@@ -2,7 +2,7 @@
   "notConfigured": {
     "title": "TaskMaster AIが設定されていません",
     "description": "TaskMasterは、AIを活用した支援により、複雑なプロジェクトを管理しやすいタスクに分解するのに役立ちます",
-    "whatIsTitle": "🎯 TaskMasterとは？",
+    "whatIsTitle": "TaskMasterとは？",
     "features": {
       "aiPowered": "AIを活用したタスク管理：複雑なプロジェクトを管理しやすいサブタスクに分解",
       "prdTemplates": "PRDテンプレート：Product Requirements Documentからタスクを生成",
@@ -35,7 +35,7 @@
         "description": "AIアシスタントにタスクの作業を開始してもらい、ステータスを更新し、プロジェクトの進行に応じて新しいタスクを追加します。"
       }
     },
-    "tip": "💡 ヒント：TaskMasterのAIを活用したタスク生成を最大限に活用するには、PRDから始めましょう"
+    "tip": "ヒント：TaskMasterのAIを活用したタスク生成を最大限に活用するには、PRDから始めましょう"
   },
   "setupModal": {
     "title": "TaskMasterのセットアップ",
@@ -49,20 +49,20 @@
     "title": "TaskMasterを始める",
     "subtitle": "生産的なタスク管理のガイド",
     "examples": {
-      "parsePRD": "💬 例：\n「Claude Task Masterで新しいプロジェクトを初期化しました。.taskmaster/docs/prd.txtにPRDがあります。解析して初期タスクを設定するのを手伝ってもらえますか？」",
-      "expandTask": "💬 例：\n「タスク5は複雑そうです。サブタスクに分解してもらえますか？」",
-      "addTask": "💬 例：\n「Cloudinaryを使用してユーザープロフィール画像のアップロードを実装する新しいタスクを追加してください。最適なアプローチを調査してください。」"
+      "parsePRD": "例：\n「Claude Task Masterで新しいプロジェクトを初期化しました。.taskmaster/docs/prd.txtにPRDがあります。解析して初期タスクを設定するのを手伝ってもらえますか？」",
+      "expandTask": "例：\n「タスク5は複雑そうです。サブタスクに分解してもらえますか？」",
+      "addTask": "例：\n「Cloudinaryを使用してユーザープロフィール画像のアップロードを実装する新しいタスクを追加してください。最適なアプローチを調査してください。」"
     },
     "moreExamples": "さらなる例と使用パターンを見る →",
     "proTips": {
-      "title": "💡 プロのヒント",
+      "title": "プロのヒント",
       "search": "検索バーを使用して特定のタスクをすばやく見つける",
       "views": "ビュー切替を使用してカンバン、リスト、グリッドビューを切り替える",
       "filters": "フィルターを使用して特定のタスクステータスや優先度に焦点を当てる",
       "details": "任意のタスクをクリックして詳細情報を表示し、サブタスクを管理する"
     },
     "learnMore": {
-      "title": "📚 詳細を見る",
+      "title": "詳細を見る",
       "description": "TaskMaster AIは開発者向けに構築された高度なタスク管理システムです。ドキュメント、例を入手し、プロジェクトに貢献できます。",
       "githubButton": "GitHubで見る"
     }
@@ -99,12 +99,12 @@
     "grid": "グリッドビュー"
   },
   "kanban": {
-    "pending": "📋 やること",
-    "inProgress": "🚀 進行中",
-    "done": "✅ 完了",
-    "blocked": "🚫 ブロック中",
-    "deferred": "⏳ 延期",
-    "cancelled": "❌ キャンセル",
+    "pending": "やること",
+    "inProgress": "進行中",
+    "done": "完了",
+    "blocked": "ブロック中",
+    "deferred": "延期",
+    "cancelled": "キャンセル",
     "noTasksYet": "まだタスクはありません",
     "tasksWillAppear": "タスクはここに表示されます",
     "moveTasksHere": "開始したらタスクをここに移動",

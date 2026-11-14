@@ -2,7 +2,7 @@
   "notConfigured": {
     "title": "TaskMaster AI is not configured",
     "description": "Prepare tasks with one click, then organize action items from everyday conversations.",
-    "whatIsTitle": "🎯 What is TaskMaster?",
+    "whatIsTitle": "What is TaskMaster?",
     "features": {
       "aiPowered": "AI-Powered Task Management: Break complex projects into manageable subtasks",
       "prdTemplates": "PRD Templates: Generate tasks from Product Requirements Documents",
@@ -49,20 +49,20 @@
     "title": "Getting Started with TaskMaster",
     "subtitle": "Your guide to productive task management",
     "examples": {
-      "parsePRD": "💬 Example:\n\"I've just initialized a new project with Claude Task Master. I have a PRD at .taskmaster/docs/prd.txt. Can you help me parse it and set up the initial tasks?\"",
-      "expandTask": "💬 Example:\n\"Task 5 seems complex. Can you break it down into subtasks?\"",
-      "addTask": "💬 Example:\n\"Please add a new task to implement user profile image uploads using Cloudinary, research the best approach.\""
+      "parsePRD": "Example:\n\"I've just initialized a new project with Claude Task Master. I have a PRD at .taskmaster/docs/prd.txt. Can you help me parse it and set up the initial tasks?\"",
+      "expandTask": "Example:\n\"Task 5 seems complex. Can you break it down into subtasks?\"",
+      "addTask": "Example:\n\"Please add a new task to implement user profile image uploads using Cloudinary, research the best approach.\""
     },
     "moreExamples": "View more examples and usage patterns →",
     "proTips": {
-      "title": "💡 Pro Tips",
+      "title": "Pro Tips",
       "search": "Use the search bar to quickly find specific tasks",
       "views": "Switch between Kanban, List, and Grid views using the view toggles",
       "filters": "Use filters to focus on specific task statuses or priorities",
       "details": "Click on any task to view detailed information and manage subtasks"
     },
     "learnMore": {
-      "title": "📚 Learn More",
+      "title": "Learn More",
       "description": "TaskMaster AI is an advanced task management system built for developers. Get documentation, examples, and contribute to the project.",
       "githubButton": "View on GitHub"
     }
@@ -99,12 +99,12 @@
     "grid": "Grid view"
   },
   "kanban": {
-    "pending": "📋 To Do",
-    "inProgress": "🚀 In Progress",
-    "done": "✅ Done",
-    "blocked": "🚫 Blocked",
-    "deferred": "⏳ Deferred",
-    "cancelled": "❌ Cancelled",
+    "pending": "To Do",
+    "inProgress": "In Progress",
+    "done": "Done",
+    "blocked": "Blocked",
+    "deferred": "Deferred",
+    "cancelled": "Cancelled",
     "noTasksYet": "No tasks yet",
     "tasksWillAppear": "Tasks will appear here",
     "moveTasksHere": "Move tasks here when started",

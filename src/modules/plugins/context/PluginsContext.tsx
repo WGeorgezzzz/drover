@@ -44,8 +44,8 @@ export function PluginsProvider({ children }: { children: ReactNode }) {
         try {
           const data = await res.json();
           errorMessage = readApiErrorMessage(data) ?? errorMessage;
-        } catch {
-          errorMessage = res.statusText || errorMessage;
+        } catch (error) {
+          errorMessage = error instanceof Error ? error.message : res.statusText || errorMessage;
         }
         setPluginsError(errorMessage);
       }
@@ -112,9 +112,8 @@ export function PluginsProvider({ children }: { children: ReactNode }) {
         try {
           const data = await res.json();
           errorMessage = readApiErrorMessage(data) ?? errorMessage;
-        } catch {
-          // response body wasn't JSON, use status text
-          errorMessage = res.statusText || errorMessage;
+        } catch (error) {
+          errorMessage = error instanceof Error ? error.message : res.statusText || errorMessage;
         }
         return { success: false, error: errorMessage };
       }

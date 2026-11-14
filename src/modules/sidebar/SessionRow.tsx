@@ -1,11 +1,12 @@
 import { useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { TFunction } from 'i18next';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/shared/icons';
 import { SectionRow } from '@/modules/sidebar/SectionRow';
 import { SessionOrganizationBadge } from '@/modules/sidebar/SessionOrganizationBadge';
 import { LLMProviderLogo, Tooltip } from '@/shared/ui';
 import { cn } from '@/shared/utils';
+import { SessionNotificationBadge } from '@/modules/notifications';
 
 /** Sidebar project, section, pinned, inbox and recent lists share geometry and status ordering. */
 export function SessionRow({sessionId,title,provider,selected,processing,background,attention,recent,t,onSelect,options,subtitle,
@@ -34,8 +35,9 @@ export function SessionRow({sessionId,title,provider,selected,processing,backgro
         </span>
       </a>
       <span data-session-status className="ml-1 flex shrink-0 items-center gap-1">
+        <SessionNotificationBadge sessionId={sessionId}/>
         {processing&&<Tooltip content={t('tooltips.processingSessionIndicator','Processing session')}><Loader2 className="h-3 w-3 animate-spin text-muted-foreground"/></Tooltip>}
-        {dot&&<Tooltip content={label}><span role="status" aria-label={label} className={cn('h-1.5 w-1.5 shrink-0 rounded-full',needsAttention?'bg-amber-500':background?'bg-purple-500 dark:bg-purple-400':'bg-green-500')}/></Tooltip>}
+        {dot&&<Tooltip content={label}><span role="status" aria-label={label} className={cn('h-1.5 w-1.5 shrink-0 rounded-full',needsAttention?'bg-warning':background?'bg-primary dark:bg-primary':'bg-success')}/></Tooltip>}
         <SessionOrganizationBadge sessionId={sessionId}/>
       </span>
       {options&&<span data-session-options className="ml-1 flex shrink-0 items-center">{options}</span>}

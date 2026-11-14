@@ -1,7 +1,10 @@
+import { Wrench } from '@/shared/icons';
+import { File as UnifiedFile } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import { InvocationCatalogContext,renderInvocationTokens } from '@/modules/chat/utils/invocationTokens';
 import { memo, useMemo, useRef,useContext,Children } from 'react';
 import { useTranslation } from 'react-i18next';
-import { GitBranchIcon, PencilIcon } from 'lucide-react';
+import { GitBranchIcon, PencilIcon } from '@/shared/icons';
 
 import type { ChatMessage, ClaudePermissionSuggestion, PermissionGrantResult, LLMProvider,DiffLine,Project } from '@/shared/types';
 import { formatUsageLimitText, stripProposedPlanEnvelope } from '@/modules/chat/utils/chatFormatting';
@@ -18,7 +21,7 @@ import MessageModelLabel from '@/modules/chat/transcript/MessageModelLabel';
 import MessageSpeakControl from '@/modules/chat/transcript/MessageSpeakControl';
 import { useIsExportingTranscript } from '@/modules/chat/context/TranscriptRenderContext';
 import { MemoryCitations } from '@/modules/chat/transcript/MemoryCitations';
-import { authenticatedFetch } from '@/shared/api';
+import { api } from '@/shared/api';
 
 type MessageComponentProps = {
   message: ChatMessage;
@@ -144,7 +147,7 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
                       className="mr-auto rounded border border-border/60 px-1 text-[10px] leading-4">{t('liveInput.inserted')}</span>
                   )}
                   {onEditMessage && message.transcriptAnchorId && (
-                    <button
+                    <Button variant="ghost" size="compact"
                       type="button"
                       onClick={() => onEditMessage(message)}
                       title={t('message.editAndResend')}
@@ -152,10 +155,10 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
                       className="rounded p-1 opacity-0 transition-opacity hover:bg-muted focus-visible:opacity-100 group-hover:opacity-100"
                     >
                       <PencilIcon className="h-3.5 w-3.5" />
-                    </button>
+                    </Button>
                   )}
                   {onForkFromMessage && message.transcriptAnchorId && (
-                    <button
+                    <Button variant="ghost" size="compact"
                       type="button"
                       onClick={() => onForkFromMessage(message)}
                       title={t('message.forkFromHere')}
@@ -163,7 +166,7 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
                       className="rounded p-1 opacity-0 transition-opacity hover:bg-muted focus-visible:opacity-100 group-hover:opacity-100"
                     >
                       <GitBranchIcon className="h-3.5 w-3.5" />
-                    </button>
+                    </Button>
                   )}
                   {shouldShowUserCopyControl && (
                     <MessageCopyControl content={userCopyContent} messageType="user" />
@@ -186,19 +189,19 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
             <span
               className={`inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full ${
                 message.compact.phase === 'running'
-                  ? 'animate-pulse bg-amber-400 dark:bg-amber-500'
+                  ? 'animate-pulse bg-warning dark:bg-warning'
                   : message.compact.phase === 'failed'
-                    ? 'bg-red-400 dark:bg-red-500'
-                    : 'bg-gray-400 dark:bg-gray-500'
+                    ? 'bg-destructive dark:bg-destructive'
+                    : 'bg-muted dark:bg-muted'
               }`}
             />
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-muted-foreground dark:text-muted-foreground">
               {message.content || t('chat:misc.compacted', 'Compacted')}
             </span>
           </div>
           {message.compactSummary && (
             <details className="ml-3.5 mt-0.5">
-              <summary className="cursor-pointer text-xs text-gray-500 hover:text-foreground dark:text-gray-400">
+              <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground dark:text-muted-foreground">
                 {t('chat:misc.compactionSummary', 'full summary')}
               </summary>
               <div className="mt-1">
@@ -213,8 +216,8 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
         /* Compact task notification on the left */
         <div className="w-full">
           <div className="flex items-center gap-2 py-0.5">
-            <span className={`inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full ${message.taskNotificationStatus === 'completed' ? 'bg-green-400 dark:bg-green-500' : 'bg-amber-400 dark:bg-amber-500'}`} />
-            <span className="text-xs text-gray-500 dark:text-gray-400">{message.content}</span>
+            <span className={`inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full ${message.taskNotificationStatus === 'completed' ? 'bg-success dark:bg-success' : 'bg-warning dark:bg-warning'}`} />
+            <span className="text-xs text-muted-foreground dark:text-muted-foreground">{message.content}</span>
           </div>
         </div>
       ) : (
@@ -223,19 +226,19 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
           {!isGrouped && (provider !== 'claude' || message.type === 'error') && (
             <div className="mb-2 flex items-center space-x-3">
               {message.type === 'error' ? (
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-600 text-sm text-white">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-destructive text-sm text-primary-foreground">
                   !
                 </div>
               ) : message.type === 'tool' ? (
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-600 text-sm text-white dark:bg-gray-700">
-                  🔧
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-sm text-primary-foreground dark:bg-muted">
+                  <Wrench />
                 </div>
               ) : (
                 <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full p-1 text-sm text-foreground">
                   <LLMProviderLogo provider={provider} className="h-full w-full" />
                 </div>
               )}
-              <div className="text-sm font-medium text-gray-900 dark:text-white">
+              <div className="text-sm font-medium text-foreground dark:text-primary-foreground">
                 {message.type === 'error'
                   ? t('messageTypes.error')
                   : message.type === 'tool'
@@ -356,7 +359,7 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
                 </ReasoningContent>
               </Reasoning>
             ) : (
-              <div dir="auto" className="text-sm text-gray-700 dark:text-gray-300">
+              <div dir="auto" className="text-sm text-foreground dark:text-muted-foreground">
                 {/* Reasoning accordion */}
                 {showThinking && message.reasoning && (
                   <Reasoning className="mb-3" defaultOpen={false}>
@@ -383,9 +386,7 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
                       return (
                         <div className="my-2">
                           <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
+                            <UnifiedFile className="h-4 w-4" />
                             <span className="font-medium">{t('json.response')}</span>
                           </div>
                           <div className="overflow-hidden rounded-lg border border-border bg-muted">
@@ -427,7 +428,7 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
             )}
 
             {(shouldShowAssistantCopyControl || !isGrouped || message.type === 'assistant') && (
-              <div className="mt-1 flex w-full items-center gap-2 text-[11px] text-gray-400 dark:text-gray-500">
+              <div className="mt-1 flex w-full items-center gap-2 text-[11px] text-muted-foreground dark:text-muted-foreground">
                 {shouldShowAssistantCopyControl && (
                   <MessageCopyControl content={assistantCopyContent} messageType="assistant" />
                 )}
@@ -439,7 +440,7 @@ const MessageComponent = memo(({ message, prevMessage, createDiff, onFileOpen, s
                     copy and speak it is not gated on the copy control, and an
                     exported transcript keeps it wherever the footer renders. */}
                 <MessageModelLabel model={message.model} />
-                {provider==='gemini'&&<button className="min-h-10 px-2 text-primary" onClick={()=>void authenticatedFetch('/api/providers/gemini/open',{method:'POST'})}>在 Gemini 桌面版中打开</button>}
+                {provider==='gemini'&&<Button variant="ghost" size="compact" className="min-h-10 px-2 text-primary" onClick={()=>void api.geminiDesktop.open()}>在 Gemini 桌面版中打开</Button>}
                 {formattedTime && <span title={fullTimestamp}>{formattedTime}</span>}
                 {message.turnDurationMs !== undefined && message.turnDurationMs >= 0 && (
                   <span>{`用时 ${Math.floor(message.turnDurationMs / 60000)} 分 ${Math.floor((message.turnDurationMs % 60000) / 1000)} 秒`}</span>

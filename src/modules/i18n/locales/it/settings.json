@@ -264,7 +264,7 @@
     "title": "Chiavi API",
     "description": "Genera chiavi API per accedere all'API esterna da altre applicazioni.",
     "newKey": {
-      "alertTitle": "⚠️ Salva la tua chiave API",
+      "alertTitle": "Salva la tua chiave API",
       "alertMessage": "Questa è l'unica volta che vedrai questa chiave. Conservala in modo sicuro.",
       "iveSavedIt": "L'ho salvata"
     },

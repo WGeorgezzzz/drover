@@ -1,4 +1,4 @@
-import { Folder } from 'lucide-react';
+import { Folder } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import MobileMenuButton from '@/modules/project-workspace/MobileMenuButton';

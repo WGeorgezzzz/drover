@@ -1,4 +1,6 @@
-import { ChevronRight, Trash2 } from 'lucide-react';
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
+import { Button } from '@/shared/ui/Button';
+import { ChevronRight, Trash2 } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import type { FileStatusCode } from '@/shared/types';
@@ -42,8 +44,8 @@ export default function FileChangeItem({
   return (
     <div className="border-b border-border last:border-0">
       <div className={`flex items-center transition-colors hover:bg-accent/50 ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'}`}>
-        <input
-          type="checkbox"
+        <UnifiedCheckbox
+
           checked={isSelected}
           onChange={() => onToggleSelected(filePath)}
           onClick={(event) => event.stopPropagation()}
@@ -51,7 +53,7 @@ export default function FileChangeItem({
         />
 
         <div className="flex min-w-0 flex-1 items-center">
-          <button
+          <Button variant="ghost" size="compact"
             onClick={(event) => {
               event.stopPropagation();
               onToggleExpanded(filePath);
@@ -60,7 +62,7 @@ export default function FileChangeItem({
             title={isExpanded ? t('git:item.collapseDiff') : t('git:item.expandDiff')}
           >
             <ChevronRight className={`h-3 w-3 transition-transform duration-200 ease-in-out ${isExpanded ? 'rotate-90' : 'rotate-0'}`} />
-          </button>
+          </Button>
 
           <span
             className={`flex-1 truncate ${isMobile ? 'text-xs' : 'text-sm'} cursor-pointer hover:text-primary hover:underline`}
@@ -75,7 +77,7 @@ export default function FileChangeItem({
 
           <span className="flex items-center gap-1">
             {(status === 'M' || status === 'D' || status === 'U') && (
-              <button
+              <Button variant="ghost" size="compact"
                 onClick={(event) => {
                   event.stopPropagation();
                   onRequestFileAction(filePath, status);
@@ -85,7 +87,7 @@ export default function FileChangeItem({
               >
                 <Trash2 className="h-3 w-3" />
                 {isMobile && <span>{status === 'U' ? t('git:item.deleteShort') : t('git:item.discardShort')}</span>}
-              </button>
+              </Button>
             )}
 
             <span
@@ -110,7 +112,7 @@ export default function FileChangeItem({
             <span className="text-sm font-medium text-foreground">{statusLabel}</span>
           </span>
           {isMobile && (
-            <button
+            <Button variant="ghost" size="compact"
               onClick={(event) => {
                 event.stopPropagation();
                 onToggleWrapText();
@@ -119,7 +121,7 @@ export default function FileChangeItem({
               title={wrapText ? t('git:item.switchToScroll') : t('git:item.switchToWrap')}
             >
               {wrapText ? t('git:item.scroll') : t('git:item.wrap')}
-            </button>
+            </Button>
           )}
         </div>
 

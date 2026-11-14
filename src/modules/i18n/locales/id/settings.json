@@ -307,7 +307,7 @@
     "title": "Kunci API",
     "description": "Buat kunci API untuk mengakses API eksternal dari aplikasi lain.",
     "newKey": {
-      "alertTitle": "⚠️ Simpan Kunci API",
+      "alertTitle": "Simpan Kunci API",
       "alertMessage": "Ini satu-satunya saat kunci ini ditampilkan. Simpan dengan aman.",
       "iveSavedIt": "Sudah saya simpan"
     },

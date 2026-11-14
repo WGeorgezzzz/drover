@@ -307,7 +307,7 @@
     "title": "Chaves da API",
     "description": "Gere chaves da API para acessar a API externa de outros aplicativos.",
     "newKey": {
-      "alertTitle": "⚠️ Salve sua chave da API",
+      "alertTitle": "Salve sua chave da API",
       "alertMessage": "Esta é a única vez que você verá esta chave. Armazene-a com segurança.",
       "iveSavedIt": "Já salvei"
     },

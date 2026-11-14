@@ -50,16 +50,16 @@ const MAX_LISTED_UNDIFFED_PATHS = 10;
 // reads the same as one made through Edit.
 const LINE_CLASSES = {
   added: {
-    gutter: 'bg-green-50 text-green-400 dark:bg-green-950/30 dark:text-green-500',
-    text: 'bg-green-50/50 text-green-800 dark:bg-green-950/20 dark:text-green-200',
+    gutter: 'bg-success/10 text-success dark:bg-success/30 dark:text-success',
+    text: 'bg-success/10 text-success dark:bg-success/20 dark:text-success',
   },
   removed: {
-    gutter: 'bg-red-50 text-red-400 dark:bg-red-950/30 dark:text-red-500',
-    text: 'bg-red-50/50 text-red-800 dark:bg-red-950/20 dark:text-red-200',
+    gutter: 'bg-destructive/10 text-destructive dark:bg-destructive/30 dark:text-destructive',
+    text: 'bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive',
   },
   context: {
-    gutter: 'text-gray-400 dark:text-gray-500',
-    text: 'text-gray-600 dark:text-gray-400',
+    gutter: 'text-muted-foreground dark:text-muted-foreground',
+    text: 'text-muted-foreground dark:text-muted-foreground',
   },
 } as const;
 
@@ -235,7 +235,7 @@ function BashEditDiffLine({ line }: { line: string }) {
   // `\ No newline at end of file` annotates the line above it rather than
   // being part of the file, so it gets no gutter sign or colour.
   if (marker === '\\') {
-    return <div className="px-2 italic text-gray-400 dark:text-gray-500">{line}</div>;
+    return <div className="px-2 italic text-muted-foreground dark:text-muted-foreground">{line}</div>;
   }
 
   const kind = marker === '+' ? 'added' : marker === '-' ? 'removed' : 'context';
@@ -282,9 +282,9 @@ function BashEditDiffFileSection({ file, onFileOpen }: BashEditDiffFileSectionPr
       badge={stats.added > 0 || stats.removed > 0 ? <DiffStatsBadge stats={stats} /> : undefined}
       onTitleClick={openFile}
     >
-      <div className="overflow-hidden rounded border border-gray-200/60 dark:border-gray-700/50">
-        <div className="border-b border-gray-200/60 bg-gray-50/80 px-2.5 py-1 dark:border-gray-700/50 dark:bg-gray-800/40">
-          <span className="block truncate font-mono text-[11px] text-gray-600 dark:text-gray-400">
+      <div className="overflow-hidden rounded border border-border/60 dark:border-border/50">
+        <div className="border-b border-border/60 bg-muted/80 px-2.5 py-1 dark:border-border/50 dark:bg-background/40">
+          <span className="block truncate font-mono text-[11px] text-muted-foreground dark:text-muted-foreground">
             {file.filePath}
           </span>
         </div>
@@ -292,7 +292,7 @@ function BashEditDiffFileSection({ file, onFileOpen }: BashEditDiffFileSectionPr
         <div className="font-mono text-[11px] leading-[18px]">
           {hunks.map((hunk, hunkIndex) => (
             <Fragment key={hunkIndex}>
-              <div className="select-none bg-gray-50/80 px-2 text-gray-500 dark:bg-gray-800/40 dark:text-gray-400">
+              <div className="select-none bg-muted/80 px-2 text-muted-foreground dark:bg-background/40 dark:text-muted-foreground">
                 {formatHunkHeader(hunk, file)}
               </div>
               {hunk.lines.map((line, lineIndex) => (
@@ -301,12 +301,12 @@ function BashEditDiffFileSection({ file, onFileOpen }: BashEditDiffFileSectionPr
             </Fragment>
           ))}
           {hunks.length === 0 && (
-            <div className="px-2 py-0.5 italic text-gray-400 dark:text-gray-500">
+            <div className="px-2 py-0.5 italic text-muted-foreground dark:text-muted-foreground">
               {t('bashEditDiff.emptyFile')}
             </div>
           )}
           {hiddenLines > 0 && (
-            <div className="px-2 py-0.5 text-gray-500 dark:text-gray-400">
+            <div className="px-2 py-0.5 text-muted-foreground dark:text-muted-foreground">
               {t('bashEditDiff.moreLines', { count: hiddenLines })}
             </div>
           )}

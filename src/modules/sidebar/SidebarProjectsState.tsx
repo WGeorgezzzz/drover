@@ -1,4 +1,4 @@
-import { Folder, Search } from 'lucide-react';
+import { Folder, Search } from '@/shared/icons';
 import type { TFunction } from 'i18next';
 
 import type { LoadingProgress } from '@/shared/types';

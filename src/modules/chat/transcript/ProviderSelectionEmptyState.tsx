@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Plus } from '@/shared/icons';
 import { Trans, useTranslation } from "react-i18next";
 
 import type {

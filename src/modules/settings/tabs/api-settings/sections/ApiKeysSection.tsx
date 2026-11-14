@@ -1,4 +1,4 @@
-import { ExternalLink, Key, Plus, Trash2 } from 'lucide-react';
+import { ExternalLink, Key, Plus, Trash2 } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { Button, Input } from '@/shared/ui';

@@ -1,5 +1,6 @@
+import { Button } from '@/shared/ui/Button';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Clock, X } from 'lucide-react';
+import { AlertTriangle, Clock, X } from '@/shared/icons';
 
 import type { ScheduledMessage } from '@/shared/types';
 
@@ -36,12 +37,12 @@ export function ScheduledMessageList({ scheduledMessages, onCancel }: ScheduledM
             key={message.id}
             className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-xs ${
               isFailed
-                ? 'border-red-500/30 bg-red-500/10'
+                ? 'border-destructive/30 bg-destructive/10'
                 : 'border-border/60 bg-muted/40'
             }`}
           >
             {isFailed ? (
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-500" />
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
             ) : (
               <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             )}
@@ -53,7 +54,7 @@ export function ScheduledMessageList({ scheduledMessages, onCancel }: ScheduledM
               </p>
               <p className="mt-0.5 truncate text-foreground">{message.content}</p>
             </div>
-            <button
+            <Button variant="ghost" size="compact"
               type="button"
               onClick={() => onCancel(message.id)}
               title={isFailed ? t('schedule.dismiss') : t('schedule.cancel')}
@@ -61,7 +62,7 @@ export function ScheduledMessageList({ scheduledMessages, onCancel }: ScheduledM
               className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           </div>
         );
       })}

@@ -1,4 +1,5 @@
-import { Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { Check, ChevronLeft, ChevronRight, Loader2 } from '@/shared/icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -192,18 +193,18 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               )}
 
             <div className="mt-6 flex items-center justify-between border-t border-border pt-5">
-              <button
+              <Button variant="ghost" size="compact"
                 onClick={handlePreviousStep}
                 disabled={currentStep === 0 || isSubmitting}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors duration-200 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4" />
                 {t('onboarding.previous')}
-              </button>
+              </Button>
 
               <div className="flex items-center gap-3">
                 {currentStep < 1 ? (
-                  <button
+                  <Button variant="ghost" size="compact"
                     onClick={handleNextStep}
                     disabled={!isCurrentStepValid || isSubmitting}
                     className="flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 font-medium text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-200 hover:brightness-110 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
@@ -219,12 +220,12 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         <ChevronRight className="h-4 w-4" />
                       </>
                     )}
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button variant="ghost" size="compact"
                     onClick={handleFinish}
                     disabled={isSubmitting}
-                    className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 font-medium text-white shadow-lg shadow-emerald-600/25 transition-all duration-200 hover:bg-emerald-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+                    className="flex items-center gap-2 rounded-xl bg-success px-6 py-2.5 font-medium text-primary-foreground shadow-lg shadow-emerald-600/25 transition-all duration-200 hover:bg-success active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
                   >
                     {isSubmitting ? (
                       <>
@@ -237,7 +238,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                         {t('onboarding.completeSetup')}
                       </>
                     )}
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>

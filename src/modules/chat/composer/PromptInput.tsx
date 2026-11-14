@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ArrowUpIcon, SquareIcon } from 'lucide-react';
+import { ArrowUpIcon, SquareIcon } from '@/shared/icons';
 
 import { cn } from '@/shared/utils';
 import { Button, Tooltip } from '@/shared/ui';
@@ -171,7 +171,7 @@ export const PromptInputButton = React.forwardRef<HTMLButtonElement, PromptInput
             tooltip.shortcut ? (
               <span className="flex items-center gap-1.5">
                 {tooltip.content}
-                <kbd className="rounded bg-white/20 px-1 text-[10px]">{tooltip.shortcut}</kbd>
+                <kbd className="rounded bg-card/20 px-1 text-[10px]">{tooltip.shortcut}</kbd>
               </span>
             ) : (
               tooltip.content

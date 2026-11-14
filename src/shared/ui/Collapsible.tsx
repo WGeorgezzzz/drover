@@ -1,3 +1,4 @@
+import { Button as UnifiedButton } from '@/shared/ui/Button';
 import * as React from 'react';
 
 import { cn } from '@/shared/utils';
@@ -62,7 +63,7 @@ export const CollapsibleTrigger = React.forwardRef<HTMLButtonElement, React.Butt
     );
 
     return (
-      <button
+      <UnifiedButton variant="ghost" size="compact"
         ref={ref}
         type="button"
         aria-expanded={open}
@@ -72,7 +73,7 @@ export const CollapsibleTrigger = React.forwardRef<HTMLButtonElement, React.Butt
         {...props}
       >
         {children}
-      </button>
+      </UnifiedButton>
     );
   }
 );

@@ -2,7 +2,7 @@
   "notConfigured": {
     "title": "TaskMaster AI non è configurato",
     "description": "TaskMaster aiuta a suddividere progetti complessi in attività gestibili con assistenza AI",
-    "whatIsTitle": "🎯 Cos'è TaskMaster?",
+    "whatIsTitle": "Cos'è TaskMaster?",
     "features": {
       "aiPowered": "Gestione attività AI: suddividi progetti complessi in sotto-attività gestibili",
       "prdTemplates": "Template PRD: genera attività da documenti di requisiti del prodotto",
@@ -35,7 +35,7 @@
         "description": "Chiedi al tuo assistente AI di iniziare a lavorare sulle attività, aggiornare il loro stato e aggiungere nuove attività man mano che il tuo progetto evolve."
       }
     },
-    "tip": "💡 Suggerimento: inizia con un PRD per ottenere il massimo dalla generazione di attività AI di TaskMaster"
+    "tip": "Suggerimento: inizia con un PRD per ottenere il massimo dalla generazione di attività AI di TaskMaster"
   },
   "setupModal": {
     "title": "Configurazione TaskMaster",
@@ -49,20 +49,20 @@
     "title": "Inizia con TaskMaster",
     "subtitle": "La tua guida per una gestione produttiva delle attività",
     "examples": {
-      "parsePRD": "💬 Esempio:\n\"Ho appena inizializzato un nuovo progetto con Claude Task Master. Ho un PRD in .taskmaster/docs/prd.txt. Puoi aiutarmi ad analizzarlo e configurare le attività iniziali?\"",
-      "expandTask": "💬 Esempio:\n\"L'attività 5 sembra complessa. Puoi suddividerla in sotto-attività?\"",
-      "addTask": "💬 Esempio:\n\"Per favore aggiungi una nuova attività per implementare il caricamento delle immagini profilo utente usando Cloudinary, ricerca l'approccio migliore.\""
+      "parsePRD": "Esempio:\n\"Ho appena inizializzato un nuovo progetto con Claude Task Master. Ho un PRD in .taskmaster/docs/prd.txt. Puoi aiutarmi ad analizzarlo e configurare le attività iniziali?\"",
+      "expandTask": "Esempio:\n\"L'attività 5 sembra complessa. Puoi suddividerla in sotto-attività?\"",
+      "addTask": "Esempio:\n\"Per favore aggiungi una nuova attività per implementare il caricamento delle immagini profilo utente usando Cloudinary, ricerca l'approccio migliore.\""
     },
     "moreExamples": "Vedi altri esempi e pattern di utilizzo →",
     "proTips": {
-      "title": "💡 Suggerimenti pro",
+      "title": "Suggerimenti pro",
       "search": "Usa la barra di ricerca per trovare rapidamente attività specifiche",
       "views": "Passa tra le viste Kanban, Lista e Griglia usando i selettori di vista",
       "filters": "Usa i filtri per concentrarti su stati o priorità specifiche delle attività",
       "details": "Clicca su qualsiasi attività per vedere informazioni dettagliate e gestire le sotto-attività"
     },
     "learnMore": {
-      "title": "📚 Per saperne di più",
+      "title": "Per saperne di più",
       "description": "TaskMaster AI è un sistema avanzato di gestione attività pensato per sviluppatori. Trova documentazione, esempi e contribuisci al progetto.",
       "githubButton": "Vedi su GitHub"
     }
@@ -99,12 +99,12 @@
     "grid": "Vista griglia"
   },
   "kanban": {
-    "pending": "📋 Da fare",
-    "inProgress": "🚀 In corso",
-    "done": "✅ Completate",
-    "blocked": "🚫 Bloccate",
-    "deferred": "⏳ Rimandate",
-    "cancelled": "❌ Annullate",
+    "pending": "Da fare",
+    "inProgress": "In corso",
+    "done": "Completate",
+    "blocked": "Bloccate",
+    "deferred": "Rimandate",
+    "cancelled": "Annullate",
     "noTasksYet": "Nessuna attività",
     "tasksWillAppear": "Le attività appariranno qui",
     "moveTasksHere": "Sposta le attività qui quando iniziate",

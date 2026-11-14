@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { TFunction } from 'i18next';
-import { CheckSquare, Square } from 'lucide-react';
+import { CheckSquare, Square } from '@/shared/icons';
 import { SessionRow } from '@/modules/sidebar/SessionRow';
 import SessionOptions from '@/modules/sidebar/SessionOptions';
 import { createSessionViewModel } from '@/modules/sidebar/utils/sidebarProjectFormatting';

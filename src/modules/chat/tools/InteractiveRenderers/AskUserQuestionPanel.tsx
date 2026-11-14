@@ -1,3 +1,6 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { CircleHelp as UnifiedCircleHelp, Check as UnifiedCheck, ChevronLeft as UnifiedChevronLeft } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -161,7 +164,7 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
         mounted ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-0'
       }`}
     >
-      <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-lg dark:border-gray-700/50 dark:bg-gray-800/90 dark:shadow-2xl">
+      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-card shadow-lg dark:border-border/50 dark:bg-background/90 dark:shadow-2xl">
         {/* Accent line */}
         <div className="absolute left-0 right-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 via-cyan-400 to-teal-400" />
 
@@ -171,19 +174,17 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
             {/* Question icon */}
             <div className="relative flex-shrink-0">
               <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500/10 to-cyan-500/10 dark:from-blue-400/15 dark:to-cyan-400/15">
-                <svg className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827m0 3h.01" />
-                </svg>
+                <UnifiedCircleHelp className="h-3.5 w-3.5 text-primary dark:text-primary" />
               </div>
-              <div className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-cyan-400 dark:bg-cyan-500" />
+              <div className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-pulse rounded-full bg-primary dark:bg-primary" />
             </div>
 
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="text-[10px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground dark:text-muted-foreground">
                 Claude needs your input
               </span>
               {q.header && (
-                <span className="inline-flex items-center rounded border border-blue-100 bg-blue-50 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-blue-600 dark:border-blue-800/50 dark:bg-blue-900/30 dark:text-blue-400">
+                <span className="inline-flex items-center rounded border border-primary bg-primary/10 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wider text-primary dark:border-primary/50 dark:bg-primary/30 dark:text-primary">
                   {q.header}
                 </span>
               )}
@@ -191,7 +192,7 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
 
             {/* Step counter */}
             {!isSingle && (
-              <span className="flex-shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500">
+              <span className="flex-shrink-0 text-[10px] tabular-nums text-muted-foreground dark:text-muted-foreground">
                 {currentStep + 1}/{total}
               </span>
             )}
@@ -201,16 +202,16 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
           {!isSingle && (
             <div className="mb-2 flex items-center gap-1">
               {questions.map((_, i) => (
-                <button
+                <Button variant="ghost" size="compact"
                   key={i}
                   type="button"
                   onClick={() => setCurrentStep(i)}
                   className={`h-[3px] rounded-full transition-all duration-300 ${
                     i === currentStep
-                      ? 'w-5 bg-blue-500 dark:bg-blue-400'
+                      ? 'w-5 bg-primary dark:bg-primary'
                       : i < currentStep
-                        ? 'w-2.5 bg-blue-300 dark:bg-blue-600'
-                        : 'w-2.5 bg-gray-200 dark:bg-gray-700'
+                        ? 'w-2.5 bg-primary dark:bg-primary'
+                        : 'w-2.5 bg-muted dark:bg-muted'
                   }`}
                 />
               ))}
@@ -218,11 +219,11 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
           )}
 
           {/* Question text */}
-          <p className="text-[14px] font-medium leading-snug text-gray-900 dark:text-gray-100">
+          <p className="text-[14px] font-medium leading-snug text-foreground dark:text-foreground">
             {q.question}
           </p>
           {multi && (
-            <span className="text-[10px] text-gray-400 dark:text-gray-500">Select all that apply</span>
+            <span className="text-[10px] text-muted-foreground dark:text-muted-foreground">Select all that apply</span>
           )}
         </div>
 
@@ -232,21 +233,21 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
             {q.options.map((opt, optIdx) => {
               const isSelected = selected.has(opt.label);
               return (
-                <button
+                <Button variant="ghost" size="compact"
                   key={opt.label}
                   type="button"
                   onClick={() => toggleOption(currentStep, opt.label, multi)}
                   className={`group flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-all duration-150 ${
                     isSelected
-                      ? 'border-blue-300 bg-blue-50/80 ring-1 ring-blue-200/50 dark:border-blue-600 dark:bg-blue-900/25 dark:ring-blue-700/30'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/60 dark:border-gray-700/60 dark:hover:border-gray-600 dark:hover:bg-gray-700/40'
+                      ? 'border-primary bg-primary/10 ring-1 ring-primary/50 dark:border-primary dark:bg-primary/25 dark:ring-primary/30'
+                      : 'border-border hover:border-border hover:bg-muted/60 dark:border-border/60 dark:hover:border-border dark:hover:bg-muted/40'
                   }`}
                 >
                   {/* Keyboard hint */}
                   <kbd className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded font-mono text-[10px] transition-all duration-150 ${
                     isSelected
-                      ? 'bg-blue-500 font-semibold text-white dark:bg-blue-500'
-                      : 'border border-gray-200 bg-gray-100 text-gray-400 group-hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500 dark:group-hover:border-gray-600'
+                      ? 'bg-primary font-semibold text-primary-foreground dark:bg-primary'
+                      : 'border border-border bg-muted text-muted-foreground group-hover:border-border dark:border-border dark:bg-background dark:text-muted-foreground dark:group-hover:border-border'
                   }`}>
                     {optIdx + 1}
                   </kbd>
@@ -254,16 +255,16 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
                   <div className="min-w-0 flex-1">
                     <div className={`text-[13px] leading-tight transition-colors duration-150 ${
                       isSelected
-                        ? 'font-medium text-gray-900 dark:text-gray-100'
-                        : 'text-gray-700 dark:text-gray-300'
+                        ? 'font-medium text-foreground dark:text-foreground'
+                        : 'text-foreground dark:text-muted-foreground'
                     }`}>
                       {opt.label}
                     </div>
                     {opt.description && (
                       <div className={`text-[11px] leading-snug transition-colors duration-150 ${
                         isSelected
-                          ? 'text-blue-600/70 dark:text-blue-300/70'
-                          : 'text-gray-400 dark:text-gray-500'
+                          ? 'text-primary/70 dark:text-primary/70'
+                          : 'text-muted-foreground dark:text-muted-foreground'
                       }`}>
                         {opt.description}
                       </div>
@@ -272,50 +273,46 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
 
                   {/* Selection check */}
                   {isSelected && (
-                    <svg className="h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
+                    <UnifiedCheck className="h-4 w-4 flex-shrink-0 text-primary dark:text-primary" />
                   )}
-                </button>
+                </Button>
               );
             })}
 
             {/* "Other" option */}
-            <button
+            <Button variant="ghost" size="compact"
               type="button"
               onClick={() => toggleOther(currentStep, multi)}
               className={`group flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition-all duration-150 ${
                 isOtherOn
-                  ? 'border-blue-300 bg-blue-50/80 ring-1 ring-blue-200/50 dark:border-blue-600 dark:bg-blue-900/25 dark:ring-blue-700/30'
-                  : 'border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50/60 dark:border-gray-700/60 dark:hover:border-gray-600 dark:hover:bg-gray-700/40'
+                  ? 'border-primary bg-primary/10 ring-1 ring-primary/50 dark:border-primary dark:bg-primary/25 dark:ring-primary/30'
+                  : 'border-dashed border-border hover:border-border hover:bg-muted/60 dark:border-border/60 dark:hover:border-border dark:hover:bg-muted/40'
               }`}
             >
               <kbd className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded font-mono text-[10px] transition-all duration-150 ${
                 isOtherOn
-                  ? 'bg-blue-500 font-semibold text-white dark:bg-blue-500'
-                  : 'border border-gray-200 bg-gray-100 text-gray-400 group-hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500 dark:group-hover:border-gray-600'
+                  ? 'bg-primary font-semibold text-primary-foreground dark:bg-primary'
+                  : 'border border-border bg-muted text-muted-foreground group-hover:border-border dark:border-border dark:bg-background dark:text-muted-foreground dark:group-hover:border-border'
               }`}>
                 0
               </kbd>
               <span className={`text-[13px] leading-tight transition-colors ${
                 isOtherOn
-                  ? 'font-medium text-gray-900 dark:text-gray-100'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'font-medium text-foreground dark:text-foreground'
+                  : 'text-muted-foreground dark:text-muted-foreground'
               }`}>
                 Other...
               </span>
               {isOtherOn && (
-                <svg className="ml-auto h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
+                <UnifiedCheck className="ml-auto h-4 w-4 flex-shrink-0 text-primary dark:text-primary" />
               )}
-            </button>
+            </Button>
 
             {/* Other text input — inline */}
             {isOtherOn && (
               <div className="pl-[30px] pr-0.5">
                 <div className="relative">
-                  <input
+                  <UnifiedInput
                     ref={otherInputRef}
                     type="text"
                     value={otherTexts.get(currentStep) || ''}
@@ -330,9 +327,9 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
                       e.stopPropagation();
                     }}
                     placeholder={t('chat:misc.typeAnswer')}
-                    className="w-full rounded-lg border-0 bg-gray-50 px-3 py-1.5 text-[13px] text-gray-900 outline-none ring-1 ring-gray-200 transition-shadow duration-200 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-400 dark:bg-gray-900/60 dark:text-gray-100 dark:ring-gray-700 dark:placeholder:text-gray-600 dark:focus:ring-blue-500"
+                    className="w-full rounded-lg border-0 bg-muted px-3 py-1.5 text-[13px] text-foreground outline-none ring-1 ring-border transition-shadow duration-200 placeholder:text-muted-foreground focus:ring-2 focus:ring-primary dark:bg-background/60 dark:text-foreground dark:ring-border dark:placeholder:text-muted-foreground dark:focus:ring-primary"
                   />
-                  <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-gray-200 bg-gray-100 px-1 py-0.5 font-mono text-[9px] text-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-600">
+                  <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-border bg-muted px-1 py-0.5 font-mono text-[9px] text-muted-foreground dark:border-border dark:bg-background dark:text-muted-foreground">
                     Enter
                   </kbd>
                 </div>
@@ -342,49 +339,47 @@ export const AskUserQuestionPanel: React.FC<PermissionPanelProps> = ({
         </div>
 
         {/* Footer — compact */}
-        <div className="flex items-center justify-between gap-2 border-t border-gray-100 bg-gray-50/50 px-4 py-2 dark:border-gray-700/50 dark:bg-gray-800/50">
-          <button
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-muted/50 px-4 py-2 dark:border-border/50 dark:bg-background/50">
+          <Button variant="ghost" size="compact"
             type="button"
             onClick={handleSkip}
-            className="text-[11px] text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+            className="text-[11px] text-muted-foreground transition-colors hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-muted-foreground"
           >
             {isSingle ? t('chat:misc.skipOne') : t('chat:misc.skipAll')}
-            <span className="ml-1 text-[9px] text-gray-300 dark:text-gray-600">Esc</span>
-          </button>
+            <span className="ml-1 text-[9px] text-muted-foreground dark:text-muted-foreground">Esc</span>
+          </Button>
 
           <div className="flex items-center gap-1.5">
             {!isSingle && !isFirst && (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={() => setCurrentStep(s => s - 1)}
-                className="inline-flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-gray-600 transition-all duration-150 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/60"
+                className="inline-flex items-center gap-0.5 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-muted-foreground transition-all duration-150 hover:bg-muted dark:text-muted-foreground dark:hover:bg-muted/60"
               >
-                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
+                <UnifiedChevronLeft className="h-3 w-3" />
                 Back
-              </button>
+              </Button>
             )}
 
             {isLast ? (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={handleSubmit}
                 disabled={!hasCurrentSelection && !Object.keys(buildAnswers()).length}
-                className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 px-3.5 py-1.5 text-[11px] font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none dark:from-blue-500 dark:to-blue-600"
+                className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 px-3.5 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none dark:from-blue-500 dark:to-blue-600"
               >
                 Submit
                 <span className="ml-0.5 font-mono text-[9px] opacity-70">Enter</span>
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={() => setCurrentStep(s => s + 1)}
-                className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 px-3.5 py-1.5 text-[11px] font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md dark:from-blue-500 dark:to-blue-600"
+                className="inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 px-3.5 py-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:shadow-md dark:from-blue-500 dark:to-blue-600"
               >
                 Next
                 <span className="ml-0.5 font-mono text-[9px] opacity-70">Enter</span>
-              </button>
+              </Button>
             )}
           </div>
         </div>

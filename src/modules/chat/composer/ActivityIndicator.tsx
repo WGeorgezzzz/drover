@@ -1,3 +1,5 @@
+import { Square as UnifiedSquare } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -110,7 +112,7 @@ export default function ActivityIndicator({ activity, onAbort, isInputFocused = 
         <div className={`${tabSurfaceClassName} min-w-0 max-w-full gap-2`}>
           <span
             className={`h-1.5 w-1.5 shrink-0 animate-pulse rounded-full ${
-              isBackground ? 'bg-purple-500 dark:bg-purple-400' : 'bg-primary'
+              isBackground ? 'bg-muted-foreground' : 'bg-primary'
             }`}
             aria-hidden
           />
@@ -122,20 +124,18 @@ export default function ActivityIndicator({ activity, onAbort, isInputFocused = 
         </div>
 
         {renderedActivity.canInterrupt && onAbort && (
-          <button
+          <Button variant="ghost" size="compact"
             type="button"
             onClick={onAbort}
             className={`${tabSurfaceClassName} pointer-events-auto gap-1.5 text-muted-foreground hover:bg-card hover:text-destructive`}
             aria-label={t('claudeStatus.stop', { defaultValue: 'Stop' })}
           >
-            <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24" aria-hidden>
-              <rect x="5" y="5" width="14" height="14" rx="2" />
-            </svg>
+            <UnifiedSquare className="h-2.5 w-2.5 fill-current" aria-hidden />
             <span>{t('claudeStatus.stop', { defaultValue: 'Stop' })}</span>
             <kbd className="hidden rounded border border-border/60 px-1 text-[10px] text-muted-foreground/70 sm:inline-block">
               esc
             </kbd>
-          </button>
+          </Button>
         )}
       </div>
     </div>

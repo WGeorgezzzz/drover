@@ -1,7 +1,8 @@
+import { Button } from '@/shared/ui/Button';
 import { InvocationCatalogContext } from '@/modules/chat/utils/invocationTokens';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownIcon } from 'lucide-react';
+import { ArrowDownIcon } from '@/shared/icons';
 
 import { useTasksSettings, ConversationTasksPanel,TaskSourceBanner } from '@/modules/task-master';
 import { usePaletteOpsRegister } from '@/modules/command-palette';
@@ -546,9 +547,9 @@ function ChatInterface({
           <TaskSourceBanner sessionId={currentSessionId||selectedSession?.id}/>
         <MarkdownWorkspaceContext.Provider value={markdownWorkspaceValue}>
           <TranscriptSessionContext.Provider value={transcriptSessionValue}>
-            {isSideChat && contextCutoff && <button type="button"
+            {isSideChat && contextCutoff && <Button variant="ghost" size="compact" type="button"
               className="mx-4 mt-2 self-start rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted"
-              onClick={()=>setShowInherited(value=>!value)}>{t(showInherited?'sideChat.hideContext':'sideChat.showContext')}</button>}
+              onClick={()=>setShowInherited(value=>!value)}>{t(showInherited?'sideChat.hideContext':'sideChat.showContext')}</Button>}
             <ConversationTasksPanel key={currentSessionId || selectedSession?.id} sessionId={currentSessionId || selectedSession?.id || null} busy={isProcessing}
               onExecute={text => {
                 const id = currentSessionId || selectedSession?.id;
@@ -623,7 +624,7 @@ function ChatInterface({
         <div className="relative flex-shrink-0">
           {isUserScrolledUp && chatMessages.length > 0 && (
             <div className="pointer-events-none absolute -top-11 left-0 right-0 z-20 flex justify-center">
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={scrollToBottomAndReset}
                 aria-label={t('input.scrollToBottom', { defaultValue: 'Scroll to bottom' })}
@@ -631,17 +632,17 @@ function ChatInterface({
                 title={t('input.scrollToBottom', { defaultValue: 'Scroll to bottom' })}
               >
                 <ArrowDownIcon className="h-4 w-4" aria-hidden />
-              </button>
+              </Button>
             </div>
           )}
 
           {onReturnReply && <div className="flex justify-end px-4 pb-2">
-            <button type="button" className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40"
+            <Button variant="ghost" size="compact" type="button" className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted disabled:opacity-40"
               disabled={!displayMessages.some(message => message.type === 'assistant' && !message.isThinking && !message.isToolUse && typeof message.content === 'string' && message.content.trim())}
               onClick={() => {
                 const answer = [...displayMessages].reverse().find(message => message.type === 'assistant' && !message.isThinking && !message.isToolUse && typeof message.content === 'string' && message.content.trim());
                 if (answer) onReturnReply(String(answer.content));
-              }}>{t('sideChat.returnReply')}</button>
+              }}>{t('sideChat.returnReply')}</Button>
           </div>}
           <NextPromptSuggestions messages={displayMessages} busy={isProcessing} onInsert={insertComposerText}
             sessionId={currentSessionId || selectedSession?.id} provider={provider}/>

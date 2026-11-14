@@ -1,3 +1,4 @@
+import { i18n } from '@/modules/i18n';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -9,7 +10,8 @@ import type { SessionMonitorSummary } from '@/shared/types';
 vi.mock('@/shared/api',()=>({api:{monitors:{summaries:vi.fn(),action:vi.fn()}},readApiErrorMessage:()=> 'Forbidden'}));
 let row:SessionMonitorSummary;
 const response=(data:unknown,status=200)=>new Response(JSON.stringify({data}),{status});
-beforeEach(()=>{
+beforeEach(async()=>{
+  await i18n.changeLanguage('zh-CN');
   vi.clearAllMocks();
   row={id:'m',session_id:'s',name:'Daily check',status:'active',interval_minutes:30,schedule_json:JSON.stringify({frequency:'daily',time:'09:00',timeZone:'America/New_York'}),next_run_at:'2026-10-28T13:00:00Z',running_id:null,last_error:null,consecutive_failures:0,last_result:'succeeded'};
   vi.mocked(api.monitors.summaries).mockImplementation(async()=>response({s:[row]}));

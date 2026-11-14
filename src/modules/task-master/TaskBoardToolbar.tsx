@@ -1,3 +1,5 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { useEffect, useRef, useState } from 'react';
 import {
   ChevronDown,
@@ -9,7 +11,7 @@ import {
   List,
   Plus,
   Search,
-} from 'lucide-react';
+} from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/shared/utils';
@@ -94,152 +96,152 @@ export default function TaskBoardToolbar({
     <>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <UnifiedInput
             type="text"
             value={searchTerm}
             onChange={(event) => onSearchTermChange(event.target.value)}
             placeholder={t('search.placeholder')}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            className="w-full rounded-lg border border-border bg-card py-2 pl-10 pr-4 text-foreground dark:border-border dark:bg-background dark:text-primary-foreground"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-            <button
+          <div className="flex rounded-lg bg-muted p-1 dark:bg-background">
+            <Button variant="ghost" size="compact"
               onClick={() => onViewModeChange('kanban')}
               className={cn(
                 'p-2 rounded-md',
                 viewMode === 'kanban'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
+                  ? 'bg-card dark:bg-muted text-foreground dark:text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-muted-foreground',
               )}
               title={t('views.kanban')}
             >
               <Columns className="h-4 w-4" />
-            </button>
+            </Button>
 
-            <button
+            <Button variant="ghost" size="compact"
               onClick={() => onViewModeChange('list')}
               className={cn(
                 'p-2 rounded-md',
                 viewMode === 'list'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
+                  ? 'bg-card dark:bg-muted text-foreground dark:text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-muted-foreground',
               )}
               title={t('views.list')}
             >
               <List className="h-4 w-4" />
-            </button>
+            </Button>
 
-            <button
+            <Button variant="ghost" size="compact"
               onClick={() => onViewModeChange('grid')}
               className={cn(
                 'p-2 rounded-md',
                 viewMode === 'grid'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
+                  ? 'bg-card dark:bg-muted text-foreground dark:text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-muted-foreground',
               )}
               title={t('views.grid')}
             >
               <Grid className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
 
-          <button
+          <Button variant="ghost" size="compact"
             onClick={onToggleFilters}
             className={cn(
               'flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors',
               showFilters
-                ? 'bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300'
-                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+                ? 'bg-primary/10 dark:bg-primary border-primary dark:border-primary text-primary dark:text-primary'
+                : 'bg-card dark:bg-background border-border dark:border-border text-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-muted',
             )}
           >
             <Filter className="h-4 w-4" />
             <span className="hidden sm:inline">{t('filters.button')}</span>
             <ChevronDown className={cn('w-4 h-4 transition-transform', showFilters && 'rotate-180')} />
-          </button>
+          </Button>
 
           {hasProject && (
             <>
-              <button
+              <Button variant="ghost" size="compact"
                 onClick={onOpenHelp}
-                className="rounded-lg border border-gray-300 p-2 text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-blue-400"
+                className="rounded-lg border border-border p-2 text-muted-foreground hover:bg-muted hover:text-primary dark:border-border dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-primary"
                 title={t('buttons.help')}
               >
                 <HelpCircle className="h-4 w-4" />
-              </button>
+              </Button>
 
               <div ref={dropdownRef} className="relative">
                 {existingPrds.length > 0 ? (
                   <>
-                    <button
+                    <Button variant="ghost" size="compact"
                       onClick={() => setIsPrdDropdownOpen((current) => !current)}
-                      className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 font-medium text-white hover:bg-purple-700"
+                      className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 font-medium text-primary-foreground hover:bg-primary"
                       title={t('buttons.prdsAvailable', { count: existingPrds.length })}
                     >
                       <FileText className="h-4 w-4" />
                       <span className="hidden sm:inline">{t('buttons.prds')}</span>
-                      <span className="min-w-5 rounded-full bg-purple-500 px-1.5 py-0.5 text-center text-xs">
+                      <span className="min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-center text-xs">
                         {existingPrds.length}
                       </span>
                       <ChevronDown className={cn('w-3 h-3 transition-transform hidden sm:block', isPrdDropdownOpen && 'rotate-180')} />
-                    </button>
+                    </Button>
 
                     {isPrdDropdownOpen && (
-                      <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800">
+                      <div className="absolute right-0 top-full z-30 mt-2 w-56 rounded-lg border border-border bg-card shadow-xl dark:border-border dark:bg-background">
                         <div className="p-2">
-                          <button
+                          <Button variant="ghost" size="compact"
                             onClick={() => {
                               onCreatePrd();
                               setIsPrdDropdownOpen(false);
                             }}
-                            className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm font-medium text-purple-700 hover:bg-purple-50 dark:text-purple-300 dark:hover:bg-purple-900/30"
+                            className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm font-medium text-primary hover:bg-primary/10 dark:text-primary dark:hover:bg-primary/30"
                           >
                             <Plus className="h-4 w-4" />
                             {t('buttons.createNewPRD')}
-                          </button>
+                          </Button>
 
-                          <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+                          <div className="my-1 border-t border-border dark:border-border" />
 
                           {existingPrds.map((prd) => (
-                            <button
+                            <Button variant="ghost" size="compact"
                               key={prd.name}
                               onClick={() => {
                                 onOpenPrd(prd);
                                 setIsPrdDropdownOpen(false);
                               }}
-                              className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                              className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-foreground hover:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
                             >
                               <FileText className="h-4 w-4" />
                               <span className="truncate">{prd.name}</span>
-                            </button>
+                            </Button>
                           ))}
                         </div>
                       </div>
                     )}
                   </>
                 ) : (
-                  <button
+                  <Button variant="ghost" size="compact"
                     onClick={onCreatePrd}
-                    className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 font-medium text-white hover:bg-purple-700"
+                    className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 font-medium text-primary-foreground hover:bg-primary"
                     title={t('buttons.addPRD')}
                   >
                     <FileText className="h-4 w-4" />
                     <span className="hidden sm:inline">{t('buttons.addPRD')}</span>
-                  </button>
+                  </Button>
                 )}
               </div>
 
               {(hasTaskMasterConfigured || totalTaskCount > 0) && (
-                <button
+                <Button variant="ghost" size="compact"
                   onClick={onOpenCreateTask}
-                  className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 font-medium text-white hover:bg-blue-700"
+                  className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 font-medium text-primary-foreground hover:bg-primary"
                   title={t('buttons.addTask')}
                 >
                   <Plus className="h-4 w-4" />
                   <span className="hidden sm:inline">{t('buttons.addTask')}</span>
-                </button>
+                </Button>
               )}
             </>
           )}

@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -73,16 +74,16 @@ export default function GitDiffViewer({ diff, isMobile, wrapText, filePath }: Gi
       <div
         key={index}
         className={`px-3 py-0.5 font-mono text-xs ${isMobile && wrapText ? 'whitespace-pre-wrap break-all' : 'overflow-x-auto whitespace-pre'
-          } ${isAddition ? 'bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300' :
-            isDeletion ? 'bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300' :
+          } ${isAddition ? 'bg-success/10 text-success dark:bg-success/50 dark:text-success' :
+            isDeletion ? 'bg-destructive/10 text-destructive dark:bg-destructive/50 dark:text-destructive' :
               isHeader ? 'bg-primary/5 text-primary' :
                 'text-muted-foreground/70'
           }`}
       >
         {filePath && provider === 'claude' && anchors[index] ? (
-          <button type="button" className="block w-full text-left hover:underline" disabled={Boolean(comment)}
+          <Button variant="ghost" size="compact" type="button" className="block w-full text-left hover:underline" disabled={Boolean(comment)}
             aria-label={t('desktop.commentLine', {defaultValue:'Comment on {{file}} line {{line}} ({{side}})',file:filePath,line:anchors[index].line,side:anchors[index].side})}
-            onClick={() => setComment({line:anchors[index]!.line,side:anchors[index]!.side,code:anchors[index]!.text,text:'',revision:diff})}>{line}</button>
+            onClick={() => setComment({line:anchors[index]!.line,side:anchors[index]!.side,code:anchors[index]!.text,text:'',revision:diff})}>{line}</Button>
         ) : line}
       </div>
     );
@@ -99,16 +100,16 @@ export default function GitDiffViewer({ diff, isMobile, wrapText, filePath }: Gi
       {provider === 'claude' && comment && filePath && (
         <div className="space-y-2 border-t border-border bg-background p-3" role="group" aria-label={t('desktop.reviewComment','Review comment')}>
           <p className="text-xs text-muted-foreground">{filePath}:{comment.line} ({comment.side})</p>
-          {comment.revision !== diff && <p className="text-xs text-amber-600" role="status">{t('desktop.diffChanged','The diff changed. Copy your comment, cancel, and select the current line again.')}</p>}
+          {comment.revision !== diff && <p className="text-xs text-warning" role="status">{t('desktop.diffChanged','The diff changed. Copy your comment, cancel, and select the current line again.')}</p>}
           <textarea autoFocus rows={3} className="w-full rounded border border-border bg-background p-2 text-sm"
             aria-label={t('desktop.reviewComment','Review comment')} value={comment.text}
             onChange={event => setComment({...comment,text:event.target.value})} />
           <div className="flex gap-2">
-            <button type="button" className="rounded bg-primary px-3 py-1.5 text-xs text-primary-foreground disabled:opacity-50" disabled={!comment.text.trim() || comment.revision !== diff} onClick={() => {
+            <Button variant="ghost" size="compact" type="button" className="rounded bg-primary px-3 py-1.5 text-xs text-primary-foreground disabled:opacity-50" disabled={!comment.text.trim() || comment.revision !== diff} onClick={() => {
               insertComposerText(`Review feedback for ${filePath}:${comment.line} (${comment.side} side of the displayed diff):\nCode: ${comment.code}\n${comment.text.trim()}\n`);
               setComment(null);
-            }}>{t('desktop.addReviewToDraft','Add to Claude draft')}</button>
-            <button type="button" className="rounded px-3 py-1.5 text-xs hover:bg-muted" onClick={() => setComment(null)}>{t('desktop.cancelComment','Cancel')}</button>
+            }}>{t('desktop.addReviewToDraft','Add to Claude draft')}</Button>
+            <Button variant="ghost" size="compact" type="button" className="rounded px-3 py-1.5 text-xs hover:bg-muted" onClick={() => setComment(null)}>{t('desktop.cancelComment','Cancel')}</Button>
           </div>
         </div>
       )}

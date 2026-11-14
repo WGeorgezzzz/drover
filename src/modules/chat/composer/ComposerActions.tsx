@@ -1,7 +1,8 @@
+import { Button } from '@/shared/ui/Button';
 import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus } from 'lucide-react';
+import { Plus } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { useViewportMenuAnchor } from '@/shared/hooks/useViewportMenuAnchor';
@@ -14,11 +15,11 @@ export function ComposerActions({children}:{children:ReactNode}) {
   const close = useCallback(() => setIsOpen(false), []);
   const { triggerRef, menuRef, anchor, updateAnchor } = useViewportMenuAnchor(isOpen, close, 256, 'above', 'left');
   return <div className="composer-actions">
-    <button ref={triggerRef} type="button" aria-label={t('ui.addContext')} title={t('ui.addContext')}
+    <Button variant="ghost" size="compact" ref={triggerRef} type="button" aria-label={t('ui.addContext')} title={t('ui.addContext')}
       aria-expanded={isOpen} className="workspace-icon-button !h-10 !w-10 shrink-0" onClick={() => {
         updateAnchor();
         setIsOpen(open => !open);
-      }}><Plus size={18}/></button>
+      }}><Plus size={18}/></Button>
     {createPortal(<div ref={menuRef} role="group" aria-label={t('ui.moreActions')}
       className="composer-actions-menu fixed z-[100] overflow-y-auto overflow-x-hidden overscroll-contain rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-lg"
       style={{ ...anchor, width: anchor?.maxWidth, display: isOpen && anchor ? undefined : 'none' }}>

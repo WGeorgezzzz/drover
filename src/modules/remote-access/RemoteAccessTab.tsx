@@ -1,5 +1,7 @@
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
+import { Select } from '@/shared/ui/Select';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Copy, Download, ExternalLink, LogIn, Play, RefreshCw, Square } from 'lucide-react';
+import { Copy, Download, ExternalLink, LogIn, Play, RefreshCw, Square } from '@/shared/icons';
 import { api } from '@/shared/api';
 import { Button } from '@/shared/ui';
 import { qrcodegen } from '@/modules/remote-access/qr-code-generator';
@@ -84,24 +86,24 @@ export function RemoteAccessTab() {
       <p className="mt-2 break-all text-sm text-muted-foreground">{status?.customDomain.enabled && status.customDomain.host ? `Cloudflare Tunnel + Access · ${status.customDomain.host}` : '未配置'}</p>
     </section>
     <section className="space-y-3 border-b border-border pb-4">
-      <h3 className="text-sm font-semibold">Microsoft Dev Tunnels <span className="ml-2 text-xs font-normal text-emerald-600">推荐</span></h3>
+      <h3 className="text-sm font-semibold">Microsoft Dev Tunnels <span className="ml-2 text-xs font-normal text-success">推荐</span></h3>
       {!status?.tools.devtunnel && <Button size="sm" variant="outline" onClick={() => void action(api.remoteAccess.install)} disabled={disabled}><Download className="mr-2 h-4 w-4" />下载官方 CLI</Button>}
       <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="outline" disabled={disabled || !status?.tools.devtunnel} onClick={() => void action(api.remoteAccess.login)}><LogIn className="mr-2 h-4 w-4" />GitHub 账号登录</Button>
         <Button size="sm" disabled={disabled || !status?.tools.devtunnel} onClick={() => void start('devtunnel')}><Play className="mr-2 h-4 w-4" />启动持久隧道</Button>
       </div>
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={publicAccess} onChange={e => setPublicAccess(e.target.checked)} />任何人可访问（仍需驭手登录）</label>
+      <label className="flex items-center gap-2 text-sm"><UnifiedCheckbox  checked={publicAccess} onChange={e => setPublicAccess(e.target.checked)} />任何人可访问（仍需驭手登录）</label>
       {status?.login.phase === 'pending' && <div role="status" className="space-y-2 rounded border border-border p-3">
         <p className="text-sm">GitHub 设备授权</p><strong className="block font-mono text-xl">{status.login.code || '正在获取设备码…'}</strong>
         {status.login.url && <a href={status.login.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 break-all text-sm text-primary underline"><ExternalLink className="h-4 w-4 shrink-0" />{status.login.url}</a>}
       </div>}
-      {status?.login.phase === 'authenticated' && <p className="text-sm text-emerald-600">GitHub 已授权</p>}
+      {status?.login.phase === 'authenticated' && <p className="text-sm text-success">GitHub 已授权</p>}
       {status?.login.error && <p role="alert" className="text-sm text-destructive">{status.login.error}</p>}
     </section>
     <section className="space-y-3 border-b border-border pb-4">
       <h3 className="text-sm font-semibold">Tailscale</h3>
       <div className="flex flex-wrap gap-2">
-        <select aria-label="Tailscale 访问范围" value={tailscaleMode} onChange={e => setTailscaleMode(e.target.value)} className="max-w-full rounded border border-border bg-background p-2 text-sm"><option value="tailscale-serve">Serve · 仅自己的 tailnet</option><option value="tailscale-funnel">Funnel · 公网</option></select>
+        <Select aria-label="Tailscale 访问范围" value={tailscaleMode} onChange={e => setTailscaleMode(e.target.value)} className="max-w-full rounded border border-border bg-background p-2 text-sm"><option value="tailscale-serve">Serve · 仅自己的 tailnet</option><option value="tailscale-funnel">Funnel · 公网</option></Select>
         <Button size="sm" variant="outline" disabled={disabled || !status?.tools.tailscale} onClick={() => void start(tailscaleMode)}><Play className="mr-2 h-4 w-4" />启动</Button>
         <Button size="sm" variant="ghost" disabled={disabled || !status?.tools.tailscale} onClick={() => void action(async () => { const r = await api.remoteAccess.tailscale(); if (r.ok) { const body = await r.clone().json(); setTailscaleStatus(JSON.stringify(body.serve, null, 2)); } return r; })}><RefreshCw className="mr-2 h-4 w-4" />检测 Serve 状态</Button>
       </div>

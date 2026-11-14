@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen } from '@/shared/icons';
 
 import { Button, Input } from '@/shared/ui';
 import { browseFilesystemFolders } from '@/modules/project-creation-wizard/utils/workspaceApi';
@@ -96,16 +96,16 @@ export default function WorkspacePathField({
           />
 
           {showPathDropdown && pathSuggestions.length > 0 && (
-            <div className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+            <div className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-border bg-card shadow-lg dark:border-border dark:bg-background">
               {pathSuggestions.map((suggestion) => (
-                <button
+                <Button variant="ghost" size="compact"
                   key={suggestion.path}
                   onClick={() => handleSuggestionSelect(suggestion)}
-                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-muted dark:hover:bg-muted"
                 >
-                  <div className="font-medium text-gray-900 dark:text-white">{suggestion.name}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{suggestion.path}</div>
-                </button>
+                  <div className="font-medium text-foreground dark:text-primary-foreground">{suggestion.name}</div>
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground">{suggestion.path}</div>
+                </Button>
               ))}
             </div>
           )}

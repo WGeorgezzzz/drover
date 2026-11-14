@@ -1,9 +1,10 @@
+import { Button } from '@/shared/ui/Button';
 import { downloadFile } from '@/shared/download';
 import { useContext, useEffect, useRef, useState } from 'react';
 import type { AnchorHTMLAttributes } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Copy, ExternalLink, FileText } from 'lucide-react';
+import { Copy, ExternalLink, FileText } from '@/shared/icons';
 
 import { MarkdownWorkspaceContext } from '@/modules/chat/context/MarkdownWorkspaceContext';
 import { isAbbreviatedFileReference, parseLocalFileLink } from '@/modules/chat/utils/localFileLink';
@@ -205,14 +206,14 @@ export function LocalFileLink({ fileReference, directories = [], onPreview, chil
       }}>{children}</a>
     {choices && <span role="group" aria-label="匹配的文件" className="ml-2 inline-flex flex-wrap items-center gap-1 align-middle text-xs">
       <span className="text-muted-foreground">找到多个同名文件（{choices.paths.length} 个匹配文件），请选择：</span>
-      {choices.paths.map(path => <button key={path} type="button" title={path}
+      {choices.paths.map(path => <Button variant="ghost" size="compact" key={path} type="button" title={path}
         className="rounded border border-border px-1.5 py-0.5 font-mono hover:bg-accent"
         onClick={() => {
           const { action } = choices; setChoices(null);
           void Promise.resolve().then(() => action(path)).catch(reason => setError(reason instanceof Error ? reason.message : String(reason)));
-        }}>{choices.paths.filter(candidate=>candidate.split('/').pop()===path.split('/').pop()).length>1?path:path.split('/').pop()}</button>)}
+        }}>{choices.paths.filter(candidate=>candidate.split('/').pop()===path.split('/').pop()).length>1?path:path.split('/').pop()}</Button>)}
     </span>}
-    {error && <span role="alert" className="ml-2 text-xs text-red-600 dark:text-red-400">{error}</span>}
+    {error && <span role="alert" className="ml-2 text-xs text-destructive dark:text-destructive">{error}</span>}
     {position && createPortal(<div ref={menuRef} role="menu" aria-label={t('fileLink.menu', 'File actions')}
       className="fixed z-[10000] overflow-y-auto overflow-x-hidden overscroll-contain rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg"
       style={{ left: position.x, top: position.y, width: position.width, maxHeight: position.maxHeight }}
@@ -224,12 +225,12 @@ export function LocalFileLink({ fileReference, directories = [], onPreview, chil
         const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (current + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length;
         buttons[next]?.focus();
       }}>
-      <button type="button" role="menuitem" className={menuClass} onClick={() => void download()}>下载</button>
-      <button type="button" role="menuitem" className={menuClass} disabled={opening} onClick={() => void openLocally()}><ExternalLink size={15}/>{t('fileLink.openLocally', 'Open locally')}</button>
-      <button type="button" role="menuitem" className={menuClass} onClick={() => { setPosition(null); linkRef.current?.click(); }}><FileText size={15}/>{t('fileLink.preview', 'Preview in Drover')}</button>
-      <button type="button" role="menuitem" className={menuClass} onClick={() => void reveal()}>打开所在文件夹</button>
-      <button type="button" role="menuitem" className={menuClass} onClick={() => void copyPath(true)}>复制文件夹路径</button>
-      <button type="button" role="menuitem" className={menuClass} onClick={() => void copyPath()}><Copy size={15}/>{t('fileLink.copyPath', 'Copy file path')}</button>
+      <Button variant="ghost" size="compact" type="button" role="menuitem" className={menuClass} onClick={() => void download()}>下载</Button>
+      <Button variant="ghost" size="compact" type="button" role="menuitem" className={menuClass} disabled={opening} onClick={() => void openLocally()}><ExternalLink size={15}/>{t('fileLink.openLocally', 'Open locally')}</Button>
+      <Button variant="ghost" size="compact" type="button" role="menuitem" className={menuClass} onClick={() => { setPosition(null); linkRef.current?.click(); }}><FileText size={15}/>{t('fileLink.preview', 'Preview in Drover')}</Button>
+      <Button variant="ghost" size="compact" type="button" role="menuitem" className={menuClass} onClick={() => void reveal()}>打开所在文件夹</Button>
+      <Button variant="ghost" size="compact" type="button" role="menuitem" className={menuClass} onClick={() => void copyPath(true)}>复制文件夹路径</Button>
+      <Button variant="ghost" size="compact" type="button" role="menuitem" className={menuClass} onClick={() => void copyPath()}><Copy size={15}/>{t('fileLink.copyPath', 'Copy file path')}</Button>
     </div>, document.body)}
   </>;
 }

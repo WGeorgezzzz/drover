@@ -10,6 +10,7 @@ import { PluginsProvider } from '@/modules/plugins';
 import { ProjectWorkspaceRoute } from '@/modules/project-workspace';
 import { i18n } from '@/modules/i18n';
 import { DesktopUpdateBanner } from '@/shared/ui/DesktopUpdateBanner';
+import { NotificationCenter } from '@/modules/notifications';
 
 const DEPLOYMENT_ASSET_DIRECTORIES = new Set(['assets', 'static', 'icons', 'images']);
 
@@ -122,6 +123,7 @@ export default function App() {
                 <ProtectedRoute>
                   <DesktopUpdateBanner />
                   <Router basename={routerBasename}>
+                    <NotificationCenter />
                     <Routes>
                       <Route path="/" element={<ProjectWorkspaceRoute />} />
                       <Route path="/remote/h200/:remoteId" element={<ProjectWorkspaceRoute />} />

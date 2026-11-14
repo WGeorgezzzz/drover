@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
+import { DialogSurface } from '@/shared/ui/Dialog';
 
 import { useDeviceSettings } from '@/shared/hooks/useDeviceSettings';
 import { useProjectSlashCommands } from '@/shared/hooks/useProjectSlashCommands';
@@ -153,21 +154,16 @@ function QuickSettingsPanelView({ selectedProject, onInsertCommand }: QuickSetti
             {panelBody}
           </div>
         )
-      ) : (
+      ) : isOpen ? (
+        <DialogSurface onClose={close}>
           <div
             aria-hidden={!isOpen}
             className={`fixed right-0 top-0 z-[9999] h-full w-64 transform border-l border-border bg-background shadow-xl transition-transform duration-150 ease-out ${isOpen ? 'translate-x-0' : 'invisible translate-x-full'} ${isMobile ? 'h-screen' : ''}`}
         >
           {panelBody}
         </div>
-      )}
-
-      {isOpen && !isPinned && (
-        <div
-          className="fixed inset-0 z-[9998] bg-background/80 backdrop-blur-sm transition-opacity duration-150 ease-out"
-          onClick={close}
-        />
-      )}
+        </DialogSurface>
+      ) : null}
     </>
   );
 }

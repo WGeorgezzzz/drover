@@ -23,6 +23,8 @@ export const buttonVariants = cva(
         sm: 'h-9 rounded-md px-3 text-sm',
         lg: 'h-11 rounded-md px-8',
         icon: 'h-10 w-10',
+        'icon-sm': 'h-8 w-8 [&_svg]:size-3.5',
+        compact: 'min-h-6 px-2 py-1 text-sm',
       },
     },
     defaultVariants: {

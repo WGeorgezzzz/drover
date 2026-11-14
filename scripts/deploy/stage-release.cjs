@@ -2,7 +2,7 @@ const fs=require('fs'),path=require('path'),crypto=require('crypto'),{execFileSy
 const src=process.cwd(),target=path.resolve(process.argv[2]||'../release-1'),root=path.dirname(target),app='C:/Users/73505/AppData/Local/Programs/Claudex-local-0.8.0/resources/app';
 if(execFileSync('git',['status','--porcelain'],{cwd:src,encoding:'utf8'}).trim())throw Error('Source must be clean before build');
 const gitBefore=execFileSync('git',['rev-parse','HEAD'],{cwd:src,encoding:'utf8'}).trim();
-execFileSync(process.platform==='win32'?'cmd.exe':'npm',process.platform==='win32'?['/c','npm run build']:['run','build'],{cwd:src,stdio:'inherit',windowsHide:true,env:{...process.env,NODE_OPTIONS:''}});
+ execFileSync(process.platform==='win32'?'cmd.exe':'npm',process.platform==='win32'?['/c','npm run build']:['run','build'],{cwd:src,stdio:'inherit',windowsHide:true,env:{...process.env,NODE_OPTIONS:process.env.NODE_OPTIONS || '--max-old-space-size=1536 --max-semi-space-size=4'}});
 if(gitBefore!==execFileSync('git',['rev-parse','HEAD'],{cwd:src,encoding:'utf8'}).trim())throw Error('Source changed during build');
 if(execFileSync('git',['status','--porcelain'],{cwd:src,encoding:'utf8'}).trim())throw Error('Source changed during build');
 if(fs.existsSync(target))throw Error('Refuse to overwrite an existing release');

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { BrainIcon, ChevronDownIcon } from 'lucide-react';
+import { BrainIcon, ChevronDownIcon } from '@/shared/icons';
 
 import { cn } from '@/shared/utils';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger, Shimmer } from '@/shared/ui';

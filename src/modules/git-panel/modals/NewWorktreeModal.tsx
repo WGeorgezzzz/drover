@@ -1,4 +1,9 @@
-import { GitFork, RefreshCw } from 'lucide-react';
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
+import { Button } from '@/shared/ui/Button';
+import { Select } from '@/shared/ui/Select';
+import { GitFork, RefreshCw } from '@/shared/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -85,14 +90,8 @@ export default function NewWorktreeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="new-worktree-title"
-      >
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) onClose(); }}><UnifiedDialogContent wrapperClassName="z-50" className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+        aria-labelledby="new-worktree-title">
         <div className="p-6">
           <h3 id="new-worktree-title" className="mb-1 text-lg font-semibold text-foreground">
             {t('git:newWorktree.title')}
@@ -105,7 +104,7 @@ export default function NewWorktreeModal({
             <label htmlFor="worktree-branch-name" className="mb-2 block text-sm font-medium text-foreground/80">
               {t('git:newWorktree.branchLabel')}
             </label>
-            <input
+            <UnifiedInput
               id="worktree-branch-name"
               type="text"
               value={branchName}
@@ -140,7 +139,7 @@ export default function NewWorktreeModal({
               <label htmlFor="worktree-base-branch" className="mb-2 block text-sm font-medium text-foreground/80">
                 {t('git:newWorktree.createFromLabel')}
               </label>
-              <select
+              <Select
                 id="worktree-base-branch"
                 value={selectedBaseBranch}
                 onChange={(event) => setSelectedBaseBranch(event.target.value)}
@@ -151,7 +150,7 @@ export default function NewWorktreeModal({
                     {branch}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           )}
 
@@ -162,8 +161,8 @@ export default function NewWorktreeModal({
           )}
 
           <label className="mb-4 flex cursor-pointer items-center gap-2 text-sm text-foreground/80">
-            <input
-              type="checkbox"
+            <UnifiedCheckbox
+
               checked={openAfterCreate}
               onChange={(event) => setOpenAfterCreate(event.target.checked)}
               className="h-4 w-4 rounded border-border accent-primary"
@@ -172,13 +171,13 @@ export default function NewWorktreeModal({
           </label>
 
           <div className="flex justify-end space-x-3">
-            <button
+            <Button variant="ghost" size="compact"
               onClick={onClose}
               className="rounded-lg px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               {t('git:confirm.cancel')}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="compact"
               onClick={() => void handleCreate()}
               disabled={!trimmedBranch || isCreating}
               className="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
@@ -194,10 +193,9 @@ export default function NewWorktreeModal({
                   <span>{t('git:newWorktree.create')}</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </UnifiedDialogContent></UnifiedDialog>
   );
 }

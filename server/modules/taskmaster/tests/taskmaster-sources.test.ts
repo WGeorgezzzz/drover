@@ -30,6 +30,9 @@ test('sources report actual connector errors; explicit HTTP collection imports v
   process.env.TASKMASTER_INBOX_ROOT=path.join(root,'inbox');process.env.TASKMASTER_REPORTS_ROOT=reports;process.env.CLAUDEX_PASSIVE_INSTANCE='1';
   let polls=0;const unit={id:9876,kind:'todo',status:'open',title:'来源回放测试',for_me:1,updated_at:Math.floor(Date.now()/1000),tags:[],parents:[],messages:[{id:1,source:'lark',link:'https://example.test/original',text:'测试待办'}]};
   const hub=createServer((req,res)=>{res.setHeader('content-type','application/json');if(req.url==='/api/poll')polls++;
+    // This fixture models the legacy API. Unsupported modern endpoints must
+    // return 404 so collection/snapshot compatibility is actually exercised.
+    if (req.url?.startsWith('/api/collect') || req.url === '/api/task-snapshot') {res.statusCode=404;res.end('{}');return;}
     res.end(JSON.stringify(req.url?.startsWith('/api/status')?{latest:[{layer:'sync',source:'lark:org1',status:'error',error:'token_missing need_user_authorization',finished_at:100},{layer:'sync',source:'wechat',status:'error',error:'WeChat is not running',finished_at:100}],totals:{sources:{'lark:org1':7}}}:req.url?.startsWith('/api/units')?[unit]:req.url==='/api/tags'?[]:req.url?.startsWith('/api/unit/')?unit:{ok:true}));});
   hub.listen(0,'127.0.0.1');await once(hub,'listening');process.env.INFOHUB_BASE_URL='http://127.0.0.1:'+(hub.address() as AddressInfo).port;
   let actor=testUserId();const member=Number(userDb.createUser('sources-member','unused').id);
@@ -48,7 +51,7 @@ test('sources report actual connector errors; explicit HTTP collection imports v
     await withUserContext(testUserId(),async()=>{
       const tasks=(await taskmasterWorkspace.list(process.env.TASKMASTER_INBOX_ROOT!,testUserId())).tasks;assert.equal(tasks.length,1);assert.equal(tasks[0].sourceId,'9876');
       const intelligence=await taskIntelligenceService.snapshot();const row=intelligence.tasks.find(row=>row.task.sourceId==='9876');assert.ok(row?.analysis);assert.equal(row.task.evidenceLink,'/infohub?unit=9876');assert.ok(intelligence.groups.some(g=>g.memberIds.includes(row.id)));
-      assert.equal(row.analysis.next_action,'查看原消息并处理');assert.equal(intelligence.groups.find(g=>g.memberIds.includes(row.id))?.name,'信息看板');
+      assert.equal(row.analysis.next_action,'查看 InfoHub 原始来源并处理');assert.equal(intelligence.groups.find(g=>g.memberIds.includes(row.id))?.name,'未归类待办');
       const db=getConnection(),at=new Date().toISOString();
       db.prepare('INSERT INTO monitors(id,user_id,session_id,name,content,options,interval_minutes,next_run_at,created_at) VALUES (?,?,?,?,?,?,?,?,?)').run('sources-monitor',testUserId(),'source-monitor-session','来源回放测试','测试监测','{}',60,at,at);
       db.prepare('INSERT INTO monitor_runs(id,monitor_id,started_at,finished_at,status,report) VALUES (?,?,?,?,?,?)').run('sources-monitor-run','sources-monitor',at,at,'succeeded','来源回放测试已完成，保留真实监测报告证据。');

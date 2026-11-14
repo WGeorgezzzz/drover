@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy } from '@/shared/icons';
 
 import { api } from '@/shared/api';
 import { copyTextToClipboard } from '@/shared/utils';

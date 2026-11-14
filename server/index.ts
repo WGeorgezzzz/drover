@@ -17,6 +17,7 @@ import http from 'http';
 
 import express, { type NextFunction, type Request, type Response } from 'express';
 import cors from 'cors';
+import { apiErrorResponses } from './shared/api-errors.js';
 import { projectOrganizationRoutes } from '@/modules/project-organization/index.js';
 
 import { monitorsRoutes, initializeMonitors, closeMonitors } from '@/modules/monitors/index.js';
@@ -155,6 +156,7 @@ createWebSocketServer(server, {
     getPluginPort,
 });
 
+app.use(apiErrorResponses);
 app.use(accessBoundaryMiddleware);
 app.use(cors({ exposedHeaders: ['X-Refreshed-Token', 'X-Auth-Error'] }));
 app.use(express.json({

@@ -1,7 +1,9 @@
+import { DialogSurface } from '@/shared/ui/Dialog';
+import { Button } from '@/shared/ui/Button';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import type { ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Check, X, Loader2, Folder, Upload } from 'lucide-react';
+import { AlertTriangle, Check, X, Loader2, Folder, Upload } from '@/shared/icons';
 
 import { cn } from '@/shared/utils';
 import { ICON_SIZE_CLASS, getFileIconData } from '@/modules/file-tree/utils/fileIcons';
@@ -214,9 +216,9 @@ export default function FileTree({ selectedProject, onFileOpen, revealDirectory 
 
       {/* Drag overlay; pointer-events-none keeps folder rows reachable as drop targets */}
       {upload.isDragOver && (
-        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-blue-500 bg-blue-500/10">
+        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-primary/10">
           <div className="flex items-center gap-3 rounded-lg bg-background/95 px-6 py-4 shadow-lg">
-            <Upload className="h-6 w-6 text-blue-500" />
+            <Upload className="h-6 w-6 text-primary" />
             <span className="text-sm font-medium">
               {upload.dropTarget
                 ? t('fileTree.dropToUploadTo', 'Drop files to upload to "{{folder}}"', {
@@ -258,7 +260,7 @@ export default function FileTree({ selectedProject, onFileOpen, revealDirectory 
             style={{ paddingLeft: `${(operations.newItemParent.split('/').length - 1) * 16 + 4}px` }}
           >
             {operations.newItemType === 'directory' ? (
-              <Folder className={cn(ICON_SIZE_CLASS, 'text-blue-500')} />
+              <Folder className={cn(ICON_SIZE_CLASS, 'text-primary')} />
             ) : (
               <span className="ml-[18px]">{renderFileIcon(operations.newItemName)}</span>
             )}
@@ -324,11 +326,11 @@ export default function FileTree({ selectedProject, onFileOpen, revealDirectory 
 
       {/* Delete Confirmation Dialog */}
       {operations.deleteConfirmation.isOpen && operations.deleteConfirmation.item && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+        <DialogSurface className="fixed inset-0 z-[9999] flex items-center justify-center "  onClose={() => { if (!operationLoading) operations.handleCancelDelete(); }}>
           <div className="mx-4 max-w-sm rounded-lg border border-border bg-background p-4 shadow-lg">
             <div className="mb-4 flex items-center gap-3">
-              <div className="rounded-full bg-red-100 p-2 dark:bg-red-900/30">
-                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="rounded-full bg-destructive/10 p-2 dark:bg-destructive/30">
+                <AlertTriangle className="h-5 w-5 text-destructive dark:text-destructive" />
               </div>
               <div>
                 <h3 className="font-medium text-foreground">
@@ -347,24 +349,24 @@ export default function FileTree({ selectedProject, onFileOpen, revealDirectory 
                 : t('fileTree.delete.fileWarning', 'This file will be permanently deleted.')}
             </p>
             <div className="flex justify-end gap-2">
-              <button
+              <Button variant="ghost" size="compact"
                 onClick={operations.handleCancelDelete}
                 disabled={operationLoading}
                 className="rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-accent"
               >
                 {t('common.cancel', 'Cancel')}
-              </button>
-              <button
+              </Button>
+              <Button variant="ghost" size="compact"
                 onClick={operations.handleConfirmDelete}
                 disabled={operationLoading}
-                className="flex items-center gap-2 rounded-md bg-red-600 px-3 py-1.5 text-sm text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-md bg-destructive px-3 py-1.5 text-sm text-primary-foreground transition-colors hover:bg-destructive disabled:opacity-50"
               >
                 {operationLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 {t('fileTree.delete.confirm', 'Delete')}
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
+        </DialogSurface>
       )}
 
       {/* Toast Notification */}
@@ -373,8 +375,8 @@ export default function FileTree({ selectedProject, onFileOpen, revealDirectory 
           className={cn(
             'fixed bottom-4 right-4 z-[9999] px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-2',
             toast.type === 'success'
-              ? 'bg-green-600 text-white'
-              : 'bg-red-600 text-white'
+              ? 'bg-success text-primary-foreground'
+              : 'bg-destructive text-primary-foreground'
           )}
         >
           {toast.type === 'success' ? (

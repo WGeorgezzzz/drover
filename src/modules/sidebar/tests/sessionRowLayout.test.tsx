@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import type { TFunction } from 'i18next';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from '@/shared/icons';
 import { SessionRow } from '@/modules/sidebar/SessionRow';
 import { ActionMenu } from '@/shared/ui';
 
@@ -20,7 +20,7 @@ test('title is separate from fixed provider and right status slots, with one men
   expect(container.querySelector('[data-session-status] [data-testid="badges"]')).not.toBeNull();
   expect(container.querySelector('[data-provider-slot]')).not.toBeNull();
   expect(container.querySelector('[data-session-row]')?.className).toContain('pl-6');
-  expect(container.querySelector('[role="status"]')?.className).toContain('bg-amber-500');
+  expect(container.querySelector('[role="status"]')?.className).toContain('bg-warning');
   expect(container.querySelector('[role="status"]')?.parentElement?.className).not.toContain('-translate-x');
   expect(container.querySelectorAll('[aria-haspopup="menu"]')).toHaveLength(1);
 });

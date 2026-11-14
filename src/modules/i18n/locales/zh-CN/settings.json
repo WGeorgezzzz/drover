@@ -170,6 +170,21 @@
       "actionRequired": "需要处理",
       "stop": "运行已停止",
       "error": "运行失败"
+    },
+    "notice": {
+      "stop": "已完成未读",
+      "actionRequired": "等你回答",
+      "error": "回合执行失败",
+      "close": "关闭提醒",
+      "inApp": "应用内提醒",
+      "system": "系统通知",
+      "permission": "权限状态",
+      "request": "请求权限",
+      "test": "发送测试通知",
+      "unsupported": "系统通知不可用",
+      "granted": "已允许",
+      "denied": "已拒绝",
+      "default": "尚未请求"
     }
   },
   "appearanceSettings": {
@@ -295,7 +310,7 @@
     "title": "API 密钥",
     "description": "生成 API 密钥以从其他应用访问外部 API。",
     "newKey": {
-      "alertTitle": "⚠️ 保存您的 API 密钥",
+      "alertTitle": "保存您的 API 密钥",
       "alertMessage": "这是您唯一一次看到此密钥。请妥善保存。",
       "iveSavedIt": "我已保存"
     },
@@ -717,5 +732,14 @@
     "area": "堆叠面积",
     "empty": "此时间段暂无用量",
     "failed": "用量加载失败"
+  },
+  "taskAutomation": {
+    "enabled": "自动从对话整理任务（默认开启）",
+    "suggestOnly": "只建议，确认后才写入任务",
+    "project": "在此项目自动整理",
+    "description": "回复结束并空闲 90 秒后增量整理；低置信度保留为建议。无项目对话跳过。每次更改可在记录中撤销。",
+    "loading": "正在读取任务设置…",
+    "loadFailed": "无法读取任务设置",
+    "saveFailed": "无法保存任务设置"
   }
 }

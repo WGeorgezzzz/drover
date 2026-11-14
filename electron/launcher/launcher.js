@@ -88,26 +88,9 @@ window.__MOCK_STATE__ = {
 
   var bridge = window.cloudcliDesktop || mockBridge;
 
-  var ICONS = {
-    terminal: '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>',
-    cloud: '<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9 4 4 0 0 0 7 19z"/>',
-    refresh: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
-    settings: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
-    gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6l-.03.08a2 2 0 1 1-3.94 0L10 20a1.7 1.7 0 0 0-1-.6 1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1l-.08-.03a2 2 0 1 1 0-3.94L4 10a1.7 1.7 0 0 0 .6-1 1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6l.03-.08a2 2 0 1 1 3.94 0L14 4a1.7 1.7 0 0 0 1 .6 1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.36.4.7.6 1l.08.03a2 2 0 1 1 0 3.94L20 14a1.7 1.7 0 0 0-.6 1z"/>',
-    play: '<polygon points="6 4 20 12 6 20 6 4"/>',
-    arrow: '<line x1="7" y1="17" x2="17" y2="7"/><polyline points="8 7 17 7 17 16"/>',
-    copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
-    cloudPlus: '<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.34 9 4 4 0 0 0 7 19z"/><line x1="12" y1="9" x2="12" y2="15"/><line x1="9" y1="12" x2="15" y2="12"/>',
-    monitor: '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
-    phone: '<rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/>',
-    x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
-    logOut: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
-  };
-  var FILLED = { play: true };
-
+  var ICONS = window.DROVER_ICONS;
   function icon(name, size) {
-    size = size || 16;
-    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="' + (FILLED[name] ? 'currentColor' : 'none') + '" stroke="' + (FILLED[name] ? 'none' : 'currentColor') + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name] || '') + '</svg>';
+    return (ICONS[name] || '').replace(/(width|height)="16"/g, '$1="' + (size || 16) + '"');
   }
 
   function esc(value) {
@@ -120,12 +103,12 @@ window.__MOCK_STATE__ = {
 
   function statusMeta(status) {
     var map = {
-      running: { label: 'Running', cls: 'ok', dot: '#10b981', verb: 'Opening', open: 'Open' },
-      starting: { label: 'Starting', cls: 'warn', dot: '#f59e0b', verb: 'Starting', open: 'Open', busy: true },
-      stopped: { label: 'Stopped', cls: 'idle', dot: '#6b7280', verb: 'Starting', open: 'Start & open' },
-      paused: { label: 'Paused', cls: 'warn', dot: '#f59e0b', verb: 'Resuming', open: 'Resume' },
+      running: { label: 'Running', cls: 'ok', dot: 'var(--ok)', verb: 'Opening', open: 'Open' },
+      starting: { label: 'Starting', cls: 'warn', dot: 'var(--warn)', verb: 'Starting', open: 'Open', busy: true },
+      stopped: { label: 'Stopped', cls: 'idle', dot: 'var(--tx3)', verb: 'Starting', open: 'Start & open' },
+      paused: { label: 'Paused', cls: 'warn', dot: 'var(--warn)', verb: 'Resuming', open: 'Resume' },
     };
-    return map[status] || { label: status || 'Unknown', cls: 'idle', dot: '#6b7280', verb: 'Starting', open: 'Start & open' };
+    return map[status] || { label: status || 'Unknown', cls: 'idle', dot: 'var(--tx3)', verb: 'Starting', open: 'Start & open' };
   }
 
   function connected(state) {

@@ -17,7 +17,7 @@ export function unknownInvocation(text:string,commands:SlashCommand[],provider:s
 /** Exact same character widths as the textarea; styling never shifts caret positions. */
 export function renderInvocationTokens(text:string,commands:SlashCommand[],files:string[]=[],overlay=false){
   const ranges=invocationRanges(text,commands,files);if(!ranges.length)return text;
-  const nodes=[];let offset=0;for(const range of ranges){nodes.push(text.slice(offset,range.start));nodes.push(<span key={range.start} data-invocation-token={range.kind} className={'rounded-md box-decoration-clone '+(range.kind==='file'?'bg-blue-200/70 dark:bg-blue-300/30':'bg-violet-200/70 dark:bg-violet-400/25')+(overlay?' text-transparent':' px-0.5 font-medium')} title={range.kind==='file'?'文件引用':range.kind==='skill'?'技能':'命令'}>{range.name}</span>);offset=range.end;}nodes.push(text.slice(offset));return nodes;
+  const nodes=[];let offset=0;for(const range of ranges){nodes.push(text.slice(offset,range.start));nodes.push(<span key={range.start} data-invocation-token={range.kind} className={'rounded-md box-decoration-clone '+(range.kind==='file'?'bg-primary/10 dark:bg-primary/30':'bg-primary/10 dark:bg-primary/25')+(overlay?' text-transparent':' px-0.5 font-medium')} title={range.kind==='file'?'文件引用':range.kind==='skill'?'技能':'命令'}>{range.name}</span>);offset=range.end;}nodes.push(text.slice(offset));return nodes;
 }
 export function removeInvocationAtCaret(text:string,caret:number,key:string,commands:SlashCommand[],files:string[]=[]){
   if(key!=='Backspace'&&key!=='Delete')return null;

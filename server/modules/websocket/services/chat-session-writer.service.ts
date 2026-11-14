@@ -1,4 +1,4 @@
-import { WS_OPEN_STATE } from '@/modules/websocket/services/websocket-state.service.js';
+import { WS_OPEN_STATE, connectedClients, clientUserIds } from '@/modules/websocket/services/websocket-state.service.js';
 import type {
   LLMProvider,
   NormalizedMessage,
@@ -169,6 +169,18 @@ export class ChatSessionWriter {
         connection.send(payload);
       } else {
         this.connections.delete(connection);
+      }
+    }
+
+    // A phone or another tab need not subscribe to a run to learn that it needs
+    // attention. Use a separate envelope so unrelated chat reducers never consume
+    // a terminal frame for the session currently displayed in that other tab.
+    if (this.userId != null && ['complete', 'permission_request', 'permission_resolved', 'permission_cancelled', 'interactive_prompt'].includes(message.kind)) {
+      const notice = JSON.stringify({ type: 'session_notice', event: message });
+      for (const client of connectedClients) {
+        if (!this.connections.has(client) && client.readyState === WS_OPEN_STATE && clientUserIds.get(client) === Number(this.userId)) {
+          client.send(notice);
+        }
       }
     }
   }

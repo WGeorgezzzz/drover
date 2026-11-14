@@ -1,11 +1,13 @@
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
+import { Button } from '@/shared/ui/Button';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { X } from '@/shared/icons';
 
 import { StandaloneShell } from '@/modules/standalone-shell';
 import { IS_PLATFORM } from '@/shared/utils';
 import type { LLMProvider } from '@/shared/types';
-import { authenticatedFetch } from '@/shared/api';
-const apiCallOpenGemini=()=>authenticatedFetch('/api/providers/gemini/open',{method:'POST'});
+import { api } from '@/shared/api';
+const apiCallOpenGemini=()=>api.geminiDesktop.open();
 
 /**
  * For empty shell instances where no project is provided,
@@ -86,32 +88,28 @@ export default function ProviderLoginModal({
     return null;
   }
 
-  if (provider === 'gemini') return <div role="dialog" className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-5"><div className="max-w-md rounded-xl bg-background p-5"><h2 className="text-lg font-semibold">Gemini / Antigravity</h2><p className="my-3 text-sm text-muted-foreground">使用本机 Gemini 登录。当前服务商可能限制地区，原生历史以只读摘要导入；完整会话请在桌面版查看。</p><button className="min-h-10 rounded border px-3" onClick={()=>void apiCallOpenGemini()}>在 Gemini 桌面版中打开</button><button className="ml-3 min-h-10 px-3" onClick={onClose}>关闭</button></div></div>;
+  if (provider === 'gemini') return <UnifiedDialog open onOpenChange={(open) => { if (!open) { onClose(); } }}><UnifiedDialogContent wrapperClassName="z-50"  className="max-w-md rounded-xl bg-background p-5"><h2 className="text-lg font-semibold">Gemini / Antigravity</h2><p className="my-3 text-sm text-muted-foreground">使用本机 Gemini 登录。当前服务商可能限制地区，原生历史以只读摘要导入；完整会话请在桌面版查看。</p><Button variant="ghost" size="compact" className="min-h-10 rounded border px-3" onClick={()=>void apiCallOpenGemini()}>在 Gemini 桌面版中打开</Button><Button variant="ghost" size="compact" className="ml-3 min-h-10 px-3" onClick={onClose}>关闭</Button></UnifiedDialogContent></UnifiedDialog>;
   if (provider === 'deepseek-harness') return (
-    <div data-escape-layer className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-      <div role="dialog" aria-label="DeepSeek Harness" className="m-4 w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) onClose(); }}><UnifiedDialogContent wrapperClassName="z-[9999]" aria-label="DeepSeek Harness" className="m-4 w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
         <h2 className="mb-3 text-lg font-semibold">DeepSeek Harness</h2>
         <p className="text-sm text-muted-foreground">使用本机已配置的 Harness 模型和凭证。完成本地配置后，刷新连接状态。</p>
         <div className="mt-5 flex justify-end gap-3">
-          <button onClick={onClose}>关闭</button>
-          <button className="rounded bg-primary px-3 py-2 text-primary-foreground" onClick={() => { onComplete?.(0); onClose(); }}>刷新</button>
+          <Button variant="ghost" size="compact" onClick={onClose}>关闭</Button>
+          <Button variant="ghost" size="compact" className="rounded bg-primary px-3 py-2 text-primary-foreground" onClick={() => { onComplete?.(0); onClose(); }}>刷新</Button>
         </div>
-      </div>
-    </div>
+      </UnifiedDialogContent></UnifiedDialog>
   );
 
   if (provider === 'workbuddy') {
     return (
-      <div data-escape-layer className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-        <div role="dialog" aria-label="WorkBuddy" className="m-4 w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
+      <UnifiedDialog open onOpenChange={(open) => { if (!open) onClose(); }}><UnifiedDialogContent wrapperClassName="z-[9999]" aria-label="WorkBuddy" className="m-4 w-full max-w-md rounded-lg bg-background p-6 shadow-xl">
           <h3 className="mb-3 text-lg font-semibold">WorkBuddy</h3>
           <p className="text-sm text-muted-foreground">{t('common:workbuddy.localLogin', { defaultValue: 'Open WorkBuddy on this Windows computer and sign in. Then refresh to reuse that local login in Drover. This connection currently supports conversations only.' })}</p>
           <div className="mt-5 flex justify-end gap-3">
-            <button onClick={onClose}>{t('common:buttons.close', { defaultValue: 'Close' })}</button>
-            <button className="rounded bg-primary px-3 py-2 text-primary-foreground" onClick={() => { onComplete?.(0); onClose(); }}>{t('common:buttons.refresh', { defaultValue: 'Refresh' })}</button>
+            <Button variant="ghost" size="compact" onClick={onClose}>{t('common:buttons.close', { defaultValue: 'Close' })}</Button>
+            <Button variant="ghost" size="compact" className="rounded bg-primary px-3 py-2 text-primary-foreground" onClick={() => { onComplete?.(0); onClose(); }}>{t('common:buttons.refresh', { defaultValue: 'Refresh' })}</Button>
           </div>
-        </div>
-      </div>
+        </UnifiedDialogContent></UnifiedDialog>
     );
   }
 
@@ -124,26 +122,23 @@ export default function ProviderLoginModal({
   };
 
   return (
-    <div
-      data-escape-layer
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 max-md:items-stretch max-md:justify-stretch"
-    >
-      <div className="flex h-3/4 w-full max-w-4xl flex-col rounded-lg bg-white shadow-xl dark:bg-gray-800 max-md:m-0 max-md:h-full max-md:max-w-none max-md:rounded-none md:m-4 md:h-3/4 md:max-w-4xl md:rounded-lg">
-        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-          <button
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) { onClose(); } }}>
+      <UnifiedDialogContent wrapperClassName="z-[9999]"  className="flex h-3/4 w-full max-w-4xl flex-col rounded-lg bg-card shadow-xl dark:bg-background max-md:m-0 max-md:h-full max-md:max-w-none max-md:rounded-none md:m-4 md:h-3/4 md:max-w-4xl md:rounded-lg">
+        <div className="flex items-center justify-between border-b border-border p-4 dark:border-border">
+          <h3 className="text-lg font-semibold text-foreground dark:text-primary-foreground">{title}</h3>
+          <Button variant="ghost" size="compact"
             onClick={onClose}
-            className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-muted-foreground transition-colors hover:text-muted-foreground dark:hover:text-muted-foreground"
             aria-label={t('common:misc.closeLoginModal')}
           >
             <X className="h-6 w-6" />
-          </button>
+          </Button>
         </div>
 
         <div className="flex-1 overflow-hidden">
           <StandaloneShell project={DEFAULT_PROJECT_FOR_EMPTY_SHELL} command={command} onComplete={handleComplete} minimal={true} />
         </div>
-      </div>
-    </div>
+      </UnifiedDialogContent>
+    </UnifiedDialog>
   );
 }

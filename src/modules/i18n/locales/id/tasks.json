@@ -2,7 +2,7 @@
   "notConfigured": {
     "title": "TaskMaster AI belum dikonfigurasi",
     "description": "TaskMaster membantu memecah proyek kompleks menjadi tugas yang dapat dikelola dengan bantuan AI",
-    "whatIsTitle": "🎯 Apa itu TaskMaster?",
+    "whatIsTitle": "Apa itu TaskMaster?",
     "features": {
       "aiPowered": "Manajemen Tugas Berbasis AI: Pecah proyek kompleks menjadi subtugas yang dapat dikelola",
       "prdTemplates": "Template PRD: Buat tugas dari Product Requirements Document",
@@ -35,7 +35,7 @@
         "description": "Minta asisten AI mulai mengerjakan tugas, memperbarui statusnya, dan menambahkan tugas baru seiring berkembangnya proyek."
       }
     },
-    "tip": "💡 Tips: Mulai dengan PRD untuk memaksimalkan pembuatan tugas berbasis AI dari TaskMaster"
+    "tip": "Tips: Mulai dengan PRD untuk memaksimalkan pembuatan tugas berbasis AI dari TaskMaster"
   },
   "setupModal": {
     "title": "Penyiapan TaskMaster",
@@ -49,20 +49,20 @@
     "title": "Memulai dengan TaskMaster",
     "subtitle": "Panduan untuk manajemen tugas yang produktif",
     "examples": {
-      "parsePRD": "💬 Contoh:\n\"Saya baru saja menginisialisasi proyek baru dengan Claude Task Master. Saya punya PRD di .taskmaster/docs/prd.txt. Bisakah bantu mem-parsing-nya dan menyiapkan tugas awal?\"",
-      "expandTask": "💬 Contoh:\n\"Tugas 5 terlihat kompleks. Bisakah dipecah menjadi subtugas?\"",
-      "addTask": "💬 Contoh:\n\"Tolong tambahkan tugas baru untuk mengimplementasikan unggahan gambar profil pengguna menggunakan Cloudinary, lalu cari pendekatan terbaik.\""
+      "parsePRD": "Contoh:\n\"Saya baru saja menginisialisasi proyek baru dengan Claude Task Master. Saya punya PRD di .taskmaster/docs/prd.txt. Bisakah bantu mem-parsing-nya dan menyiapkan tugas awal?\"",
+      "expandTask": "Contoh:\n\"Tugas 5 terlihat kompleks. Bisakah dipecah menjadi subtugas?\"",
+      "addTask": "Contoh:\n\"Tolong tambahkan tugas baru untuk mengimplementasikan unggahan gambar profil pengguna menggunakan Cloudinary, lalu cari pendekatan terbaik.\""
     },
     "moreExamples": "Lihat contoh dan pola penggunaan lainnya →",
     "proTips": {
-      "title": "💡 Tips Pro",
+      "title": "Tips Pro",
       "search": "Gunakan bilah pencarian untuk menemukan tugas tertentu dengan cepat",
       "views": "Beralih antara tampilan Kanban, Daftar, dan Grid menggunakan tombol tampilan",
       "filters": "Gunakan filter untuk berfokus pada status atau prioritas tugas tertentu",
       "details": "Klik tugas untuk melihat informasi terperinci dan mengelola subtugas"
     },
     "learnMore": {
-      "title": "📚 Pelajari Lebih Lanjut",
+      "title": "Pelajari Lebih Lanjut",
       "description": "TaskMaster AI adalah sistem manajemen tugas lanjutan yang dibuat untuk developer. Dapatkan dokumentasi, contoh, dan berkontribusi ke proyek.",
       "githubButton": "Lihat di GitHub"
     }
@@ -99,12 +99,12 @@
     "grid": "Tampilan grid"
   },
   "kanban": {
-    "pending": "📋 Akan Dikerjakan",
-    "inProgress": "🚀 Sedang Berjalan",
-    "done": "✅ Selesai",
-    "blocked": "🚫 Terblokir",
-    "deferred": "⏳ Ditunda",
-    "cancelled": "❌ Dibatalkan",
+    "pending": "Akan Dikerjakan",
+    "inProgress": "Sedang Berjalan",
+    "done": "Selesai",
+    "blocked": "Terblokir",
+    "deferred": "Ditunda",
+    "cancelled": "Dibatalkan",
     "noTasksYet": "Belum ada tugas",
     "tasksWillAppear": "Tugas akan muncul di sini",
     "moveTasksHere": "Pindahkan tugas ke sini saat mulai dikerjakan",

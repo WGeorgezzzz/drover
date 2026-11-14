@@ -1,10 +1,10 @@
-import { Check } from 'lucide-react';
+import { Check } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { useGitSettings } from '@/modules/settings/hooks/useGitSettings';
 import { Button, Input } from '@/shared/ui';
-import SettingsCard from '@/modules/settings/SettingsCard';
-import SettingsSection from '@/modules/settings/SettingsSection';
+import SettingsCard from '@/shared/ui/SettingsCard';
+import SettingsSection from '@/shared/ui/SettingsSection';
 
 /** Rendered by Settings for the "git" tab, configuring the commit identity and git preferences. */
 export default function GitSettingsTab() {
@@ -69,7 +69,7 @@ export default function GitSettingsTab() {
               </Button>
 
               {saveStatus === 'success' && (
-                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <div className="flex items-center gap-2 text-sm text-success dark:text-success">
                   <Check className="h-4 w-4" />
                   {t('git.status.success')}
                 </div>

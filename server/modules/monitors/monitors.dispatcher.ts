@@ -10,6 +10,7 @@ import type { LLMProvider } from '@/shared/types.js';
 import { maintainMonitorContext } from './monitor-context.service.js';
 import { prepareIsolatedRound, finishMonitorReport } from './monitor-isolated.service.js';
 import { pollMonitorProbes } from './monitor-probe.service.js';
+import { notifyMonitorAttention } from './monitor-notice.service.js';
 
 let timer: ReturnType<typeof setInterval>|null=null;
 export function shouldIsolateMonitor(runMode:unknown,contextTokens:number):boolean{return runMode!=='original'||contextTokens>120_000;}
@@ -87,8 +88,10 @@ export async function dispatchMonitors(runtime: ProviderRuntimeGateway,now=new D
         if(!failure)await finishMonitorReport(row,runId,sessionId,finalText,isolated,round?.fingerprint,cumulativeUsage);
         if (!isolated && !failure && current?.status === 'active') await maintainMonitorContext(current, runId, sessionId);
         monitorsDb.finish(row.id,runId,failure);
+        if (failure) notifyMonitorAttention(row, runId, '', failure);
       } catch(error) {
         monitorsDb.finish(row.id,runId,(error instanceof Error?error.message:String(error)).slice(0,1000));
+        notifyMonitorAttention(row, runId, '', error instanceof Error ? error.message : String(error));
       }
     })).catch(error => { monitorsDb.finish(row.id,runId,String(error).slice(0,1000)); });
     jobs.push(job);

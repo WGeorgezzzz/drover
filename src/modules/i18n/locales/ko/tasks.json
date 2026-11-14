@@ -2,7 +2,7 @@
   "notConfigured": {
     "title": "TaskMaster AI가 설정되지 않았습니다",
     "description": "TaskMaster는 AI 기반 지원으로 복잡한 프로젝트를 관리하기 쉬운 작업 단위로 나눠줍니다",
-    "whatIsTitle": "🎯 TaskMaster란?",
+    "whatIsTitle": "TaskMaster란?",
     "features": {
       "aiPowered": "AI 기반 작업 관리: 복잡한 프로젝트를 관리하기 쉬운 하위 작업으로 분할",
       "prdTemplates": "PRD 템플릿: 제품 요구사항 문서(PRD)로부터 작업 생성",
@@ -35,7 +35,7 @@
         "description": "AI 어시스턴트에게 작업을 시작하고, 상태를 업데이트하고, 프로젝트가 진행됨에 따라 새 작업을 추가해달라고 요청하세요."
       }
     },
-    "tip": "💡 팁: PRD로 시작하면 TaskMaster의 AI 기반 작업 생성 기능을 최대한 활용할 수 있습니다"
+    "tip": "팁: PRD로 시작하면 TaskMaster의 AI 기반 작업 생성 기능을 최대한 활용할 수 있습니다"
   },
   "setupModal": {
     "title": "TaskMaster 설정",
@@ -49,20 +49,20 @@
     "title": "TaskMaster 시작하기",
     "subtitle": "생산적인 작업 관리를 위한 가이드",
     "examples": {
-      "parsePRD": "💬 예시:\n\"Claude Task Master로 새 프로젝트를 초기화했어요. .taskmaster/docs/prd.txt에 PRD가 있는데, 이를 분석해서 초기 작업을 설정하는 걸 도와줄 수 있나요?\"",
-      "expandTask": "💬 예시:\n\"작업 5가 복잡해 보이는데, 하위 작업으로 나눠줄 수 있나요?\"",
-      "addTask": "💬 예시:\n\"Cloudinary를 사용한 사용자 프로필 이미지 업로드 기능을 구현하는 새 작업을 추가해주세요. 가장 좋은 방법을 조사해주세요.\""
+      "parsePRD": "예시:\n\"Claude Task Master로 새 프로젝트를 초기화했어요. .taskmaster/docs/prd.txt에 PRD가 있는데, 이를 분석해서 초기 작업을 설정하는 걸 도와줄 수 있나요?\"",
+      "expandTask": "예시:\n\"작업 5가 복잡해 보이는데, 하위 작업으로 나눠줄 수 있나요?\"",
+      "addTask": "예시:\n\"Cloudinary를 사용한 사용자 프로필 이미지 업로드 기능을 구현하는 새 작업을 추가해주세요. 가장 좋은 방법을 조사해주세요.\""
     },
     "moreExamples": "더 많은 예시와 사용 패턴 보기 →",
     "proTips": {
-      "title": "💡 유용한 팁",
+      "title": "유용한 팁",
       "search": "검색창을 사용해 특정 작업을 빠르게 찾으세요",
       "views": "보기 전환 버튼으로 칸반, 목록, 그리드 보기를 전환하세요",
       "filters": "필터를 사용해 특정 상태나 우선순위의 작업에 집중하세요",
       "details": "작업을 클릭하면 상세 정보를 확인하고 하위 작업을 관리할 수 있습니다"
     },
     "learnMore": {
-      "title": "📚 더 알아보기",
+      "title": "더 알아보기",
       "description": "TaskMaster AI는 개발자를 위한 고급 작업 관리 시스템입니다. 문서와 예시를 확인하고 프로젝트에 기여해보세요.",
       "githubButton": "GitHub에서 보기"
     }
@@ -99,12 +99,12 @@
     "grid": "그리드 보기"
   },
   "kanban": {
-    "pending": "📋 대기 중",
-    "inProgress": "🚀 진행 중",
-    "done": "✅ 완료",
-    "blocked": "🚫 차단됨",
-    "deferred": "⏳ 보류",
-    "cancelled": "❌ 취소됨",
+    "pending": "대기 중",
+    "inProgress": "진행 중",
+    "done": "완료",
+    "blocked": "차단됨",
+    "deferred": "보류",
+    "cancelled": "취소됨",
     "noTasksYet": "아직 작업이 없습니다",
     "tasksWillAppear": "작업이 여기에 표시됩니다",
     "moveTasksHere": "시작하면 작업을 여기로 옮기세요",

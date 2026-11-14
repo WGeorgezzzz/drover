@@ -1,4 +1,7 @@
-import { ArrowRight, GitMerge, RefreshCw } from 'lucide-react';
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
+import { Button } from '@/shared/ui/Button';
+import { ArrowRight, GitMerge, RefreshCw } from '@/shared/icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -92,14 +95,8 @@ export default function MergeWorktreeModal({
   const commitLabel = t('git:merge.commitsCount', { count: worktree.ahead });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="merge-worktree-title"
-      >
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) onClose(); }}><UnifiedDialogContent wrapperClassName="z-50" className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+        aria-labelledby="merge-worktree-title">
         <div className="p-6">
           <h3 id="merge-worktree-title" className="mb-1 text-lg font-semibold text-foreground">
             {t('git:merge.title')}
@@ -118,8 +115,8 @@ export default function MergeWorktreeModal({
           </div>
 
           <label className="mb-3 flex cursor-pointer items-start gap-2 text-sm text-foreground/80">
-            <input
-              type="checkbox"
+            <UnifiedCheckbox
+
               checked={squash}
               onChange={(event) => handleSquashChange(event.target.checked)}
               className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
@@ -149,8 +146,8 @@ export default function MergeWorktreeModal({
           </div>
 
           <label className="mb-4 flex cursor-pointer items-start gap-2 text-sm text-foreground/80">
-            <input
-              type="checkbox"
+            <UnifiedCheckbox
+
               checked={removeAfterMerge}
               onChange={(event) => setRemoveAfterMerge(event.target.checked)}
               className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
@@ -164,13 +161,13 @@ export default function MergeWorktreeModal({
           </label>
 
           <div className="flex justify-end space-x-3">
-            <button
+            <Button variant="ghost" size="compact"
               onClick={onClose}
               className="rounded-lg px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               {t('git:confirm.cancel')}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="compact"
               onClick={() => void handleMerge()}
               disabled={isMerging || !message.trim()}
               className="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
@@ -186,10 +183,9 @@ export default function MergeWorktreeModal({
                   <span>{squash ? t('git:merge.squashAndMerge') : t('git:merge.merge')}</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </UnifiedDialogContent></UnifiedDialog>
   );
 }

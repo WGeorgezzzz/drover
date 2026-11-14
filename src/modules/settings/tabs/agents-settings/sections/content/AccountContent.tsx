@@ -1,4 +1,4 @@
-import { AlertTriangle, LogIn } from 'lucide-react';
+import { AlertTriangle, LogIn } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { Badge, Button, LLMProviderLogo } from '@/shared/ui';
@@ -21,50 +21,50 @@ type AgentVisualConfig = {
 };
 
 const agentConfig: Record<AgentProvider, AgentVisualConfig> = {
-  gemini: {name:'Gemini',bgClass:'bg-blue-50 dark:bg-blue-950',borderClass:'border-blue-200 dark:border-blue-800',textClass:'text-blue-900 dark:text-blue-100',subtextClass:'text-blue-700 dark:text-blue-300',buttonClass:'bg-blue-600 hover:bg-blue-700'},
+  gemini: {name:'Gemini',bgClass:'bg-primary/10 dark:bg-primary',borderClass:'border-primary dark:border-primary',textClass:'text-primary dark:text-primary',subtextClass:'text-primary dark:text-primary',buttonClass:'bg-primary hover:bg-primary'},
   claude: {
     name: 'Claude',
-    bgClass: 'bg-blue-50 dark:bg-blue-900/20',
-    borderClass: 'border-blue-200 dark:border-blue-800',
-    textClass: 'text-blue-900 dark:text-blue-100',
-    subtextClass: 'text-blue-700 dark:text-blue-300',
-    buttonClass: 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800',
+    bgClass: 'bg-primary/10 dark:bg-primary/20',
+    borderClass: 'border-primary dark:border-primary',
+    textClass: 'text-primary dark:text-primary',
+    subtextClass: 'text-primary dark:text-primary',
+    buttonClass: 'bg-primary hover:bg-primary active:bg-primary',
   },
   cursor: {
     name: 'Cursor',
-    bgClass: 'bg-purple-50 dark:bg-purple-900/20',
-    borderClass: 'border-purple-200 dark:border-purple-800',
-    textClass: 'text-purple-900 dark:text-purple-100',
-    subtextClass: 'text-purple-700 dark:text-purple-300',
-    buttonClass: 'bg-purple-600 hover:bg-purple-700 active:bg-purple-800',
+    bgClass: 'bg-primary/10 dark:bg-primary/20',
+    borderClass: 'border-primary dark:border-primary',
+    textClass: 'text-primary dark:text-primary',
+    subtextClass: 'text-primary dark:text-primary',
+    buttonClass: 'bg-primary hover:bg-primary active:bg-primary',
   },
   codex: {
     name: 'Codex',
     bgClass: 'bg-muted/50',
-    borderClass: 'border-gray-300 dark:border-gray-600',
-    textClass: 'text-gray-900 dark:text-gray-100',
-    subtextClass: 'text-gray-700 dark:text-gray-300',
-    buttonClass: 'bg-gray-800 hover:bg-gray-900 active:bg-gray-950 dark:bg-gray-700 dark:hover:bg-gray-600 dark:active:bg-gray-500',
+    borderClass: 'border-border dark:border-border',
+    textClass: 'text-foreground dark:text-foreground',
+    subtextClass: 'text-foreground dark:text-muted-foreground',
+    buttonClass: 'bg-background hover:bg-background active:bg-background dark:bg-muted dark:hover:bg-muted dark:active:bg-muted',
   },
   'deepseek-harness': {
     name: 'DeepSeek Harness', description: '使用本机 Harness 配置运行任务',
-    bgClass: 'bg-blue-50 dark:bg-blue-900/20', borderClass: 'border-blue-200 dark:border-blue-700',
-    textClass: 'text-blue-900 dark:text-blue-100', subtextClass: 'text-blue-700 dark:text-blue-300', buttonClass: 'bg-blue-600 hover:bg-blue-700',
+    bgClass: 'bg-primary/10 dark:bg-primary/20', borderClass: 'border-primary dark:border-primary',
+    textClass: 'text-primary dark:text-primary', subtextClass: 'text-primary dark:text-primary', buttonClass: 'bg-primary hover:bg-primary',
   },
   workbuddy: {
     name: 'WorkBuddy', description: 'Use the WorkBuddy account signed in on this Windows computer. Conversations only.',
-    bgClass: 'bg-blue-50 dark:bg-blue-900/20', borderClass: 'border-blue-200 dark:border-blue-800',
-    textClass: 'text-blue-900 dark:text-blue-100', subtextClass: 'text-blue-700 dark:text-blue-300',
-    buttonClass: 'bg-blue-600 hover:bg-blue-700',
+    bgClass: 'bg-primary/10 dark:bg-primary/20', borderClass: 'border-primary dark:border-primary',
+    textClass: 'text-primary dark:text-primary', subtextClass: 'text-primary dark:text-primary',
+    buttonClass: 'bg-primary hover:bg-primary',
   },
   opencode: {
     name: 'OpenCode',
     description: 'OpenCode CLI assistant',
-    bgClass: 'bg-zinc-50 dark:bg-zinc-900/20',
-    borderClass: 'border-zinc-200 dark:border-zinc-700',
-    textClass: 'text-zinc-900 dark:text-zinc-100',
-    subtextClass: 'text-zinc-700 dark:text-zinc-300',
-    buttonClass: 'bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-950 dark:bg-zinc-700 dark:hover:bg-zinc-600',
+    bgClass: 'bg-muted dark:bg-background/20',
+    borderClass: 'border-border dark:border-border',
+    textClass: 'text-foreground dark:text-foreground',
+    subtextClass: 'text-foreground dark:text-muted-foreground',
+    buttonClass: 'bg-background hover:bg-background active:bg-background dark:bg-muted dark:hover:bg-muted',
   },
 };
 
@@ -92,11 +92,11 @@ function SubscriptionOverrideNotice({ override }: SubscriptionOverrideNoticeProp
     <div
       role="alert"
       data-testid="provider-auth-subscription-override"
-      className="rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-700 dark:bg-amber-900/30"
+      className="rounded-lg border border-warning bg-warning/10 p-3 dark:border-warning dark:bg-warning/30"
     >
       <div className="flex items-start gap-2">
-        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
-        <div className="space-y-1 text-sm text-amber-900 dark:text-amber-100">
+        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-warning dark:text-warning" />
+        <div className="space-y-1 text-sm text-warning dark:text-warning">
           <div className="font-medium">{t('agents.subscriptionOverride.title')}</div>
           <p>{description}</p>
           <p>{t(`agents.subscriptionOverride.fix.${override.source}`, { variable: override.variable })}</p>
@@ -150,11 +150,11 @@ export default function AccountContent({ agent, authStatus, onLogin }: AccountCo
                   {t('agents.authStatus.checking')}
                 </Badge>
               ) : authStatus.authenticated ? (
-                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                <Badge variant="secondary" className="bg-success/10 text-success dark:bg-success/30 dark:text-success">
                   {t('agents.authStatus.connected')}
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
+                <Badge variant="secondary" className="bg-muted text-foreground dark:bg-background dark:text-muted-foreground">
                   {t('agents.authStatus.disconnected')}
                 </Badge>
               )}
@@ -180,7 +180,7 @@ export default function AccountContent({ agent, authStatus, onLogin }: AccountCo
                 </div>
                 <Button
                   onClick={onLogin}
-                  className={`${config.buttonClass} text-white`}
+                  className={`${config.buttonClass} text-primary-foreground`}
                   size="sm"
                 >
                   <LogIn className="mr-2 h-4 w-4" />
@@ -192,7 +192,7 @@ export default function AccountContent({ agent, authStatus, onLogin }: AccountCo
 
           {authStatus.error && (
             <div className="border-t border-border/50 pt-4">
-              <div className="text-sm text-red-600 dark:text-red-400">
+              <div className="text-sm text-destructive dark:text-destructive">
                 {t('agents.error', { error: authStatus.error })}
               </div>
             </div>

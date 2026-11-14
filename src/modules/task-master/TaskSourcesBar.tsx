@@ -1,5 +1,7 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, ChevronDown, Loader2, Play } from 'lucide-react';
+import { AlertCircle, ChevronDown, Loader2, Play } from '@/shared/icons';
 import { inboxTasksApi } from '@/shared/api';
 
 type Source = { id:string; name:string; status:string; count:number; taskCount:number; lastSyncedAt:string|null; error:string|null; note?:string; lastObservedAt?:string|null };
@@ -28,11 +30,11 @@ export function TaskSourcesBar({onSynced,showSettings=false}:{onSynced:()=>void;
     <div className="flex items-center gap-1.5 text-[11px]">
       <span className="shrink-0 font-medium text-muted-foreground">来源</span>
       <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto whitespace-nowrap py-0.5">
-      {data?.sources.map(source=>{const failed=['error','disabled','unknown'].includes(source.status)||/authorization|token_missing|失败/i.test(source.error||''),offline=['offline','stopped'].includes(source.status);return <button key={source.id} aria-expanded={selected===source.id} aria-label={source.name+'来源状态'} onClick={()=>setSelected(selected===source.id?null:source.id)} className="flex min-h-7 shrink-0 items-center gap-1 rounded-md border bg-background px-2 hover:bg-muted">
-        <span aria-hidden className={'h-1.5 w-1.5 rounded-full '+(failed?'bg-destructive':offline?'bg-slate-400':'bg-emerald-500')}/><span>{source.name}</span><span className="tabular-nums text-muted-foreground">{source.count}</span>{source.id==='infohub'&&<span className="text-muted-foreground">{data.infohub.online?(phaseNames[data.infohub.phase]||'运行中'):'未运行'}</span>}<ChevronDown size={10}/>
-      </button>;})}
+      {data?.sources.map(source=>{const failed=['error','disabled','unknown'].includes(source.status)||/authorization|token_missing|失败/i.test(source.error||''),offline=['offline','stopped'].includes(source.status);return <Button variant="ghost" size="compact" key={source.id} aria-expanded={selected===source.id} aria-label={source.name+'来源状态'} onClick={()=>setSelected(selected===source.id?null:source.id)} className="flex min-h-7 shrink-0 items-center gap-1 rounded-md border bg-background px-2 hover:bg-muted">
+        <span aria-hidden className={'h-1.5 w-1.5 rounded-full '+(failed?'bg-destructive':offline?'bg-muted':'bg-success')}/><span>{source.name}</span><span className="tabular-nums text-muted-foreground">{source.count}</span>{source.id==='infohub'&&<span className="text-muted-foreground">{data.infohub.online?(phaseNames[data.infohub.phase]||'运行中'):'未运行'}</span>}<ChevronDown size={10}/>
+      </Button>;})}
       </div>
-      <button disabled={submitting||busy} onClick={()=>void start()} className="flex min-h-8 shrink-0 items-center gap-1 rounded-md border bg-background px-2 text-xs disabled:opacity-60">{busy||submitting?<Loader2 size={12} className="animate-spin"/>:<Play size={12}/>} {busy?`${phaseNames[data!.infohub.phase]} ${data!.infohub.phase==='organizing'&&data!.infohub.organization?.total?`${data!.infohub.organization.processed||0}/${data!.infohub.organization.total}`:`${data!.infohub.progress.completed}/${data!.infohub.progress.total}`}`:'启动并同步'}</button>
+      <Button variant="ghost" size="compact" disabled={submitting||busy} onClick={()=>void start()} className="flex min-h-8 shrink-0 items-center gap-1 rounded-md border bg-background px-2 text-xs disabled:opacity-60">{busy||submitting?<Loader2 size={12} className="animate-spin"/>:<Play size={12}/>} {busy?`${phaseNames[data!.infohub.phase]} ${data!.infohub.phase==='organizing'&&data!.infohub.organization?.total?`${data!.infohub.organization.processed||0}/${data!.infohub.organization.total}`:`${data!.infohub.progress.completed}/${data!.infohub.progress.total}`}`:'启动并同步'}</Button>
     </div>
     {(error||data?.infohub.error||data?.infohub.syncError)&&<p role="alert" className="mt-1 flex items-start gap-1 text-xs text-destructive"><AlertCircle size={12} className="mt-0.5 shrink-0"/>{error||data?.infohub.error||data?.infohub.syncError}</p>}
     {!busy&&!!data?.infohub.organization?.remaining&&<p className="mt-1 text-xs text-muted-foreground">InfoHub 仍有 {data.infohub.organization.remaining} 个待整理作业{data.infohub.organization.reason?' · '+data.infohub.organization.reason:''}；当前已完成的整理结果已同步。</p>}
@@ -42,7 +44,7 @@ export function TaskSourcesBar({onSynced,showSettings=false}:{onSynced:()=>void;
       {chosen.status==='offline'&&<p>上次观测 {chosen.lastSyncedAt?new Date(chosen.lastSyncedAt).toLocaleString('zh-CN'):chosen.lastObservedAt?new Date(chosen.lastObservedAt).toLocaleString('zh-CN'):'时间未知'}</p>}
       {/authorization|token_missing|auth|login/i.test(chosen.error||'')&&<p>授权可能已恢复，点启动并同步刷新</p>}
       {chosen.error&&<p className="break-words text-destructive">{chosen.error}</p>}{chosen.note&&<p className="text-muted-foreground">{chosen.note}</p>}
-      {['infohub','lark','wechat'].includes(chosen.id)&&<><p>飞书需完成用户授权；微信需先打开客户端并登录。<a className="text-primary underline" href="/infohub" target="_blank" rel="noreferrer">打开信息看板</a></p><label className="flex items-center gap-2">空闲退出（分钟）<input aria-label="信息看板空闲退出分钟" type="number" min="1" max="1440" key={data?.infohub.idleMinutes} defaultValue={data?.infohub.idleMinutes||10} className="w-20 rounded border bg-background p-1" onBlur={async event=>{const minutes=Number(event.target.value);if(!Number.isInteger(minutes)||minutes<1||minutes>1440){setError('空闲退出时间须为 1–1440 分钟');return;}try{await read(await inboxTasksApi.saveInfohubSettings(minutes));await load();}catch(cause){setError(String(cause));}}}/></label>{data?.infohub.idleDeadline&&<p>预计退出：{new Date(data.infohub.idleDeadline).toLocaleTimeString('zh-CN')}</p>}</>}
+      {['infohub','lark','wechat'].includes(chosen.id)&&<><p>飞书需完成用户授权；微信需先打开客户端并登录。<a className="text-primary underline" href="/infohub" target="_blank" rel="noreferrer">打开信息看板</a></p><label className="flex items-center gap-2">空闲退出（分钟）<UnifiedInput aria-label="信息看板空闲退出分钟" type="number" min="1" max="1440" key={data?.infohub.idleMinutes} defaultValue={data?.infohub.idleMinutes||10} className="w-20 rounded border bg-background p-1" onBlur={async event=>{const minutes=Number(event.target.value);if(!Number.isInteger(minutes)||minutes<1||minutes>1440){setError('空闲退出时间须为 1–1440 分钟');return;}try{await read(await inboxTasksApi.saveInfohubSettings(minutes));await load();}catch(cause){setError(String(cause));}}}/></label>{data?.infohub.idleDeadline&&<p>预计退出：{new Date(data.infohub.idleDeadline).toLocaleTimeString('zh-CN')}</p>}</>}
     </div>}
   </section>;
 }

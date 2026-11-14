@@ -134,7 +134,7 @@ describe('PluginsContext reads the structured error envelope of every plugin cal
     });
     renderPluginSettings();
 
-    fireEvent.click(await screen.findByRole('checkbox', { name: 'Disable Private Demo' }));
+    fireEvent.click(await screen.findByRole('switch', { name: 'Disable Private Demo' }));
 
     expect(await screen.findByText(message)).toBeTruthy();
   });

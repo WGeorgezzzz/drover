@@ -35,6 +35,7 @@ describe('the background-work send dialog', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     const overlay = document.querySelector('[role="dialog"]')?.previousElementSibling;
     expect(overlay).toBeTruthy();
+    fireEvent.mouseDown(overlay as Element);
     fireEvent.click(overlay as Element);
 
     expect(onResolve.mock.calls).toEqual([['cancel'], ['cancel']]);

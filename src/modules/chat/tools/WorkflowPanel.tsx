@@ -1,6 +1,7 @@
+import { Button } from '@/shared/ui/Button';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, CircleAlert, CircleCheck, CircleDashed, Workflow } from 'lucide-react';
+import { ChevronRight, CircleAlert, CircleCheck, CircleDashed, Workflow } from '@/shared/icons';
 
 import type {
   BackgroundTaskStatus,
@@ -100,17 +101,17 @@ function formatResultText(text: string): string {
 }
 
 const STATUS_STYLES: Record<BackgroundTaskStatus, string> = {
-  running: 'text-purple-600 dark:text-purple-300',
+  running: 'text-primary dark:text-primary',
   completed: 'text-muted-foreground',
-  failed: 'text-red-600 dark:text-red-400',
+  failed: 'text-destructive dark:text-destructive',
   stopped: 'text-muted-foreground/70',
 };
 
 const AGENT_STATUS_STYLES: Record<WorkflowAgentRow['status'], string> = {
   queued: 'border border-muted-foreground/50',
-  running: 'bg-purple-500 dark:bg-purple-400 animate-pulse',
-  completed: 'bg-green-500 dark:bg-green-400',
-  failed: 'bg-red-500 dark:bg-red-400',
+  running: 'bg-primary dark:bg-primary animate-pulse',
+  completed: 'bg-success dark:bg-success',
+  failed: 'bg-destructive dark:bg-destructive',
   stopped: 'bg-muted-foreground/40',
 };
 
@@ -306,7 +307,7 @@ const WorkflowAgentRowView = memo(({ agent, timelineAddress, onFileOpen, createD
   const summary = (
     <>
       <span className={cn('h-1.5 w-1.5 flex-shrink-0 rounded-full', AGENT_STATUS_STYLES[agent.status])} />
-      <span className={cn('min-w-0 truncate', agent.status === 'failed' ? 'text-red-600 dark:text-red-400' : 'text-foreground')}>
+      <span className={cn('min-w-0 truncate', agent.status === 'failed' ? 'text-destructive dark:text-destructive' : 'text-foreground')}>
         {describeWorkflowAgent(agent)}
       </span>
       {agent.phase && <span className="flex-shrink-0 text-muted-foreground/70">· {agent.phase}</span>}
@@ -319,7 +320,7 @@ const WorkflowAgentRowView = memo(({ agent, timelineAddress, onFileOpen, createD
   return (
     <li>
       {canOpen ? (
-        <button
+        <Button variant="ghost" size="compact"
           type="button"
           aria-expanded={isOpen}
           onClick={() => setIsOpen((previous) => !previous)}
@@ -327,7 +328,7 @@ const WorkflowAgentRowView = memo(({ agent, timelineAddress, onFileOpen, createD
         >
           <ChevronRight className={cn('h-3 w-3 flex-shrink-0 transition-transform duration-150', isOpen && 'rotate-90')} />
           {summary}
-        </button>
+        </Button>
       ) : (
         <div className="flex items-center gap-1.5 pl-[18px]">{summary}</div>
       )}
@@ -438,14 +439,14 @@ export const WorkflowPanel = memo(({ toolInput, toolResult, workflow, taskStatus
 
   return (
     <div className="my-1 border-l-2 border-l-purple-500 py-0.5 pl-3 dark:border-l-purple-400">
-      <button
+      <Button variant="ghost" size="compact"
         type="button"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((previous) => !previous)}
         className="flex w-full select-none items-center gap-1.5 py-0.5 text-left text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
         <ChevronRight className={cn('h-3 w-3 flex-shrink-0 transition-transform duration-150', isOpen && 'rotate-90')} />
-        <Workflow className="h-3.5 w-3.5 flex-shrink-0 text-purple-500 dark:text-purple-400" />
+        <Workflow className="h-3.5 w-3.5 flex-shrink-0 text-primary dark:text-primary" />
         <span className="flex-shrink-0 font-medium text-foreground">{t('workflow.title', 'Workflow')}</span>
         {name && (
           <>
@@ -457,7 +458,7 @@ export const WorkflowPanel = memo(({ toolInput, toolResult, workflow, taskStatus
         <span className={cn('ml-auto flex flex-shrink-0 items-center gap-1 text-[11px]', STATUS_STYLES[status])}>
           {status === 'running' ? (
             <>
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-purple-500 dark:bg-purple-400" />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary dark:bg-primary" />
               {liveSummary || t('workflow.status.running', 'running')}
             </>
           ) : status === 'failed' ? (
@@ -479,7 +480,7 @@ export const WorkflowPanel = memo(({ toolInput, toolResult, workflow, taskStatus
             </>
           )}
         </span>
-      </button>
+      </Button>
 
       {showBody && (
         <div className="mt-1.5 space-y-2 pl-[18px] text-xs">

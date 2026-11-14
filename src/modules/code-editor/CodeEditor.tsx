@@ -1,3 +1,5 @@
+import { DialogSurface } from '@/shared/ui/Dialog';
+import { Button } from '@/shared/ui/Button';
 import DataFilePreview from '@/modules/code-editor/DataFilePreview';
 import { EditorView } from '@codemirror/view';
 import { unifiedMergeView } from '@codemirror/merge';
@@ -172,6 +174,7 @@ export default function CodeEditor({
           showDiff: t('toolbar.showDiff'),
           collapse: t('toolbar.collapse'),
           expand: t('toolbar.expand'),
+          openInModal: t('actions.openInModal'),
         },
       })
     ),
@@ -271,7 +274,7 @@ export default function CodeEditor({
 
   const outerContainerClassName = isSidebar
     ? 'w-full h-full flex flex-col'
-    : `fixed inset-0 z-[9999] md:bg-black/50 md:flex md:items-center md:justify-center md:p-4 ${isFullscreen ? 'md:p-0' : ''}`;
+    : `fixed inset-0 z-[9999] md:bg-overlay/50 md:flex md:items-center md:justify-center md:p-4 ${isFullscreen ? 'md:p-0' : ''}`;
 
   const innerContainerClassName = isSidebar
     ? 'bg-background flex flex-col w-full h-full'
@@ -282,7 +285,7 @@ export default function CodeEditor({
   return (
     <>
       <style>{getEditorStyles(isDarkMode)}</style>
-      <div className={outerContainerClassName}>
+      <DialogSurface className={outerContainerClassName} modal={!isSidebar} onClose={() => { requestClose(); }}>
         <div className={innerContainerClassName}>
           <CodeEditorHeader
             file={file}
@@ -321,17 +324,17 @@ export default function CodeEditor({
           />
 
           {saveError && (
-            <div className="border-b border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+            <div className="border-b border-destructive bg-destructive/10 px-3 py-1.5 text-xs text-destructive dark:border-destructive/40 dark:bg-destructive/20 dark:text-destructive">
               {saveError}
             </div>
           )}
 
-          {/\.(csv|tsv|json|jsonl)$/i.test(file.name) && !previewMeta.truncated && <button className="border p-1 text-xs" onClick={()=>setDataSource(v=>!v)}>{dataSource?'查看格式化预览':'查看源码'}</button>}
+          {/\.(csv|tsv|json|jsonl)$/i.test(file.name) && !previewMeta.truncated && <Button variant="ghost" size="compact" className="border p-1 text-xs" onClick={()=>setDataSource(v=>!v)}>{dataSource?'查看格式化预览':'查看源码'}</Button>}
           <div className="flex-1 overflow-hidden">
             {(previewMeta.truncated || (/\.(csv|tsv|json|jsonl)$/i.test(file.name) && !dataSource && !file.line && !file.diffInfo)) ? (
               <DataFilePreview name={file.name} content={content} projectId={fileProjectId} path={file.path} size={previewMeta.size} truncated={previewMeta.truncated} initialOffset={previewMeta.offset} />
             ) : isHtmlPreviewFile && markdownPreview ? (
-              <iframe title={`HTML 预览：${file.name}`} sandbox="allow-scripts" referrerPolicy="no-referrer" srcDoc={content} className="h-full w-full border-0 bg-white" />
+              <iframe title={`HTML 预览：${file.name}`} sandbox="allow-scripts" referrerPolicy="no-referrer" srcDoc={content} className="h-full w-full border-0 bg-card" />
             ) : (
             <CodeEditorSurface
               content={content}
@@ -354,7 +357,7 @@ export default function CodeEditor({
             shortcutsLabel={t('footer.shortcuts')}
           />
         </div>
-      </div>
+      </DialogSurface>
     </>
   );
 }

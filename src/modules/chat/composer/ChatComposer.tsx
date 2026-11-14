@@ -1,3 +1,6 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { CloudUpload as UnifiedCloudUpload } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import { useTranslation } from 'react-i18next';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
@@ -10,7 +13,7 @@ import type {
   RefObject,
   TouchEvent,
 } from 'react';
-import { ListPlus, OctagonX, PaperclipIcon, MessageSquareIcon, XIcon, Loader2, CornerDownRight, PencilIcon, Monitor,RefreshCw } from 'lucide-react';
+import { ListPlus, OctagonX, PaperclipIcon, MessageSquareIcon, XIcon, Loader2, CornerDownRight, PencilIcon, Monitor,RefreshCw } from '@/shared/icons';
 
 import { useVoiceInput } from '@/modules/chat/hooks/useVoiceInput';
 import { useVoiceAvailable } from '@/modules/chat/hooks/useVoiceAvailable';
@@ -324,20 +327,20 @@ export default function ChatComposer({
       />
 
       {isEditingSentMessage && (
-        <div className="mx-auto mb-2 flex max-w-[54.25rem] items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-foreground">
-          <PencilIcon className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+        <div className="mx-auto mb-2 flex max-w-[54.25rem] items-center gap-2 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground">
+          <PencilIcon className="h-3.5 w-3.5 shrink-0 text-warning dark:text-warning" />
           <span className="min-w-0 flex-1">
             {t('composer.editing.title')}
             {' — '}
             <span className="text-muted-foreground">{t('composer.editing.filesNotReverted')}</span>
           </span>
-          <button
+          <Button variant="ghost" size="compact"
             type="button"
             onClick={onCancelEditMessage}
             className="shrink-0 rounded-md px-2 py-1 font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {t('composer.editing.cancel')}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -402,14 +405,7 @@ export default function ChatComposer({
           {isDragActive && (
             <div className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl border-2 border-dashed border-primary/50 bg-primary/15">
               <div className="rounded-xl border border-border/30 bg-card p-4 shadow-lg">
-                <svg className="mx-auto mb-2 h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
+                <UnifiedCloudUpload className="mx-auto mb-2 h-8 w-8 text-primary" />
                 <p className="text-sm font-medium">Drop files here</p>
               </div>
             </div>
@@ -432,7 +428,7 @@ export default function ChatComposer({
             </PromptInputHeader>
           )}
 
-          <input {...getInputProps()} />
+          <UnifiedInput {...getInputProps()} />
 
           <PromptInputBody>
             <div ref={inputHighlightRef} aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
@@ -459,15 +455,15 @@ export default function ChatComposer({
 
         {canQueueDraft && supportsLiveInput && <div className="busy-send-destination mx-3 my-1 flex h-8 min-w-0 items-center gap-2" role="group" aria-label={t('liveInput.modeLabel')}>
           <div className="flex h-8 shrink-0 items-center rounded-lg bg-muted/60 px-1">
-            <button type="button" disabled={Boolean(liveDisabledReason)} aria-pressed={insertsLive} aria-label={t('liveInput.insert')}
+            <Button variant="ghost" size="compact" type="button" disabled={Boolean(liveDisabledReason)} aria-pressed={insertsLive} aria-label={t('liveInput.insert')}
               title={liveDisabledReason || t('liveInput.insertKeys')} onClick={() => onBusySendModeChange?.('insert')}
               className="min-h-10 whitespace-nowrap rounded-md px-3 text-xs disabled:opacity-40 aria-pressed:bg-primary/10 aria-pressed:text-primary">
               <span className="sm:hidden">{t('liveInput.insertShort')}</span><span className="hidden sm:inline">{t('liveInput.insert')}</span>
-            </button>
-            <button type="button" aria-pressed={!insertsLive} aria-label={t('liveInput.next')} title={submitHint}
+            </Button>
+            <Button variant="ghost" size="compact" type="button" aria-pressed={!insertsLive} aria-label={t('liveInput.next')} title={submitHint}
               onClick={() => onBusySendModeChange?.('queue')} className="min-h-10 whitespace-nowrap rounded-md px-3 text-xs aria-pressed:bg-primary/10 aria-pressed:text-primary">
               <span className="sm:hidden">{t('liveInput.nextShort')}</span><span className="hidden sm:inline">{t('liveInput.next')}</span>
-            </button>
+            </Button>
           </div>
           {liveDisabledReason && <span role="status" title={liveDisabledReason} className="min-w-0 truncate text-[11px] text-muted-foreground">{liveDisabledReason}</span>}
         </div>}
@@ -527,7 +523,7 @@ export default function ChatComposer({
               <span className="text-xs text-muted-foreground" data-testid="composer-stopping">{t('stopControl.stopping')}</span>
             )}
             {canForceStop && onForceStopSession && (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={(e: MouseEvent<HTMLButtonElement>) => {
                   e.preventDefault();
@@ -536,11 +532,11 @@ export default function ChatComposer({
                 title={t('stopControl.forceHint')}
                 aria-label={t('stopControl.force')}
                 data-testid="composer-force-stop"
-                className="inline-flex h-10 shrink-0 items-center gap-1 rounded-xl bg-red-600 px-3 text-xs font-medium text-white hover:bg-red-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+                className="inline-flex h-10 shrink-0 items-center gap-1 rounded-xl bg-destructive px-3 text-xs font-medium text-primary-foreground hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
               >
                 <OctagonX className="h-4 w-4" />
                 <span>{t('stopControl.force')}</span>
-              </button>
+              </Button>
             )}
             <PromptInputSubmit
               onClick={

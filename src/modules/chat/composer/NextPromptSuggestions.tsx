@@ -1,4 +1,5 @@
-import { ArrowUpRight } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { ArrowUpRight } from '@/shared/icons';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -67,13 +68,13 @@ export function NextPromptSuggestions({ messages, busy, onInsert, sessionId, pro
     if (!current || current.status === 'ready') return null;
     return <div role="status" className="next-prompt-suggestions mx-auto mb-2 w-full max-w-[54.25rem] px-4 text-xs text-muted-foreground">
       {t(current.status === 'loading' ? 'nextPrompts.generating' : 'nextPrompts.failed')}
-      {current.status === 'error' && <button type="button" onClick={() => setRetry(value => value + 1)} className="ml-2 underline">{t('nextPrompts.retry')}</button>}
+      {current.status === 'error' && <Button variant="ghost" size="compact" type="button" onClick={() => setRetry(value => value + 1)} className="ml-2 underline">{t('nextPrompts.retry')}</Button>}
     </div>;
   }
   return <section aria-label={t('nextPrompts.title')} title={t('nextPrompts.hint')} className="next-prompt-suggestions mx-auto mb-2 w-full max-w-[54.25rem] px-4">
     <p className="mb-1 text-[10px] text-muted-foreground">{t('nextPrompts.title')}</p>
-    <div className="grid gap-2 pb-1" style={{ gridTemplateColumns: `repeat(${prompts.length}, minmax(0, 1fr))` }}>{prompts.map(prompt => <button key={prompt} type="button" title={prompt} onClick={() => onInsert(prompt)} className="flex min-w-0 items-center gap-1.5 rounded-lg border border-border/60 px-2.5 py-2 text-left text-xs text-muted-foreground hover:bg-muted">
+    <div className="grid gap-2 pb-1" style={{ gridTemplateColumns: `repeat(${prompts.length}, minmax(0, 1fr))` }}>{prompts.map(prompt => <Button variant="ghost" size="compact" key={prompt} type="button" title={prompt} onClick={() => onInsert(prompt)} className="flex min-w-0 items-center gap-1.5 rounded-lg border border-border/60 px-2.5 py-2 text-left text-xs text-muted-foreground hover:bg-muted">
       <ArrowUpRight size={13} className="hidden shrink-0 sm:block"/><span className="line-clamp-2 break-words">{prompt}</span>
-    </button>)}</div>
+    </Button>)}</div>
   </section>;
 }

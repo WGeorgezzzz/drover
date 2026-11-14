@@ -21,12 +21,14 @@ export const authenticatedFetch = (
   url: string,
   options: ApiRequestOptions = {},
 ): Promise<Response> => {
-  const token = getStoredAuthToken();
+  const target = new URL(url, window.location.href);
+  const sameOrigin = target.origin === window.location.origin;
+  const token = sameOrigin ? getStoredAuthToken() : null;
 
   const defaultHeaders: Record<string, string> = {};
 
   // Only set Content-Type for non-FormData requests
-  if (!(options.body instanceof FormData)) {
+  if (options.body != null && !(options.body instanceof FormData)) {
     defaultHeaders['Content-Type'] = 'application/json';
   }
 
@@ -42,6 +44,7 @@ export const authenticatedFetch = (
     // a stale X-Refreshed-Token overwrote the current token with an expired one
     // on every start, which then got discarded as expired.
     cache: 'no-store',
+    signal: options.signal ? AbortSignal.any([options.signal, AbortSignal.timeout(120000)]) : AbortSignal.timeout(120000),
     headers: {
       ...defaultHeaders,
       ...options.headers,
@@ -49,7 +52,7 @@ export const authenticatedFetch = (
   }).then((response) => {
     if (options.method && !['GET', 'HEAD'].includes(options.method.toUpperCase())) pendingTaskSnapshots.clear();
     const refreshedToken = response.headers.get('X-Refreshed-Token');
-    if (refreshedToken) {
+    if (sameOrigin && refreshedToken) {
       storeAuthToken(refreshedToken);
     }
     // Belt and braces for any path that still reaches a cached response: only a
@@ -58,12 +61,41 @@ export const authenticatedFetch = (
     // header alone says nothing about the current request.
     // Without a stored token there is no session to expire: an anonymous request
     // made before sign-in must not show a 'session expired' banner.
-    if (response.status === 401 && response.headers.get('X-Auth-Error') && localStorage.getItem('auth-token')) {
+    if (sameOrigin && response.status === 401 && !target.pathname.startsWith('/api/auth/') && localStorage.getItem('auth-token')) {
       expireAuthSession();
     }
-    return response;
+    return withApiJson(response, !target.pathname.startsWith('/api/auth/'));
+  }).catch((error: unknown) => {
+    if (error instanceof ApiRequestError || options.signal?.aborted) throw error;
+    const timeout = error instanceof DOMException && error.name === 'TimeoutError';
+    throw new ApiRequestError(error instanceof Error ? error.message : 'Network request failed', {
+      status: 0, code: timeout ? 'TIMEOUT' : 'NETWORK_ERROR', details: error,
+    });
   });
 };
+
+/** Multipart uploads retain progress reporting and use the same auth/error policy. */
+function uploadWithProgress(url: string, body: FormData, progress: (value: number) => void): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.timeout = 120000;
+    const token = getStoredAuthToken();
+    if (!IS_PLATFORM && token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+    xhr.upload.onprogress = event => { if (event.lengthComputable) progress(Math.min(99, Math.round(event.loaded / event.total * 100))); };
+    xhr.onload = () => {
+      if (!xhr.status) { reject(new ApiRequestError('Upload connection failed', { status: 0, code: 'NETWORK_ERROR' })); return; }
+      const refreshed = xhr.getResponseHeader('X-Refreshed-Token');
+      if (refreshed) storeAuthToken(refreshed);
+      if (xhr.status === 401 && token) expireAuthSession();
+      resolve(withApiJson(new Response(xhr.responseText || null, { status: xhr.status, headers: { 'Content-Type': 'application/json' } }), true));
+    };
+    xhr.onerror = () => reject(new ApiRequestError('Upload connection failed', { status: 0, code: 'NETWORK_ERROR' }));
+    xhr.ontimeout = () => reject(new ApiRequestError('Upload timed out', { status: 0, code: 'TIMEOUT' }));
+    xhr.onabort = () => reject(new DOMException('Upload cancelled', 'AbortError'));
+    xhr.send(body);
+  });
+}
 
 // ─── Request helpers ────────────────────────────────────────────────────────
 // Every endpoint below goes through these so verb, JSON encoding and query
@@ -150,6 +182,37 @@ export class ApiRequestError extends Error {
   }
 }
 
+/** Keep streaming/blob responses intact while giving every JSON consumer one parser.
+ * Auth forms intentionally inspect rejected credentials themselves.
+ */
+function withApiJson(response: Response, throwOnFailure: boolean): Response {
+  const parse = response.json.bind(response);
+  const clone = response.clone.bind(response);
+  response.json = async () => {
+    let data: unknown;
+    try { data = response.status === 204 ? null : await parse(); }
+    catch (cause) {
+      throw new ApiRequestError(`Invalid JSON response (${response.status})`, { status: response.status, code: 'INVALID_JSON', details: cause });
+    }
+    if (throwOnFailure) assertApiSuccess(response, data);
+    return data;
+  };
+  response.clone = () => withApiJson(clone(), throwOnFailure);
+  return response;
+}
+
+function assertApiSuccess(response: Response, value: unknown): void {
+  const data = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+  if (response.ok && data.success !== false) return;
+  const raw = data.error ?? data.details;
+  const payload = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
+  throw new ApiRequestError(readApiErrorMessage(data) || `Request failed (${response.status})`, {
+    code: typeof payload.code === 'string' ? payload.code : typeof data.code === 'string' ? data.code : undefined,
+    details: payload.details ?? data.details,
+    status: response.status,
+  });
+}
+
 /**
  * Reads a `{ success, error, details }` envelope response, throwing an
  * ApiRequestError carrying the server's machine-readable error code when one
@@ -158,16 +221,7 @@ export class ApiRequestError extends Error {
  */
 export async function readApiJson<T>(response: Response): Promise<T> {
   const data = await response.json();
-  if (!response.ok || data.success === false) {
-    const raw = data.error ?? data.details;
-    const payload = raw && typeof raw === 'object' ? raw : {};
-    const message = (typeof raw === 'string' ? raw : payload?.message) || data.details || `Request failed (${response.status})`;
-    throw new ApiRequestError(message, {
-      code: typeof payload?.code === 'string' ? payload.code : undefined,
-      details: payload?.details ?? data.details,
-      status: response.status,
-    });
-  }
+  assertApiSuccess(response, data);
   return data as T;
 }
 
@@ -246,6 +300,16 @@ const pluginAssetPath = (pluginName: string, assetFile: string) =>
 // import a named method instead of assembling URLs of their own.
 
 export const api = {
+  downloads: {
+    fileTicket: (projectId: string, path: string, directory = false) => post('/api/file-tree/projects/' + encodeURIComponent(projectId) + '/download-ticket', { path, directory }),
+    attachmentTicket: (filename: string, name: string) => post('/api/assets/files/' + encodeURIComponent(filename) + '/download-ticket', { name }),
+  },
+  github: {
+    repository: (owner: string, repo: string) => get(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
+    latestRelease: (owner: string, repo: string) => get(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/latest`),
+  },
+  geminiDesktop: { open: () => post('/api/providers/gemini/open') },
+  superagent: { request: (path = '', body?: unknown, method?: string) => authenticatedFetch('/api/superagent' + path, { method: method ?? (body ? 'POST' : 'GET'), ...(body ? { body: JSON.stringify(body) } : {}) }) },
   remoteAccess: {
     status: () => get('/api/remote-access'),
     install: () => post('/api/remote-access/install'),
@@ -271,20 +335,20 @@ export const api = {
     deleteUser: (id: number) => del('/api/auth/users/'+id),
     resetPassword: (id: number, password: string) => post('/api/auth/users/'+id+'/password', {password}),
     changePassword: (current_password: string, password: string) => post('/api/auth/password', {current_password,password}),
-    exchangeAccess: () => fetch('/api/auth/access-exchange',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),
-    exchangeLocal: (ticket:string) => fetch('/api/auth/local-exchange',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket})}),
+    exchangeAccess: () => authenticatedFetch('/api/auth/access-exchange',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),
+    exchangeLocal: (ticket:string) => authenticatedFetch('/api/auth/local-exchange',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket})}),
     logout: () => post('/api/auth/logout'),
     devices: () => get('/api/auth/devices'),
     revokeDevice: (id:string) => del('/api/auth/devices/'+encodeURIComponent(id)),
     remoteAccount: () => get('/api/auth/remote-account'),
     configureRemoteAccount: (username: string, password: string) => post('/api/auth/remote-account', { username, password }),
-    status: () => fetch('/api/auth/status'),
-    login: (username: string, password: string, otp?:string) => fetch('/api/auth/login', {
+    status: () => authenticatedFetch('/api/auth/status'),
+    login: (username: string, password: string, otp?:string) => authenticatedFetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password, ...(otp?{otp}:{}) }),
     }),
-    register: (username: string, password: string) => fetch('/api/auth/register', {
+    register: (username: string, password: string) => authenticatedFetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -462,6 +526,7 @@ export const api = {
     del(`/api/file-tree/projects/${projectId}/files`, { path, type }),
 
   // Uploads with a progress bar go through XMLHttpRequest, which needs the URL.
+  uploadFiles: (projectId: string, body: FormData, progress: (value: number) => void) => uploadWithProgress(`/api/file-tree/projects/${encodeURIComponent(projectId)}/files/upload`, body, progress),
   uploadFilesUrl: (projectId: string) =>
     `/api/file-tree/projects/${encodeURIComponent(projectId)}/files/upload`,
 
@@ -759,6 +824,8 @@ export const api = {
   },
 
   system: {
+    health: () => get('/health'),
+    restartDesktop: () => post('/api/system/desktop/restart'),
     update: () => post('/api/system/update'),
   },
 };
@@ -794,7 +861,7 @@ export function transcribeVoice(blob: Blob, filename: string): Promise<Response>
   if (config.baseUrl.trim()) {
     body.append('file', blob, filename);
     body.append('model', config.sttModel || 'whisper-1');
-    return fetch(voiceDirectUrl(config.baseUrl.trim(), '/audio/transcriptions'), {
+    return authenticatedFetch(voiceDirectUrl(config.baseUrl.trim(), '/audio/transcriptions'), {
       method: 'POST',
       headers: config.apiKey ? { Authorization: `Bearer ${config.apiKey}` } : {},
       body,
@@ -813,7 +880,7 @@ export function synthesizeVoice(text: string, signal: AbortSignal): Promise<Resp
   const config = readVoiceConfig();
 
   if (config.baseUrl.trim()) {
-    return fetch(voiceDirectUrl(config.baseUrl.trim(), '/audio/speech'), {
+    return authenticatedFetch(voiceDirectUrl(config.baseUrl.trim(), '/audio/speech'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

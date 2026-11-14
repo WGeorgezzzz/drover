@@ -27,6 +27,7 @@ if (isCloudCliAppOrigin(window.location)) {
     openLocalPath: (filePath) => ipcRenderer.invoke('cloudcli-desktop:open-local-path', filePath),
     getState: () => ipcRenderer.invoke('cloudcli-desktop:get-state'),
     update: (settings) => ipcRenderer.invoke('cloudcli-desktop:update-desktop-notifications', settings),
+    test: () => ipcRenderer.invoke('cloudcli-desktop:test-notification'),
     onStateUpdated: onDesktopStateUpdated,
   });
 }

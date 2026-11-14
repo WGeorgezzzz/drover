@@ -1,3 +1,4 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
 import { useTranslation } from 'react-i18next';
 
 import { SessionMonitorBadge } from '@/shared/ui';
@@ -82,7 +83,7 @@ export default function WorkspaceTitle({
         {activeTab === 'chat' && selectedSession ? (
           <div className="workspace-title-row flex min-w-0 items-baseline gap-2"><SessionMonitorBadge sessionId={selectedSession.id}/>
             {isRenaming ? (
-              <input
+              <UnifiedInput
                 ref={renameInputRef}
                 type="text"
                 value={renameDraft}

@@ -2,6 +2,12 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 
 import { cn } from '@/shared/utils';
+import { Button } from '@/shared/ui/Button';
+
+// A stack prevents one Escape from closing both a child and its parent dialog.
+const dialogStack: HTMLElement[] = [];
+let scrollLockCount = 0;
+let previousOverflow = '';
 
 type DialogContextValue = {
   open: boolean;
@@ -74,7 +80,7 @@ export const DialogTrigger = React.forwardRef<HTMLButtonElement, React.ButtonHTM
     }
 
     return (
-      <button
+      <Button variant="ghost"
         ref={(node) => {
           triggerRef.current = node;
           if (typeof ref === 'function') ref(node);
@@ -85,7 +91,7 @@ export const DialogTrigger = React.forwardRef<HTMLButtonElement, React.ButtonHTM
         {...props}
       >
         {children}
-      </button>
+      </Button>
     );
   }
 );
@@ -108,6 +114,10 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
     const { open, onOpenChange, triggerRef } = useDialog();
     const contentRef = React.useRef<HTMLDivElement | null>(null);
     const previousFocusRef = React.useRef<HTMLElement | null>(null);
+    const backdropStarted = React.useRef(false);
+    // Stable listeners must not restore focus on every controlled form update.
+    const callbacks = React.useRef({ onOpenChange, onEscapeKeyDown });
+    callbacks.current = { onOpenChange, onEscapeKeyDown };
 
     // Save the element that had focus before opening, restore on close
     React.useEffect(() => {
@@ -123,12 +133,20 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
 
     React.useEffect(() => {
       if (!open) return;
+      const node = contentRef.current;
+      if (node) dialogStack.push(node);
+      if (scrollLockCount++ === 0) { previousOverflow = document.body.style.overflow; document.body.style.overflow = 'hidden'; }
 
       const handleKeyDown = (e: KeyboardEvent) => {
+        if (node !== dialogStack[dialogStack.length - 1] || e.defaultPrevented) return;
         if (e.key === 'Escape') {
+          // Menus and legacy modal layers above this panel own their Escape.
+          const layers = Array.from(document.querySelectorAll('[data-escape-layer], [role="menu"], [aria-modal="true"]'));
+          if (layers.some(layer => layer !== node && !layer.contains(node))) return;
+          e.preventDefault();
           e.stopPropagation();
-          onEscapeKeyDown?.();
-          onOpenChange(false);
+          callbacks.current.onEscapeKeyDown?.();
+          callbacks.current.onOpenChange(false);
           return;
         }
 
@@ -155,14 +173,15 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
       document.addEventListener('keydown', handleKeyDown, true);
 
       // Prevent body scroll
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
 
       return () => {
         document.removeEventListener('keydown', handleKeyDown, true);
-        document.body.style.overflow = prev;
+        if (node) { const index = dialogStack.indexOf(node); if (index >= 0) dialogStack.splice(index, 1); }
+        if (--scrollLockCount === 0) document.body.style.overflow = previousOverflow;
+        const target = triggerRef.current || previousFocusRef.current;
+        if (target?.isConnected) target.focus();
       };
-    }, [open, onOpenChange, onEscapeKeyDown]);
+    }, [open]);
 
     // Auto-focus first focusable element on open
     React.useEffect(() => {
@@ -182,8 +201,11 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
       <div className={cn('fixed inset-0 z-50', wrapperClassName)}>
         {/* Overlay */}
         <div
-          className="fixed inset-0 animate-dialog-overlay-show bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 animate-dialog-overlay-show bg-overlay/50 backdrop-blur-sm"
+          onMouseDown={() => { backdropStarted.current = true; }}
           onClick={() => {
+            if (!backdropStarted.current) return;
+            backdropStarted.current = false;
             onPointerDownOutside?.();
             onOpenChange(false);
           }}
@@ -214,6 +236,18 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
   }
 );
 DialogContent.displayName = 'DialogContent';
+
+/** Editor, PRD and image/browser previews share the modal focus and scroll lifecycle.
+ * Inline sidebar editors keep their normal DOM position and do not trap focus.
+ */
+export function DialogSurface({ modal = true, onClose, children, className, ...props }: React.HTMLAttributes<HTMLDivElement> & { modal?: boolean; onClose?: () => void }) {
+  if (!modal) return <div className={className} {...props}>{children}</div>;
+  return <Dialog open onOpenChange={open => { if (!open) onClose?.(); }}>
+    <DialogContent wrapperClassName="z-[9999]" className={cn('pointer-events-none inset-0 left-0 top-0 h-dvh max-h-none w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 bg-transparent shadow-none [&>*]:pointer-events-auto', className)} {...props}>
+      {children}
+    </DialogContent>
+  </Dialog>;
+}
 
 /** Accessible title of Dialog, used by the chat, command-palette, sidebar and skills modules. */
 export const DialogTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(

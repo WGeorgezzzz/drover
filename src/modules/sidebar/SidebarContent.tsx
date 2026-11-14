@@ -1,5 +1,6 @@
+import { Button } from '@/shared/ui/Button';
 import { type ReactNode } from 'react';
-import { Activity, Archive, Folder, MessageSquare, RotateCcw, Search, Trash2 } from 'lucide-react';
+import { Activity, Archive, Folder, MessageSquare, RotateCcw, Search, Trash2 } from '@/shared/icons';
 import type { TFunction } from 'i18next';
 
 import { RemoteFolders } from '@/modules/plugins';
@@ -24,7 +25,7 @@ function HighlightedSnippet({ snippet, highlights }: { snippet: string; highligh
       parts.push(snippet.slice(cursor, h.start));
     }
     parts.push(
-      <mark key={h.start} className="rounded-sm bg-yellow-200 px-0.5 text-foreground dark:bg-yellow-800">
+      <mark key={h.start} className="rounded-sm bg-warning/10 px-0.5 text-foreground dark:bg-warning">
         {snippet.slice(h.start, h.end)}
       </mark>
     );
@@ -262,7 +263,7 @@ export default function SidebarContent({
                     const age = formatCompactAge(session.lastActivity, projectListProps.currentTime);
 
                     return (
-                      <button
+                      <Button variant="ghost" size="compact"
                         key={`${session.provider}-${session.sessionId}`}
                         type="button"
                         className="group flex w-full min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-accent/60"
@@ -291,7 +292,7 @@ export default function SidebarContent({
                             )}
                           </span>
                         </span>
-                      </button>
+                      </Button>
                     );
                   })}
                 </section>
@@ -341,7 +342,7 @@ export default function SidebarContent({
                         </span>
                       </div>
                       {projectResult.sessions.map((session) => (
-                        <button
+                        <Button variant="ghost" size="compact"
                           key={`${projectResult.projectId ?? projectResult.projectName}-${session.sessionId}`}
                           className="w-full rounded-md px-2 py-2 text-left transition-colors hover:bg-accent/50"
                           onClick={() => onConversationResultClick(
@@ -378,7 +379,7 @@ export default function SidebarContent({
                               </div>
                             ))}
                           </div>
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   ))}
@@ -421,14 +422,14 @@ export default function SidebarContent({
             <div className="space-y-2">
               <div className="mx-2 flex items-center justify-between rounded-lg border border-border/60 bg-card/50 px-3 py-2 shadow-sm">
                 <div className="flex min-w-0 items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-success/10 text-success dark:text-success">
                     <Activity className="h-3.5 w-3.5" />
                   </span>
                   <span className="truncate text-xs font-normal text-foreground">
                     {t('running.title', 'Running now')}
                   </span>
                 </div>
-                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-normal text-emerald-700 dark:text-emerald-300">
+                <span className="rounded-full bg-success/10 px-2 py-0.5 text-[11px] font-normal text-success dark:text-success">
                   {runningSessionsCount}
                 </span>
               </div>
@@ -535,20 +536,20 @@ export default function SidebarContent({
                           {project.fullPath}
                         </p>
                       </div>
-                      <button
-                        className="flex h-7 flex-shrink-0 items-center gap-1.5 rounded-lg border border-emerald-600/15 bg-emerald-500/10 px-2 text-[10px] font-medium text-emerald-700 transition-all hover:border-emerald-600/25 hover:bg-emerald-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:text-emerald-300"
+                      <Button variant="ghost" size="compact"
+                        className="flex h-7 flex-shrink-0 items-center gap-1.5 rounded-lg border border-success/15 bg-success/10 px-2 text-[10px] font-medium text-success transition-all hover:border-success/25 hover:bg-success/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/40 dark:text-success"
                         onClick={() => onRestoreArchivedProject(project.projectId)}
                         title={t('archived.restoreProject', 'Restore workspace')}
                         aria-label={`${t('archived.restoreProject', 'Restore workspace')}: ${project.displayName}`}
                       >
                         <RotateCcw className="h-3 w-3" />
                         {t('archived.restoreAction', 'Restore')}
-                      </button>
+                      </Button>
                     </div>
                     {projectSessions.length > 0 && (
                       <div className="border-t border-border/45 bg-muted/[0.08]">
                         {projectSessions.map((session) => (
-                          <button
+                          <Button variant="ghost" size="compact"
                             key={String(session.id)}
                             className="flex w-full items-center gap-2.5 border-b border-border/35 px-2.5 py-2 text-left transition-colors last:border-b-0 hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                             onClick={() => onArchivedSessionClick({
@@ -604,7 +605,7 @@ export default function SidebarContent({
                                 </span>
                               </div>
                             </div>
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     )}
@@ -642,7 +643,7 @@ export default function SidebarContent({
                         key={session.sessionId}
                         className="group/session flex items-center gap-1 border-b border-border/35 px-2.5 py-2 last:border-b-0 hover:bg-accent/35"
                       >
-                        <button
+                        <Button variant="ghost" size="compact"
                           className="flex min-w-0 flex-1 items-center gap-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           onClick={() => onArchivedSessionClick(session)}
                         >
@@ -665,24 +666,24 @@ export default function SidebarContent({
                               )}
                             </div>
                           </div>
-                        </button>
+                        </Button>
                         <div className="flex flex-shrink-0 items-center gap-0.5">
-                          <button
-                            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-emerald-500/10 hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 dark:hover:text-emerald-300"
+                          <Button variant="ghost" size="compact"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-success/10 hover:text-success focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/40 dark:hover:text-success"
                             onClick={() => onRestoreArchivedSession(session.sessionId)}
                             title={t('archived.restore', 'Restore session')}
                             aria-label={`${t('archived.restore', 'Restore session')}: ${session.sessionTitle}`}
                           >
                             <RotateCcw className="h-3.5 w-3.5" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button variant="ghost" size="compact"
                             className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/40"
                             onClick={() => onDeleteArchivedSession(session)}
                             title={t('archived.deletePermanently', 'Delete permanently')}
                             aria-label={`${t('archived.deletePermanently', 'Delete permanently')}: ${session.sessionTitle}`}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ))}

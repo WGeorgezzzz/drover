@@ -118,7 +118,7 @@ const typeInto = (editor: HTMLTextAreaElement, value: string) => {
 const isDocked = () => screen.queryByTitle('Drag to resize') !== null;
 
 /** The floating layout is the modal one: a full-viewport overlay. */
-const isFloating = (container: HTMLElement) => container.querySelector('.fixed.inset-0') !== null;
+const isFloating = (_container: HTMLElement) => document.querySelector('[role="dialog"]') !== null;
 
 // Everything a layout switch must not destroy, in one assertion.
 const assertBufferSurvived = () => {

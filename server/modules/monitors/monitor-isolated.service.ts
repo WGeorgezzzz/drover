@@ -11,6 +11,7 @@ import { createNormalizedMessage, cleanMonitorReport } from '@/shared/index.js';
 import type { MonitorRecord, LLMProvider } from '@/shared/types.js';
 
 import { normalizeProbe, hydrateProbeDelta } from './monitor-probe.service.js';
+import { notifyMonitorAttention } from './monitor-notice.service.js';
 
 const execFileAsync = promisify(execFile);
 const MAX_FULL_FILE_BYTES = 1024 * 1024;
@@ -129,6 +130,7 @@ export async function finishMonitorReport(row: MonitorRecord, runId: string, ses
   }
   const usage = await providerTokenUsageService.getSessionTokenUsage(sessionId).catch(() => ({used:undefined}));
   monitorsDb.saveReport(row.user_id, row.id, runId, parsed.report, parsed.state, {...(cumulativeUsage??{}),contextTokens:usage.used}, fingerprint);
+  notifyMonitorAttention(row, runId, parsed.state);
   if (!isolated) return;
   const source = sessionsDb.getSessionById(row.session_id)!;
   const message = createNormalizedMessage({ id: 'monitor-report:' + runId, kind: 'text', role: 'assistant', provider: source.provider as LLMProvider, sessionId: row.session_id, timestamp: new Date().toISOString(), content: '**监测「' + row.name + '」· 第 ' + (row.run_count + 1) + ' 轮**\n\n' + parsed.report + '\n\n[展开本轮会话](/session/' + sessionId + ')' });

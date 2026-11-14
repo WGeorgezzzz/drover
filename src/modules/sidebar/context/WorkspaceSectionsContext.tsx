@@ -1,3 +1,5 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
@@ -90,15 +92,15 @@ export function WorkspaceSectionsProvider({ children }: { children: ReactNode })
       <DialogTitle className="not-sr-only font-semibold">移到分区 ▸</DialogTitle>
       <p className="truncate text-xs text-muted-foreground">{target?.title}</p>
       {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
-      <div role="menu" aria-label="选择分区" className="space-y-1">{layout?.sections.map(section => <button type="button" role="menuitemradio" aria-checked={selected === section.id} key={section.id} disabled={busy} className="flex min-h-10 w-full items-center justify-between rounded px-3 text-left text-sm hover:bg-muted" onClick={() => void assign(section.id)}><span>{section.name}</span>{selected === section.id && <span aria-hidden>✓</span>}</button>)}
-        <button type="button" role="menuitem" disabled={busy} className="min-h-10 w-full rounded px-3 text-left text-sm hover:bg-muted" onClick={() => { setCreating(true); setName(''); }}>＋ 新建分区…</button>
-        <button type="button" role="menuitem" disabled={busy || !selected} className="min-h-10 w-full rounded px-3 text-left text-sm hover:bg-muted disabled:opacity-40" onClick={() => void assign(null)}>移出分区</button>
+      <div role="menu" aria-label="选择分区" className="space-y-1">{layout?.sections.map(section => <Button variant="ghost" size="compact" type="button" role="menuitemradio" aria-checked={selected === section.id} key={section.id} disabled={busy} className="flex min-h-10 w-full items-center justify-between rounded px-3 text-left text-sm hover:bg-muted" onClick={() => void assign(section.id)}><span>{section.name}</span>{selected === section.id && <span aria-hidden>✓</span>}</Button>)}
+        <Button variant="ghost" size="compact" type="button" role="menuitem" disabled={busy} className="min-h-10 w-full rounded px-3 text-left text-sm hover:bg-muted" onClick={() => { setCreating(true); setName(''); }}>＋ 新建分区…</Button>
+        <Button variant="ghost" size="compact" type="button" role="menuitem" disabled={busy || !selected} className="min-h-10 w-full rounded px-3 text-left text-sm hover:bg-muted disabled:opacity-40" onClick={() => void assign(null)}>移出分区</Button>
       </div>
       {creating && <form onSubmit={event => { event.preventDefault(); if (target) void change({ action: 'create-assign', name, kind: target.kind, targetId: target.targetId }).then(ok => { if (ok) setTarget(null); }); }} className="flex gap-2">
-        <input autoFocus aria-label="新分区名称" maxLength={80} value={name} onChange={event => setName(event.target.value)} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); setCreating(false); } }} className="min-w-0 flex-1 rounded border border-border bg-background p-2 text-base"/>
-        <button disabled={busy || !name.trim()} className="rounded bg-primary px-3 text-xs text-primary-foreground disabled:opacity-40">创建并移入</button>
+        <UnifiedInput autoFocus aria-label="新分区名称" maxLength={80} value={name} onChange={event => setName(event.target.value)} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); setCreating(false); } }} className="min-w-0 flex-1 rounded border border-border bg-background p-2 text-base"/>
+        <Button variant="ghost" size="compact" disabled={busy || !name.trim()} className="rounded bg-primary px-3 text-xs text-primary-foreground disabled:opacity-40">创建并移入</Button>
       </form>}
-      <button type="button" className="min-h-10 w-full text-sm text-muted-foreground" onClick={() => setTarget(null)}>取消</button>
+      <Button variant="ghost" size="compact" type="button" className="min-h-10 w-full text-sm text-muted-foreground" onClick={() => setTarget(null)}>取消</Button>
     </DialogContent></Dialog>
   </SectionsContext.Provider>;
 }
