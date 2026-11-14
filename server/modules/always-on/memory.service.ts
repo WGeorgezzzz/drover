@@ -100,8 +100,12 @@ export async function consolidateMemory(userId:number) {
     const touched=new Set<string>(),archived:string[]=[];
     for(const value of raw.operations){
       const op=value as {index:string;line:number;old:string;replacement:string;kind?:string;type?:string;operation?:string};
+      // JSON plans can retain the CR from a Windows CRLF index. Compare the
+      // same canonical line representation used by the inventory; never trim
+      // spaces, alter content, or search for a different line on a mismatch.
+      if(typeof op.old==='string')op.old=op.old.replace(/\r$/,'');
       const kind=op.kind||op.type||op.operation,all=next.get(op.index),key=op.index+':'+op.line;
-      if(!all||!Number.isInteger(op.line)||all[op.line-1]!==op.old||touched.has(key)||!/^\s*[-*]\s/.test(op.old))throw new Error('方案行号、原文或条目无效');
+      if(!all||!Number.isInteger(op.line)||all[op.line-1]!==op.old||touched.has(key)||!/^\s*[-*]\s/.test(op.old))throw new Error('方案行号、原文或条目无效：'+key);
       if(!['archive','compress','merge','fix'].includes(String(kind))||typeof op.replacement!=='string'||/[\r\n]/.test(op.replacement))throw new Error('操作不在允许范围内');
       const oldLinks=links(op.old),newLinks=links(op.replacement);
       if(kind==='archive'||kind==='merge'){
