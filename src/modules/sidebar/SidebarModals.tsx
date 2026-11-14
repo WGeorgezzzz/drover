@@ -1,6 +1,7 @@
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
 import { useMemo } from 'react';
 import ReactDOM from 'react-dom';
-import { AlertTriangle, EyeOff, Trash2 } from 'lucide-react';
+import { AlertTriangle, EyeOff, Trash2 } from '@/shared/icons';
 import type { TFunction } from 'i18next';
 
 import { Button } from '@/shared/ui';
@@ -98,12 +99,12 @@ export default function SidebarModals({
 
       {pendingDeletion?.kind === 'project' &&
         ReactDOM.createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+          <UnifiedDialog open onOpenChange={(open) => { if (!open) { onCancelDeletion(); } }}>
+            <UnifiedDialogContent wrapperClassName="z-50"  className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
               <div className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
-                    <AlertTriangle className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-warning/10 dark:bg-warning/30">
+                    <AlertTriangle className="h-6 w-6 text-warning dark:text-warning" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="mb-2 text-lg font-semibold text-foreground">
@@ -135,7 +136,7 @@ export default function SidebarModals({
                 </Button>
                 <Button
                   variant="destructive"
-                  className="w-full justify-start bg-red-600 text-white hover:bg-red-700"
+                  className="w-full justify-start bg-destructive text-primary-foreground hover:bg-destructive"
                   onClick={() => onConfirmDeleteProject(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -145,19 +146,19 @@ export default function SidebarModals({
                   {t('actions.cancel')}
                 </Button>
               </div>
-            </div>
-          </div>,
+            </UnifiedDialogContent>
+          </UnifiedDialog>,
           document.body,
         )}
 
       {pendingDeletion?.kind === 'session' &&
         ReactDOM.createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+          <UnifiedDialog open onOpenChange={(open) => { if (!open) { onCancelDeletion(); } }}>
+            <UnifiedDialogContent wrapperClassName="z-50"  className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
               <div className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                    <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-destructive/10 dark:bg-destructive/30">
+                    <AlertTriangle className="h-6 w-6 text-destructive dark:text-destructive" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="mb-2 text-lg font-semibold text-foreground">
@@ -191,7 +192,7 @@ export default function SidebarModals({
                 )}
                 <Button
                   variant="destructive"
-                  className="w-full justify-start bg-red-600 text-white hover:bg-red-700"
+                  className="w-full justify-start bg-destructive text-primary-foreground hover:bg-destructive"
                   onClick={() => onConfirmDeleteSession(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -201,19 +202,19 @@ export default function SidebarModals({
                   {t('actions.cancel')}
                 </Button>
               </div>
-            </div>
-          </div>,
+            </UnifiedDialogContent>
+          </UnifiedDialog>,
           document.body,
         )}
 
       {pendingDeletion?.kind === 'sessions' &&
         ReactDOM.createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+          <UnifiedDialog open onOpenChange={(open) => { if (!open) { onCancelDeletion(); } }}>
+            <UnifiedDialogContent wrapperClassName="z-50"  className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
               <div className="p-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                    <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-destructive/10 dark:bg-destructive/30">
+                    <AlertTriangle className="h-6 w-6 text-destructive dark:text-destructive" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="mb-2 text-lg font-semibold text-foreground">
@@ -243,7 +244,7 @@ export default function SidebarModals({
                 </Button>
                 <Button
                   variant="destructive"
-                  className="w-full justify-start bg-red-600 text-white hover:bg-red-700"
+                  className="w-full justify-start bg-destructive text-primary-foreground hover:bg-destructive"
                   onClick={() => onConfirmDeleteSessions(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -253,8 +254,8 @@ export default function SidebarModals({
                   {t('actions.cancel')}
                 </Button>
               </div>
-            </div>
-          </div>,
+            </UnifiedDialogContent>
+          </UnifiedDialog>,
           document.body,
         )}
 

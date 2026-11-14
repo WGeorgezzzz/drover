@@ -414,5 +414,33 @@
   "brand": {
     "name": "Drover",
     "tagline": "Drive every agent from one place"
+  },
+  "desktop": {
+    "updated": "Desktop updated",
+    "restart": "Restart desktop"
+  },
+  "sessionMonitor": {
+    "title": "Session monitors",
+    "close": "Close session monitors",
+    "paused": "Paused",
+    "backoff": "Failed / backing off",
+    "running": "Running",
+    "enabled": "Enabled",
+    "succeeded": "Succeeded",
+    "failed": "Failed",
+    "interrupted": "Interrupted",
+    "never": "Not run yet",
+    "pauseSchedule": "Not scheduled while paused",
+    "actionFailed": "Action failed",
+    "badgePaused": "Monitor: paused",
+    "badgeEnabled": "Monitor: enabled",
+    "badgeBackoff": "Monitor: failed / backing off",
+    "next": "Next (local): ",
+    "result": "Last result: ",
+    "hint": "Next execution is shown in your local timezone. Pausing or stopping leaves the current run to finish.",
+    "resume": "Resume",
+    "pause": "Pause",
+    "runNow": "Run now",
+    "stop": "Stop"
   }
 }

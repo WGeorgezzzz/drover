@@ -42,7 +42,7 @@ test('a background-only session names its workflow, counts from its start and of
   assert.match(container.textContent ?? '', /Workflow frontend-architecture-audit/);
   assert.match(container.textContent ?? '', /1m 5s/, 'elapsed since the task started, not since the pill mounted');
   assert.equal(screen.queryByRole('button', { name: 'Stop' }), null);
-  assert.ok(container.querySelector('.bg-purple-500'), 'the dot is the cards\' purple, not the primary colour');
+  assert.ok(container.querySelector('.bg-muted-foreground'), 'background work uses the quiet secondary status colour');
 });
 
 test('an agent and a command are named by what they were asked to do; several tasks by their count', () => {
@@ -83,5 +83,5 @@ test('a response in flight still shows the Stop button and the primary dot', () 
 
   assert.ok(screen.getByRole('button', { name: 'Stop' }));
   assert.ok(container.querySelector('.bg-primary'));
-  assert.equal(container.querySelector('.bg-purple-500'), null);
+  assert.equal(container.querySelector('.bg-muted-foreground'), null);
 });

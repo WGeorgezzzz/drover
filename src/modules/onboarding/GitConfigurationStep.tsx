@@ -1,4 +1,5 @@
-import { GitBranch, Mail, User } from 'lucide-react';
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { GitBranch, Mail, User } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 type GitConfigurationStepProps = {
@@ -34,9 +35,9 @@ export default function GitConfigurationStep({
         <div>
           <label htmlFor="gitName" className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
             <User className="h-4 w-4" />
-            {t('onboarding.gitNameLabel')} <span className="text-red-500">*</span>
+            {t('onboarding.gitNameLabel')} <span className="text-destructive">*</span>
           </label>
-          <input
+          <UnifiedInput
             type="text"
             id="gitName"
             value={gitName}
@@ -52,9 +53,9 @@ export default function GitConfigurationStep({
         <div>
           <label htmlFor="gitEmail" className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
             <Mail className="h-4 w-4" />
-            {t('onboarding.gitEmailLabel')} <span className="text-red-500">*</span>
+            {t('onboarding.gitEmailLabel')} <span className="text-destructive">*</span>
           </label>
-          <input
+          <UnifiedInput
             type="email"
             id="gitEmail"
             value={gitEmail}

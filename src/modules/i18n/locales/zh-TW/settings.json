@@ -265,7 +265,7 @@
     "title": "API 金鑰",
     "description": "產生 API 金鑰以從其他應用程式存取外部 API。",
     "newKey": {
-      "alertTitle": "⚠️ 儲存您的 API 金鑰",
+      "alertTitle": "儲存您的 API 金鑰",
       "alertMessage": "這是您唯一一次看到此金鑰。請妥善保存。",
       "iveSavedIt": "我已儲存"
     },

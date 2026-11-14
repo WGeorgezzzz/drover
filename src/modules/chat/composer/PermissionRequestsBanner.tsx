@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldAlertIcon } from 'lucide-react';
+import { ShieldAlertIcon } from '@/shared/icons';
 
 import type { PendingPermissionRequest } from '@/shared/types';
 import { buildClaudeToolPermissionEntry, formatToolInputForDisplay } from '@/modules/chat/utils/chatPermissions';

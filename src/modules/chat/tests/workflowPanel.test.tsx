@@ -287,7 +287,7 @@ describe('the agents of a workflow card', () => {
       'audit:sidebar· Auditfailed',
       'synthesize· Synthesizeno result',
     ]);
-    expect(rows[1]?.querySelector('.text-red-600')?.textContent).toBe('audit:sidebar');
+    expect(rows[1]?.querySelector('.text-destructive')?.textContent).toBe('audit:sidebar');
     expect(screen.getByText('2 of 3 agents finished · 1 failed')).toBeTruthy();
     expect(screen.getByText('40 tool uses · 5m 0s')).toBeTruthy();
   });

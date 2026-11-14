@@ -1,3 +1,4 @@
+import { api } from '@/shared/api';
 import { useState, useEffect, useCallback } from 'react';
 
 const CACHE_KEY = 'CLOUDCLI_GITHUB_STARS';
@@ -38,7 +39,7 @@ export const useGitHubStars = (owner: string, repo: string) => {
 
     const fetchStars = async () => {
       try {
-        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+        const response = await api.github.repository(owner, repo);
         if (!response.ok) return;
         const data = await response.json();
         const count = data.stargazers_count;

@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,7 +12,7 @@ import {
   Target,
   ListChecks,
   Zap,
-} from 'lucide-react';
+} from '@/shared/icons';
 
 import { cn } from '@/shared/utils';
 import { useTaskMaster } from '@/modules/task-master/context/TaskMasterContext';
@@ -28,23 +29,23 @@ function PriorityIndicator({ priority }: { priority?: string }) {
   const { t } = useTranslation();
   if (priority === 'high') {
     return (
-      <div className="flex h-4 w-4 items-center justify-center rounded bg-red-100 dark:bg-red-900/50" title={t('tasks:priorities.highTitle')}>
-        <Zap className="h-2.5 w-2.5 text-red-600 dark:text-red-400" />
+      <div className="flex h-4 w-4 items-center justify-center rounded bg-destructive/10 dark:bg-destructive/50" title={t('tasks:priorities.highTitle')}>
+        <Zap className="h-2.5 w-2.5 text-destructive dark:text-destructive" />
       </div>
     );
   }
 
   if (priority === 'medium') {
     return (
-      <div className="flex h-4 w-4 items-center justify-center rounded bg-amber-100 dark:bg-amber-900/50" title={t('tasks:priorities.mediumTitle')}>
-        <Flag className="h-2.5 w-2.5 text-amber-600 dark:text-amber-400" />
+      <div className="flex h-4 w-4 items-center justify-center rounded bg-warning/10 dark:bg-warning/50" title={t('tasks:priorities.mediumTitle')}>
+        <Flag className="h-2.5 w-2.5 text-warning dark:text-warning" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-4 w-4 items-center justify-center rounded bg-gray-100 dark:bg-gray-800" title={t('tasks:priorities.lowTitle')}>
-      <Circle className="h-2.5 w-2.5 text-gray-400 dark:text-gray-500" />
+    <div className="flex h-4 w-4 items-center justify-center rounded bg-muted dark:bg-background" title={t('tasks:priorities.lowTitle')}>
+      <Circle className="h-2.5 w-2.5 text-muted-foreground dark:text-muted-foreground" />
     </div>
   );
 }
@@ -83,32 +84,32 @@ export default function NextTaskBanner({ onShowAllTasks = null, onStartTask = nu
   if (!hasTasks && !hasTaskMaster) {
     return (
       <>
-        <div className={cn('bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4', className)}>
+        <div className={cn('bg-primary/10 dark:bg-primary border border-primary dark:border-primary rounded-lg p-3 mb-4', className)}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
-              <List className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{t('tasks:notConfigured.title')}</p>
+              <List className="h-4 w-4 text-primary dark:text-primary" />
+              <p className="text-sm font-medium text-foreground dark:text-primary-foreground">{t('tasks:notConfigured.title')}</p>
             </div>
 
-            <button
+            <Button variant="ghost" size="compact"
               onClick={() => setShowSetupModal(true)}
-              className="flex items-center gap-1 rounded bg-blue-600 px-2 py-1 text-xs text-white transition-colors hover:bg-blue-700"
+              className="flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs text-primary-foreground transition-colors hover:bg-primary"
             >
               <ListChecks className="h-3 w-3" />
               {t('tasks:banner.initialize')}
-            </button>
+            </Button>
           </div>
 
-          <button
+          <Button variant="ghost" size="compact"
             onClick={() => setShowSetupDetails((current) => !current)}
-            className="mt-2 flex items-center gap-1 text-xs text-blue-700 hover:underline dark:text-blue-300"
+            className="mt-2 flex items-center gap-1 text-xs text-primary hover:underline dark:text-primary"
           >
             <Settings className="h-3 w-3" />
             {showSetupDetails ? t('tasks:banner.hideDetails') : t('tasks:banner.whatIsTaskmaster')}
-          </button>
+          </Button>
 
           {showSetupDetails && (
-            <div className="mt-3 space-y-1 text-xs text-blue-900 dark:text-blue-100">
+            <div className="mt-3 space-y-1 text-xs text-primary dark:text-primary">
               <p>{t('tasks:banner.detailAiPowered')}</p>
               <p>{t('tasks:banner.detailPrdDriven')}</p>
               <p>{t('tasks:banner.detailKanbanList')}</p>
@@ -129,44 +130,44 @@ export default function NextTaskBanner({ onShowAllTasks = null, onStartTask = nu
   if (nextTask) {
     return (
       <>
-        <div className={cn('bg-slate-50 dark:bg-slate-900/30 border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-4', className)}>
+        <div className={cn('bg-muted dark:bg-background/30 border border-border dark:border-border rounded-lg p-3 mb-4', className)}>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex items-center gap-2">
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
-                  <Target className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/50">
+                  <Target className="h-3 w-3 text-primary dark:text-primary" />
                 </div>
-                <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Task {nextTask.id}</span>
+                <span className="text-xs font-medium text-muted-foreground dark:text-muted-foreground">Task {nextTask.id}</span>
                 <PriorityIndicator priority={nextTask.priority} />
               </div>
-              <p className="line-clamp-1 text-sm font-medium text-slate-900 dark:text-slate-100">{nextTask.title}</p>
+              <p className="line-clamp-1 text-sm font-medium text-foreground dark:text-foreground">{nextTask.title}</p>
             </div>
 
             <div className="flex flex-shrink-0 items-center gap-1">
-              <button
+              <Button variant="ghost" size="compact"
                 onClick={() => onStartTask?.()}
-                className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary"
               >
                 <Play className="h-3 w-3" />
                 {t('tasks:banner.startTask')}
-              </button>
+              </Button>
 
-              <button
+              <Button variant="ghost" size="compact"
                 onClick={() => setShowTaskDetail(true)}
-                className="rounded-md border border-slate-300 px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="rounded-md border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted dark:border-border dark:text-muted-foreground dark:hover:bg-background"
                 title={t('tasks:banner.viewTaskDetails')}
               >
                 <Eye className="h-3 w-3" />
-              </button>
+              </Button>
 
               {onShowAllTasks && (
-                <button
+                <Button variant="ghost" size="compact"
                   onClick={onShowAllTasks}
-                  className="rounded-md border border-slate-300 px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                  className="rounded-md border border-border px-2 py-1.5 text-xs text-muted-foreground hover:bg-muted dark:border-border dark:text-muted-foreground dark:hover:bg-background"
                   title={t('tasks:banner.viewAllTasks')}
                 >
                   <List className="h-3 w-3" />
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -188,25 +189,25 @@ export default function NextTaskBanner({ onShowAllTasks = null, onStartTask = nu
     const completedTasks = tasks.filter((task) => task.status === 'done').length;
 
     return (
-      <div className={cn('bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 rounded-lg p-3 mb-4', className)}>
+      <div className={cn('bg-primary/10 dark:bg-primary border border-primary dark:border-primary rounded-lg p-3 mb-4', className)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
+            <CheckCircle className="h-4 w-4 text-primary dark:text-primary" />
+            <span className="text-sm font-medium text-foreground dark:text-primary-foreground">
               {completedTasks === tasks.length ? t('tasks:banner.allComplete') : t('tasks:banner.noPending')}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">
+            <span className="text-xs text-muted-foreground dark:text-muted-foreground">
               {completedTasks}/{tasks.length}
             </span>
             {onShowAllTasks && (
-              <button
+              <Button variant="ghost" size="compact"
                 onClick={onShowAllTasks}
-                className="rounded bg-purple-600 px-2 py-1 text-xs text-white transition-colors hover:bg-purple-700"
+                className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground transition-colors hover:bg-primary"
               >
                 Review
-              </button>
+              </Button>
             )}
           </div>
         </div>

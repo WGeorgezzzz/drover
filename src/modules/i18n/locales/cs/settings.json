@@ -280,7 +280,7 @@
     "title": "API klíče",
     "description": "Vygenerujte API klíče pro přístup k externímu API z jiných aplikací.",
     "newKey": {
-      "alertTitle": "⚠️ Uložte si API klíč",
+      "alertTitle": "Uložte si API klíč",
       "alertMessage": "Tento klíč se zobrazí pouze nyní. Uložte si ho na bezpečné místo.",
       "iveSavedIt": "Mám uloženo"
     },

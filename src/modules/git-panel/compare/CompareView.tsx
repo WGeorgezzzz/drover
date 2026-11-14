@@ -1,4 +1,6 @@
-import { AlertCircle, GitCompare, RefreshCw } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { Select } from '@/shared/ui/Select';
+import { AlertCircle, GitCompare, RefreshCw } from '@/shared/icons';
 import { useCallback, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
@@ -99,7 +101,7 @@ export default function CompareView({
         <label htmlFor="compare-base-branch" className="shrink-0 text-xs font-medium text-muted-foreground">
           {t('git:compare.baseLabel')}
         </label>
-        <select
+        <Select
           id="compare-base-branch"
           value={base}
           disabled={!hasBases}
@@ -125,8 +127,8 @@ export default function CompareView({
               ))}
             </optgroup>
           )}
-        </select>
-        <button
+        </Select>
+        <Button variant="ghost" size="compact"
           type="button"
           onClick={refresh}
           disabled={!base || isLoading}
@@ -134,7 +136,7 @@ export default function CompareView({
           title={t('git:compare.refresh')}
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-        </button>
+        </Button>
       </div>
 
       {base && !error && !showSpinner && (

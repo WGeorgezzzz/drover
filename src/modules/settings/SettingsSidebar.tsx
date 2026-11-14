@@ -1,4 +1,5 @@
-import { Bell, Bot, GitBranch, Globe, Info, Key, ListChecks, Mic, MonitorPlay, Palette, Puzzle, UserRound, Users } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { Bell, Bot, GitBranch, Globe, Info, Key, ListChecks, Mic, MonitorPlay, Palette, Puzzle, UserRound, Users } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/modules/auth';
@@ -52,7 +53,7 @@ export default function SettingsSidebar({ activeTab, onChange }: SettingsSidebar
             const isActive = activeTab === item.id;
 
             return (
-              <button
+              <Button variant="ghost" size="compact"
                 key={item.id}
                 onClick={() => onChange(item.id)}
                 className={cn(
@@ -64,7 +65,7 @@ export default function SettingsSidebar({ activeTab, onChange }: SettingsSidebar
               >
                 <Icon className="h-4 w-4 flex-shrink-0" />
                 {t(item.labelKey)}
-              </button>
+              </Button>
             );
           })}
         </nav>

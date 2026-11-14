@@ -1,4 +1,4 @@
-import { MessageSquare, Terminal, Folder, GitBranch, ClipboardCheck, MonitorPlay, type LucideIcon } from 'lucide-react';
+import { MessageSquare, Terminal, Folder, GitBranch, ClipboardCheck, MonitorPlay, type LucideIcon } from '@/shared/icons';
 import { Fragment } from 'react';
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -131,7 +131,7 @@ export default function WorkspaceTabs({
                 className="h-8 max-w-44 px-2.5 py-[5px]"
               >
                 {tab.kind === 'builtin' ? (
-                  <tab.icon className="h-3.5 w-3.5 shrink-0" strokeWidth={isActive ? 2.2 : 1.8} />
+                  <tab.icon className="h-3.5 w-3.5 shrink-0" />
                 ) : (
                   <PluginIcon
                     pluginName={tab.pluginName}

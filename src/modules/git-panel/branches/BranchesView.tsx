@@ -1,4 +1,6 @@
-import { Check, GitBranch, Globe, Plus, RefreshCw, Search, Trash2, X } from 'lucide-react';
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
+import { Check, GitBranch, Globe, Plus, RefreshCw, Search, Trash2, X } from '@/shared/icons';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -74,7 +76,7 @@ function BranchRow({ name, isCurrent, isRemote, aheadCount, behindCount, isMobil
         {isCurrent && (aheadCount > 0 || behindCount > 0) && (
           <div className="flex items-center gap-2 text-xs">
             {aheadCount > 0 && (
-              <span className="text-green-600 dark:text-green-400">{t('git:branches.ahead', { n: aheadCount })}</span>
+              <span className="text-success dark:text-success">{t('git:branches.ahead', { n: aheadCount })}</span>
             )}
             {behindCount > 0 && (
               <span className="text-primary">{t('git:branches.behind', { n: behindCount })}</span>
@@ -89,20 +91,20 @@ function BranchRow({ name, isCurrent, isRemote, aheadCount, behindCount, isMobil
           <Check className="h-4 w-4 text-primary" />
         ) : !isRemote ? (
           <>
-            <button
+            <Button variant="ghost" size="compact"
               onClick={onSwitch}
               className="rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               title={t('git:branches.switchTo', { name })}
             >
               {t('git:branches.switch')}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="compact"
               onClick={onDelete}
               className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               title={t('git:branches.deleteTo', { name })}
             >
               <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           </>
         ) : null}
       </div>
@@ -197,19 +199,19 @@ export default function BranchesView({
             ? t('git:branches.summaryLocalRemote', { local: localBranches.length, remote: remoteBranches.length })
             : t('git:branches.summaryLocal', { n: localBranches.length })}
         </span>
-        <button
+        <Button variant="ghost" size="compact"
           onClick={() => setShowNewBranchModal(true)}
           className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
         >
           <Plus className="h-3.5 w-3.5" />
           {t('git:branches.newBranch')}
-        </button>
+        </Button>
       </div>
 
       {/* Branch search */}
       <div className="flex items-center gap-2 border-b border-border/40 px-4 py-2">
         <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        <input
+        <UnifiedInput
           type="text"
           value={branchSearchQuery}
           onChange={(event) => setBranchSearchQuery(event.target.value)}
@@ -217,13 +219,13 @@ export default function BranchesView({
           className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
         />
         {branchSearchQuery && (
-          <button
+          <Button variant="ghost" size="compact"
             onClick={() => setBranchSearchQuery('')}
             className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
             title={t('git:branches.clearSearch')}
           >
             <X className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         )}
       </div>
 

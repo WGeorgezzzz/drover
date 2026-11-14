@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +17,7 @@ import {
   Settings,
   SunMoon,
   X,
-} from 'lucide-react';
+} from '@/shared/icons';
 
 import {
   Command,
@@ -180,14 +181,14 @@ function CommandPalette({
             <div className="flex items-center gap-2 border-b px-3 py-2">
               <span className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
                 {t(`commandPalette.pages.${page}`)}
-                <button
+                <Button variant="ghost" size="compact"
                   type="button"
                   onClick={popPage}
                   aria-label={t('commandPalette.backToAll')}
                   className="ml-0.5 rounded-sm opacity-70 hover:opacity-100"
                 >
                   <X className="h-3 w-3" />
-                </button>
+                </Button>
               </span>
               <span className="text-xs text-muted-foreground">{t('commandPalette.backspaceHint')}</span>
             </div>
@@ -202,13 +203,13 @@ function CommandPalette({
           />
           {showSessions && <div className="flex items-center gap-2 border-b px-3 py-2 text-xs">
             <span className="text-muted-foreground">{t('commandPalette.sessionScope')}</span>
-            <button type="button" aria-pressed={sessionScope === 'all'} onClick={() => setSessionScope('all')} className={`rounded px-2 py-1 ${sessionScope === 'all' ? 'bg-accent' : ''}`}>{t('commandPalette.allProjects')}</button>
-            <button type="button" disabled={!projectId} aria-pressed={sessionScope === 'project'} onClick={() => setSessionScope('project')} className={`rounded px-2 py-1 disabled:opacity-40 ${sessionScope === 'project' ? 'bg-accent' : ''}`}>{t('commandPalette.currentProject')}</button>
+            <Button variant="ghost" size="compact" type="button" aria-pressed={sessionScope === 'all'} onClick={() => setSessionScope('all')} className={`rounded px-2 py-1 ${sessionScope === 'all' ? 'bg-accent' : ''}`}>{t('commandPalette.allProjects')}</Button>
+            <Button variant="ghost" size="compact" type="button" disabled={!projectId} aria-pressed={sessionScope === 'project'} onClick={() => setSessionScope('project')} className={`rounded px-2 py-1 disabled:opacity-40 ${sessionScope === 'project' ? 'bg-accent' : ''}`}>{t('commandPalette.currentProject')}</Button>
           </div>}
           <CommandList>
             <CommandEmpty>{sessions.loading || messageMatches.searching ? t('commandPalette.searching') : t('commandPalette.noResults')}</CommandEmpty>
             {showSessions && (sessions.error || messageMatches.error) && <div role="alert" className="px-3 py-2 text-xs text-destructive">{t('commandPalette.sessionLoadFailed')}
-              <button className="ml-2 underline" onClick={() => { if (sessions.error) void sessions.retry(); if (messageMatches.error) messageMatches.retry(); }}>{t('commandPalette.retry')}</button>
+              <Button variant="ghost" size="compact" className="ml-2 underline" onClick={() => { if (sessions.error) void sessions.retry(); if (messageMatches.error) messageMatches.retry(); }}>{t('commandPalette.retry')}</Button>
             </div>}
             {showSessions && messageMatches.searching && <div role="status" className="px-3 py-1 text-xs text-muted-foreground">{t('commandPalette.searching')}</div>}
 
@@ -329,7 +330,7 @@ function CommandPalette({
               </CommandGroup>
             )}
             {showSessions && sessions.hasMore && page === 'sessions' && <div className="border-t px-3 py-2">
-              <button type="button" className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50" disabled={sessions.loading} onClick={() => void sessions.loadMore()}>{t(sessions.loading ? 'commandPalette.loading' : 'commandPalette.loadMoreSessions')}</button>
+              <Button variant="ghost" size="compact" type="button" className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50" disabled={sessions.loading} onClick={() => void sessions.loadMore()}>{t(sessions.loading ? 'commandPalette.loading' : 'commandPalette.loadMoreSessions')}</Button>
             </div>}
 
             {showFiles && projectId && filesShown.length > 0 && (

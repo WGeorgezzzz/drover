@@ -24,8 +24,14 @@ export { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/shared/u
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/shared/ui/Collapsible';
 export { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '@/shared/ui/Command';
 export { DarkModeToggle } from '@/shared/ui/DarkModeToggle';
-export { Dialog, DialogTrigger, DialogContent, DialogTitle } from '@/shared/ui/Dialog';
+export { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogSurface } from '@/shared/ui/Dialog';
+export { default as SettingsSection } from '@/shared/ui/SettingsSection';
+export { default as SettingsRow } from '@/shared/ui/SettingsRow';
+export { default as SettingsCard } from '@/shared/ui/SettingsCard';
 export { Input } from '@/shared/ui/Input';
+export { Select } from '@/shared/ui/Select';
+export { Switch } from '@/shared/ui/Switch';
+export { Checkbox } from '@/shared/ui/Checkbox';
 export { LLMProviderLogo } from '@/shared/ui/LLMProviderLogo';
 export { PillBar, Pill } from '@/shared/ui/PillBar';
 export { ScrollArea } from '@/shared/ui/ScrollArea';

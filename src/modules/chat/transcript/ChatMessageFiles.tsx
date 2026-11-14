@@ -1,4 +1,5 @@
-import { DownloadIcon, FileArchiveIcon, FileCodeIcon, FileIcon, FileTextIcon } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { DownloadIcon, FileArchiveIcon, FileCodeIcon, FileIcon, FileTextIcon } from '@/shared/icons';
 import { useState } from 'react';
 
 import { downloadAttachment } from '@/shared/download';
@@ -46,7 +47,7 @@ function ChatMessageFile({ file }: { file: ChatAttachment }) {
   };
 
   return (
-    <button
+    <Button variant="ghost" size="compact"
       type="button"
       onClick={() => void download()}
       disabled={!file.path || isDownloading}
@@ -66,7 +67,7 @@ function ChatMessageFile({ file }: { file: ChatAttachment }) {
         }`}
         aria-hidden
       />
-    </button>
+    </Button>
   );
 }
 

@@ -1,4 +1,5 @@
-import { FileText, GitBranch, GitCompare, GitFork, History } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { FileText, GitBranch, GitCompare, GitFork, History } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import type { GitPanelView } from '@/shared/types';
@@ -33,7 +34,7 @@ export default function GitViewTabs({ activeView, isHidden, changeCount, onChang
         aria-label={t('git:tabs.ariaLabel')}
       >
         {TABS.map(({ id, labelKey, Icon }) => (
-          <button
+          <Button variant="ghost" size="compact"
             key={id}
             type="button"
             role="tab"
@@ -54,7 +55,7 @@ export default function GitViewTabs({ activeView, isHidden, changeCount, onChang
                 </span>
               )}
             </span>
-          </button>
+          </Button>
         ))}
       </div>
     </div>

@@ -1,5 +1,6 @@
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { X } from '@/shared/icons';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -92,7 +93,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }: Set
   } = useWebPush();
 
   const handleEnablePush = async () => {
-    await pushSubscribe();
+    if (!await pushSubscribe()) return;
     // Server sets webPush: true in preferences on subscribe; sync local state
     setNotificationPreferences({
       ...notificationPreferences,
@@ -101,7 +102,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }: Set
   };
 
   const handleDisablePush = async () => {
-    await pushUnsubscribe();
+    if (!await pushUnsubscribe()) return;
     // Server sets webPush: false in preferences on unsubscribe; sync local state
     setNotificationPreferences({
       ...notificationPreferences,
@@ -196,18 +197,8 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }: Set
   const isAuthenticated = Boolean(loginProvider && providerAuthStatus[loginProvider].authenticated);
 
   return (
-    <div
-      className="modal-backdrop fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm md:p-4"
-      onMouseDown={handleBackdropMouseDown}
-      onClick={handleBackdropClick}
-    >
-      {/* Marked as a modal dialog so layers underneath, like the code editor, leave its Escape alone. */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('title')}
-        className="flex h-full w-full flex-col overflow-hidden border border-border bg-background shadow-2xl md:h-[90vh] md:max-w-4xl md:rounded-xl"
-      >
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) onClose(); }}><UnifiedDialogContent wrapperClassName="z-[9999]" aria-label={t('title')}
+        className="flex h-[100dvh] max-h-[100dvh] w-full max-w-none flex-col overflow-hidden border border-border bg-background shadow-2xl rounded-none md:h-[90vh] md:max-w-4xl md:rounded-xl">
         {/* Header */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-4 py-3 md:px-5">
           <h2 className="text-base font-semibold text-foreground">{t('title')}</h2>
@@ -278,6 +269,7 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }: Set
                   isDesktop={Boolean(desktopNotificationsBridge)}
                   desktopNotifications={desktopNotificationsState}
                   onEnableDesktopNotifications={handleEnableDesktopNotifications}
+                  onTestDesktopNotification={() => { void desktopNotificationsBridge?.test?.(); }}
                   onDisableDesktopNotifications={handleDisableDesktopNotifications}
                 />
               )}
@@ -296,18 +288,9 @@ function Settings({ isOpen, onClose, projects = [], initialTab = 'agents' }: Set
             </div>
           </main>
         </div>
-      </div>
-
-      <ProviderLoginModal
-        key={loginProvider || 'claude'}
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        provider={loginProvider || 'claude'}
-        onComplete={handleLoginComplete}
-        isAuthenticated={isAuthenticated}
-      />
-
-    </div>
+      </UnifiedDialogContent>
+      <ProviderLoginModal key={loginProvider || 'claude'} isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} provider={loginProvider || 'claude'} onComplete={handleLoginComplete} isAuthenticated={isAuthenticated} />
+      </UnifiedDialog>
   );
 }
 

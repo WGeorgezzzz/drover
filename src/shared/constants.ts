@@ -8,7 +8,7 @@ import {
   MonitorPlay,
   Palette,
   Plug,
-} from 'lucide-react';
+} from '@/shared/icons';
 import type { ComponentType } from 'react';
 
 import type { FileStatusCode, LLMProvider, McpProvider, McpScope, McpTransport, SettingsMainTab } from '@/shared/types';
@@ -233,3 +233,7 @@ export const PROVIDER_PERMISSION_PREFERENCE_KEYS: Record<LLMProvider, UserPrefer
   workbuddy: 'workbuddyPermissions',
   'deepseek-harness': 'harnessPermissions',
 };
+
+//----------------- SHARED ICON METRICS ------------
+/** Pixel dimensions used by all application icons and the launcher generator. */
+export { ICON_SIZE, ICON_STROKE } from '@/shared/iconMetrics';

@@ -265,7 +265,7 @@
     "title": "API Anahtarları",
     "description": "Diğer uygulamalardan harici API'ye erişmek için API anahtarları üret.",
     "newKey": {
-      "alertTitle": "⚠️ API Anahtarını Kaydet",
+      "alertTitle": "API Anahtarını Kaydet",
       "alertMessage": "Bu anahtarı yalnızca bu sefer göreceksin. Güvenli bir yerde sakla.",
       "iveSavedIt": "Kaydettim"
     },

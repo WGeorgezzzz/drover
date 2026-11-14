@@ -14,50 +14,14 @@ body.cc-modal-window {
 }
 
 :root {
-  --bg: #111315;
-  --s1: #171a1d;
-  --s2: #1e2328;
-  --s3: #262d34;
-  --b-subtle: #28303a;
-  --b: #313b46;
-  --b-strong: #42505f;
-  --tx: #f5f7fa;
-  --tx2: #adb8c5;
-  --tx3: #7f8b98;
-  --brand: #0a66d9;
-  --brand-2: #5fa5ff;
-  --brand-faint: rgba(10, 102, 217, 0.14);
-  --ok: #2aa775;
-  --warn: #d48b20;
-  --err: #d65252;
-  --tab-hover-bg: rgba(255, 255, 255, 0.08);
-  --tab-active-bg: rgba(255, 255, 255, 0.14);
-  --mono: "SF Mono", "Geist Mono", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
-  color-scheme: dark;
+  --background: 0 0% 8%; --foreground: 0 0% 93%; --card: 0 0% 10%; --muted: 0 0% 15%; --muted-foreground: 0 0% 65%; --border: 0 0% 20%; --primary: 0 0% 93%; --success: 150 50% 60%; --warning: 40 80% 65%; --destructive: 0 65% 58%;
+  --bg: hsl(var(--background)); --s1: hsl(var(--card)); --s2: hsl(var(--muted)); --s3: hsl(var(--foreground) / .08); --b-subtle: hsl(var(--border)); --b: hsl(var(--border)); --b-strong: hsl(var(--foreground) / .3);
+  --tx: hsl(var(--foreground)); --tx2: hsl(var(--muted-foreground)); --tx3: hsl(var(--muted-foreground)); --brand: hsl(var(--primary)); --brand-2: hsl(var(--primary)); --brand-faint: hsl(var(--primary) / .08); --ok: hsl(var(--success)); --warn: hsl(var(--warning)); --err: hsl(var(--destructive)); --tab-hover-bg: hsl(var(--foreground) / .05); --tab-active-bg: hsl(var(--foreground) / .08);
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace; --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color-scheme: dark;
 }
-
-:root[data-theme="light"] {
-  --bg: #f3f5f8;
-  --s1: #ffffff;
-  --s2: #f7f9fb;
-  --s3: #edf1f5;
-  --b-subtle: #e5eaf0;
-  --b: #d8dee6;
-  --b-strong: #c3ccd6;
-  --tx: #11151a;
-  --tx2: #566171;
-  --tx3: #7f8b98;
-  --brand: #0a66d9;
-  --brand-2: #0f5fc6;
-  --brand-faint: rgba(10, 102, 217, 0.09);
-  --ok: #1f8e61;
-  --warn: #b67515;
-  --err: #c24747;
-  --tab-hover-bg: rgba(15, 23, 42, 0.05);
-  --tab-active-bg: rgba(15, 23, 42, 0.08);
-  color-scheme: light;
-}
+:root[data-theme="light"] { --background: 0 0% 98%; --foreground: 0 0% 9%; --card: 0 0% 100%; --muted: 0 0% 96%; --muted-foreground: 0 0% 45%; --border: 0 0% 89%; --primary: 0 0% 9%; --success: 150 60% 32%; --warning: 35 80% 36%; --destructive: 0 72% 45%; color-scheme: light; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid hsl(var(--primary) / .5); outline-offset: 2px; }
+button:disabled { opacity: .5; cursor: not-allowed; }
 
 body {
   background: var(--bg);

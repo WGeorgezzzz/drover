@@ -1,7 +1,9 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { Clock } from 'lucide-react';
+import { Clock } from '@/shared/icons';
 
 import { cn } from '@/shared/utils';
 import { useViewportMenuAnchor } from '@/shared/hooks/useViewportMenuAnchor';
@@ -62,7 +64,7 @@ export function ScheduleMessagePopover({ disabled, onSchedule }: ScheduleMessage
 
   return (
     <>
-      <button
+      <Button variant="ghost" size="compact"
         ref={triggerRef}
         type="button"
         disabled={disabled}
@@ -81,7 +83,7 @@ export function ScheduleMessagePopover({ disabled, onSchedule }: ScheduleMessage
         )}
       >
         <Clock className="h-4 w-4" />
-      </button>
+      </Button>
 
       {isOpen && anchor && createPortal(
         <ComposerMenuSurface anchor={anchor} menuRef={menuRef} ariaLabel={ariaLabel}>
@@ -104,14 +106,14 @@ export function ScheduleMessagePopover({ disabled, onSchedule }: ScheduleMessage
             <label className="block text-[11px] font-medium text-muted-foreground" htmlFor="schedule-at">
               {t('schedule.customLabel')}
             </label>
-            <input
+            <UnifiedInput
               id="schedule-at"
               type="datetime-local"
               value={customValue}
               onChange={(event) => setCustomValue(event.target.value)}
               className="mt-1 w-full rounded-md border border-border/60 bg-background px-2 py-1 text-xs text-foreground"
             />
-            <button
+            <Button variant="ghost" size="compact"
               type="button"
               onClick={() => {
                 const parsed = readLocalDateTime(customValue);
@@ -120,7 +122,7 @@ export function ScheduleMessagePopover({ disabled, onSchedule }: ScheduleMessage
               className="mt-2 w-full rounded-md bg-primary px-2 py-1.5 text-xs font-medium text-primary-foreground transition-opacity hover:opacity-90"
             >
               {t('schedule.confirm')}
-            </button>
+            </Button>
           </div>
         </ComposerMenuSurface>,
         document.body,

@@ -1,13 +1,13 @@
-import { FileText } from 'lucide-react';
+import { FileText } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { useClaudeSettingsPermissionRules } from '@/modules/settings/hooks/useClaudeSettingsPermissionRules';
 import type { ClaudeSettingsPermissionSource } from '@/shared/types';
 
 const RULE_GROUPS = [
-  { key: 'allow', chipClassName: 'border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-200' },
-  { key: 'ask', chipClassName: 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200' },
-  { key: 'deny', chipClassName: 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200' },
+  { key: 'allow', chipClassName: 'border-success bg-success/10 text-success dark:border-success dark:bg-success/20 dark:text-success' },
+  { key: 'ask', chipClassName: 'border-warning bg-warning/10 text-warning dark:border-warning dark:bg-warning/20 dark:text-warning' },
+  { key: 'deny', chipClassName: 'border-destructive bg-destructive/10 text-destructive dark:border-destructive dark:bg-destructive/20 dark:text-destructive' },
 ] as const;
 
 function SettingsFileCard({ source }: { source: ClaudeSettingsPermissionSource }) {
@@ -22,7 +22,7 @@ function SettingsFileCard({ source }: { source: ClaudeSettingsPermissionSource }
       </div>
 
       {source.status === 'invalid' && (
-        <p className="text-sm text-amber-700 dark:text-amber-300">{t('permissions.settingsFiles.invalid')}</p>
+        <p className="text-sm text-warning dark:text-warning">{t('permissions.settingsFiles.invalid')}</p>
       )}
       {source.status === 'missing' && (
         <p className="text-sm text-muted-foreground">{t('permissions.settingsFiles.missing')}</p>
@@ -64,13 +64,13 @@ export default function ClaudeSettingsFileRules() {
   return (
     <div className="space-y-4" data-testid="claude-settings-file-rules">
       <div className="flex items-center gap-3">
-        <FileText className="h-5 w-5 text-blue-500" />
+        <FileText className="h-5 w-5 text-primary" />
         <h3 className="text-lg font-medium text-foreground">{t('permissions.settingsFiles.title')}</h3>
       </div>
       <p className="text-sm text-muted-foreground">{t('permissions.settingsFiles.description')}</p>
 
       {loadFailed && (
-        <p className="text-sm text-amber-700 dark:text-amber-300">{t('permissions.settingsFiles.loadFailed')}</p>
+        <p className="text-sm text-warning dark:text-warning">{t('permissions.settingsFiles.loadFailed')}</p>
       )}
       {!loadFailed && sources === null && (
         <p className="text-sm text-muted-foreground">{t('permissions.settingsFiles.loading')}</p>

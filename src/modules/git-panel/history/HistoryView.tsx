@@ -1,4 +1,4 @@
-import { History, RefreshCw } from 'lucide-react';
+import { History, RefreshCw } from '@/shared/icons';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

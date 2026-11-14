@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, dialog, ipcMain, session, shell } from 'electron';
+import { app, BrowserWindow, clipboard, dialog, ipcMain, session, shell, webContents } from 'electron';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -85,10 +85,12 @@ function getDesktopNotificationsSettingsPath() {
 }
 
 function getRunningEnvironmentUrls() {
-  return cloud.getEnvironments()
+  const remoteUrls = cloud.getEnvironments()
     .filter((environment) => environment.status === 'running')
     .map((environment) => cloud.getEnvironmentUrl(environment))
     .filter(Boolean);
+  const localUrl = localServer?.getLocalServerUrl();
+  return [...new Set([...remoteUrls, ...(localUrl ? [localUrl] : [])])];
 }
 
 function getDisplayTargetName() {
@@ -577,6 +579,7 @@ async function openLocalInDesktop() {
   const existingTab = tabs.getTab('local');
   if (existingTab && localServer.getLocalServerUrl()) {
     await desktopWindow.showTarget(await localServer.getResolvedTarget());
+    await desktopNotifications?.sync();
     return getDesktopState();
   }
 
@@ -594,6 +597,7 @@ async function openLocalInDesktop() {
 
   const target = await localServer.getResolvedTarget();
   await desktopWindow.showTarget(target);
+  await desktopNotifications?.sync();
   return getDesktopState();
 }
 
@@ -692,6 +696,8 @@ async function openNotificationTarget({ environmentUrl, sessionId = null }) {
   const environment = findEnvironmentByUrl(environmentUrl);
   if (environment) {
     await openEnvironmentInDesktop(environment);
+  } else if (localServer.getLocalServerUrl() && new URL(environmentUrl).origin === new URL(localServer.getLocalServerUrl()).origin) {
+    await openLocalInDesktop();
   } else {
     const parsed = new URL(environmentUrl);
     await desktopWindow.showTarget({
@@ -810,6 +816,14 @@ function registerIpcHandlers() {
   ipcMain.handle('cloudcli-desktop:update-desktop-notifications', async (_event, settings) => {
     await desktopNotifications?.saveSettings(settings);
     return getDesktopState();
+  });
+  ipcMain.handle('cloudcli-desktop:test-notification', async () => {
+    const url = getRunningEnvironmentUrls()[0];
+    if (!url || !desktopNotifications?.getState().enabled) return false;
+    return desktopNotifications.showNativeNotification({ httpUrl: url }, {
+      title: 'Drover', body: 'Drover',
+      data: { tag: `test:${Date.now()}`, silent: false },
+    });
   });
   ipcMain.handle('cloudcli-desktop:show-desktop-settings', async () => desktopWindow.showDesktopSettings());
   ipcMain.handle('cloudcli-desktop:show-local-settings', async () => desktopWindow.showLocalSettings());
@@ -973,13 +987,22 @@ async function bootstrap() {
     settingsPath: getDesktopNotificationsSettingsPath(),
     appVersion: app.getVersion(),
     appName: APP_NAME,
-    getDeviceId: () => cloud.getAccount()?.deviceId || '',
+    getDeviceId: () => cloud.getAccount()?.deviceId || `local-${createHash('sha256').update(app.getPath('userData')).digest('hex').slice(0, 24)}`,
     getAccountEmail: () => cloud.getAccount()?.email || null,
     getRunningEnvironmentUrls,
     getApiKey: () => cloud.getAccount()?.apiKey || '',
     getAuthToken: getEnvironmentAuthToken,
     getIconPath: getWindowIconPath,
     openNotificationTarget,
+    shouldSuppressNotification: (target, payload) => {
+      const focused = webContents.getFocusedWebContents();
+      if (!BrowserWindow.getFocusedWindow() || !focused || !payload.data?.sessionId) return false;
+      try {
+        const current = new URL(focused.getURL());
+        return current.origin === new URL(target.httpUrl).origin &&
+          decodeURIComponent(current.pathname) === `/session/${payload.data.sessionId}`;
+      } catch { return false; }
+    },
     onChange: syncDesktopState,
   });
 

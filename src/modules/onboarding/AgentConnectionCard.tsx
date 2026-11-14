@@ -1,4 +1,5 @@
-import { Check } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { Check } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { LLMProviderLogo } from '@/shared/ui';
@@ -44,19 +45,19 @@ export default function AgentConnectionCard({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
               {title}
-              {status.authenticated && <Check className="h-3.5 w-3.5 flex-shrink-0 text-emerald-500" />}
+              {status.authenticated && <Check className="h-3.5 w-3.5 flex-shrink-0 text-success" />}
             </div>
             <div className="truncate text-xs text-muted-foreground" title={statusText}>{statusText}</div>
           </div>
         </div>
 
         {!status.authenticated && !status.loading && (
-          <button
+          <Button variant="ghost" size="compact"
             onClick={onLogin}
-            className={`${loginButtonClassName} flex-shrink-0 rounded-lg px-4 py-1.5 text-sm font-medium text-white transition-colors`}
+            className={`${loginButtonClassName} flex-shrink-0 rounded-lg px-4 py-1.5 text-sm font-medium text-primary-foreground transition-colors`}
           >
             {t('onboarding.login')}
-          </button>
+          </Button>
         )}
       </div>
     </div>

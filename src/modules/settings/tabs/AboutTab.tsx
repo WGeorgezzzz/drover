@@ -1,4 +1,4 @@
-import { ExternalLink, Star } from 'lucide-react';
+import { ExternalLink, Star } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { CLOUDCLI_WORDMARK_FONT_FAMILY } from '@/shared/constants';
@@ -48,7 +48,7 @@ export default function AboutTab() {
                 href={releasesUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-medium text-green-600 transition-colors hover:bg-green-500/20 dark:text-green-400"
+                className="flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-medium text-success transition-colors hover:bg-success/20 dark:text-success"
               >
                 {t('apiKeys.version.updateAvailable', { version: latestVersion })}
                 <ExternalLink className="h-2.5 w-2.5" />

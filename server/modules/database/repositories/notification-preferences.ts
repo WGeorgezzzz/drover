@@ -23,7 +23,7 @@ type NotificationPreferences = {
 
 const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   channels: {
-    inApp: false,
+    inApp: true,
     webPush: false,
     desktop: false,
     sound: true,
@@ -48,7 +48,7 @@ function normalizeNotificationPreferences(value: unknown): NotificationPreferenc
   return {
     channels: {
       ...extraChannels,
-      inApp: source.channels?.inApp === true,
+      inApp: source.channels?.inApp !== false,
       webPush: source.channels?.webPush === true,
       desktop: source.channels?.desktop === true,
       sound: source.channels?.sound !== false,

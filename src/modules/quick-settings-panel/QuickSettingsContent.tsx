@@ -6,7 +6,7 @@ import {
   Moon,
   Sun,
   type LucideIcon,
-} from 'lucide-react';
+} from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { DarkModeToggle } from '@/shared/ui';

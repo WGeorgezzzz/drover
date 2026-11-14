@@ -2,7 +2,7 @@
   "notConfigured": {
     "title": "TaskMaster AI ist nicht konfiguriert",
     "description": "TaskMaster hilft dabei, komplexe Projekte mit KI-Unterstützung in überschaubare Aufgaben aufzuteilen",
-    "whatIsTitle": "🎯 Was ist TaskMaster?",
+    "whatIsTitle": "Was ist TaskMaster?",
     "features": {
       "aiPowered": "KI-gestütztes Aufgabenmanagement: Komplexe Projekte in handhabbare Unteraufgaben aufteilen",
       "prdTemplates": "PRD-Vorlagen: Aufgaben aus Produktanforderungsdokumenten generieren",
@@ -35,7 +35,7 @@
         "description": "Bitte deinen KI-Assistenten, mit der Bearbeitung von Aufgaben zu beginnen, deren Status zu aktualisieren und neue Aufgaben hinzuzufügen, wenn dein Projekt sich weiterentwickelt."
       }
     },
-    "tip": "💡 Tipp: Beginne mit einem PRD, um das Beste aus TaskMasters KI-gestützter Aufgabengenerierung herauszuholen"
+    "tip": "Tipp: Beginne mit einem PRD, um das Beste aus TaskMasters KI-gestützter Aufgabengenerierung herauszuholen"
   },
   "setupModal": {
     "title": "TaskMaster-Einrichtung",
@@ -49,20 +49,20 @@
     "title": "Erste Schritte mit TaskMaster",
     "subtitle": "Dein Leitfaden für produktives Aufgabenmanagement",
     "examples": {
-      "parsePRD": "💬 Beispiel:\n\"Ich habe gerade ein neues Projekt mit Claude Task Master initialisiert. Ich habe ein PRD unter .taskmaster/docs/prd.txt. Kannst du mir helfen, es zu analysieren und die ersten Aufgaben einzurichten?\"",
-      "expandTask": "💬 Beispiel:\n\"Aufgabe 5 scheint komplex. Kannst du sie in Unteraufgaben aufteilen?\"",
-      "addTask": "💬 Beispiel:\n\"Bitte füge eine neue Aufgabe hinzu, um Benutzerprofilbild-Uploads mit Cloudinary zu implementieren, und recherchiere den besten Ansatz.\""
+      "parsePRD": "Beispiel:\n\"Ich habe gerade ein neues Projekt mit Claude Task Master initialisiert. Ich habe ein PRD unter .taskmaster/docs/prd.txt. Kannst du mir helfen, es zu analysieren und die ersten Aufgaben einzurichten?\"",
+      "expandTask": "Beispiel:\n\"Aufgabe 5 scheint komplex. Kannst du sie in Unteraufgaben aufteilen?\"",
+      "addTask": "Beispiel:\n\"Bitte füge eine neue Aufgabe hinzu, um Benutzerprofilbild-Uploads mit Cloudinary zu implementieren, und recherchiere den besten Ansatz.\""
     },
     "moreExamples": "Weitere Beispiele und Verwendungsmuster anzeigen →",
     "proTips": {
-      "title": "💡 Profi-Tipps",
+      "title": "Profi-Tipps",
       "search": "Verwende die Suchleiste, um bestimmte Aufgaben schnell zu finden",
       "views": "Wechsle mit den Ansichts-Umschaltern zwischen Kanban-, Listen- und Rasteransicht",
       "filters": "Verwende Filter, um dich auf bestimmte Aufgabenstatus oder Prioritäten zu konzentrieren",
       "details": "Klicke auf eine Aufgabe, um detaillierte Informationen anzuzeigen und Unteraufgaben zu verwalten"
     },
     "learnMore": {
-      "title": "📚 Mehr erfahren",
+      "title": "Mehr erfahren",
       "description": "TaskMaster AI ist ein fortschrittliches Aufgabenmanagementsystem für Entwickler:innen. Dokumentation, Beispiele und Möglichkeiten zur Mitarbeit am Projekt.",
       "githubButton": "Auf GitHub ansehen"
     }
@@ -99,12 +99,12 @@
     "grid": "Rasteransicht"
   },
   "kanban": {
-    "pending": "📋 Ausstehend",
-    "inProgress": "🚀 In Bearbeitung",
-    "done": "✅ Erledigt",
-    "blocked": "🚫 Blockiert",
-    "deferred": "⏳ Zurückgestellt",
-    "cancelled": "❌ Abgebrochen",
+    "pending": "Ausstehend",
+    "inProgress": "In Bearbeitung",
+    "done": "Erledigt",
+    "blocked": "Blockiert",
+    "deferred": "Zurückgestellt",
+    "cancelled": "Abgebrochen",
     "noTasksYet": "Noch keine Aufgaben",
     "tasksWillAppear": "Aufgaben werden hier angezeigt",
     "moveTasksHere": "Aufgaben hierher verschieben, wenn sie gestartet werden",

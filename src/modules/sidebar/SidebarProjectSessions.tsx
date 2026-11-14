@@ -1,4 +1,4 @@
-import { CheckSquare, Plus, Trash2 } from 'lucide-react';
+import { CheckSquare, Plus, Trash2 } from '@/shared/icons';
 import { Fragment } from 'react';
 import type { TFunction } from 'i18next';
 
@@ -130,7 +130,7 @@ export default function SidebarProjectSessions({
     <div className="sidebar-project-sessions ml-3 space-y-0.5 pl-2">
       {isCompact ? (
         <div className="flex items-center gap-2 px-3 pb-1 pt-1">
-          <button
+          <Button variant="ghost" size="compact"
             className="flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-md bg-primary text-xs font-medium text-primary-foreground transition-all duration-150 hover:bg-primary/90 active:scale-[0.98]"
             onClick={() => {
               onProjectSelect(project);
@@ -139,7 +139,7 @@ export default function SidebarProjectSessions({
           >
             <Plus className="h-3.5 w-3.5" />
             {t('sessions.newSession')}
-          </button>
+          </Button>
           {!isSelecting && initialSessionsLoaded && selectableSessionIds.length > 0 && (
             <Button
               variant="ghost"
@@ -214,7 +214,7 @@ export default function SidebarProjectSessions({
               <Button
                 variant="destructive"
                 size="sm"
-                className="h-8 w-full justify-center gap-2 bg-red-600 text-xs font-medium text-white hover:bg-red-700"
+                className="h-8 w-full justify-center gap-2 bg-destructive text-xs font-medium text-primary-foreground hover:bg-destructive"
                 onClick={() => onDeleteSelectedSessions(effectiveSelectedIds)}
                 disabled={effectiveSelectedIds.length === 0}
               >

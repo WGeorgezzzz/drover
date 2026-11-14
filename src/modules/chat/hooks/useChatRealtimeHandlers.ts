@@ -2,8 +2,6 @@ import { useEffect, useRef } from 'react';
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 
 import type { ServerEvent,MarkSessionIdle,MarkSessionProcessing,PendingPermissionRequest,ProjectSession,LLMProvider,NormalizedMessage,GetSessionActivity,MarkSessionBackground } from '@/shared/types';
-import { showCompletionTitleIndicator } from '@/modules/chat/utils/pageTitleNotification';
-import { playChatCompletionSound, playNotificationSound } from '@/shared/utils';
 import type { SessionStore } from '@/modules/chat/hooks/useSessionStore';
 import { normalizedToChatMessages } from '@/modules/chat/hooks/useChatMessages';
 import { collectRunningBackgroundTasks } from '@/modules/chat/utils/backgroundTasks';
@@ -165,7 +163,6 @@ export function useChatRealtimeHandlers({
             setPendingPermissionRequests(nextPendingPermissionRequests);
 
             if (hasPendingActionablePermissionRequests && !hadActionablePermissionRequests) {
-              void playNotificationSound();
             }
           }
           return;
@@ -309,8 +306,6 @@ export function useChatRealtimeHandlers({
 
           // Celebrate only successful runs (failed runs end with success: false).
           if (msg.success !== false) {
-            showCompletionTitleIndicator();
-            void playChatCompletionSound();
           }
 
           // The session id is stable for the whole conversation (allocated
@@ -330,7 +325,6 @@ export function useChatRealtimeHandlers({
         case 'permission_request': {
           if (!msg.requestId) break;
           if (isActionablePermissionRequest({ toolName: msg.toolName })) {
-            void playNotificationSound();
           }
 
           if (sid === activeViewSessionId) {

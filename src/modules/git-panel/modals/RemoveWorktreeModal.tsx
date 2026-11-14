@@ -1,4 +1,7 @@
-import { RefreshCw, Trash2 } from 'lucide-react';
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
+import { Button } from '@/shared/ui/Button';
+import { RefreshCw, Trash2 } from '@/shared/icons';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -48,18 +51,12 @@ export default function RemoveWorktreeModal({
   const isDirty = worktree.changedFileCount > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="remove-worktree-title"
-      >
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) onClose(); }}><UnifiedDialogContent wrapperClassName="z-50" className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+        aria-labelledby="remove-worktree-title">
         <div className="p-6">
           <div className="mb-4 flex items-center">
-            <div className="mr-3 rounded-full bg-red-100 p-2 dark:bg-red-900/30">
-              <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
+            <div className="mr-3 rounded-full bg-destructive/10 p-2 dark:bg-destructive/30">
+              <Trash2 className="h-4 w-4 text-destructive dark:text-destructive" />
             </div>
             <h3 id="remove-worktree-title" className="text-lg font-semibold text-foreground">
               {t('git:remove.title')}
@@ -71,15 +68,15 @@ export default function RemoveWorktreeModal({
           </p>
 
           {isDirty && (
-            <p className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+            <p className="mb-3 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning dark:text-warning">
               {t('git:remove.uncommittedWarning', { count: worktree.changedFileCount })}
             </p>
           )}
 
           {worktree.branch && (
             <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-foreground/80">
-              <input
-                type="checkbox"
+              <UnifiedCheckbox
+
                 checked={deleteBranch}
                 onChange={(event) => setDeleteBranch(event.target.checked)}
                 className="h-4 w-4 rounded border-border accent-primary"
@@ -90,8 +87,8 @@ export default function RemoveWorktreeModal({
 
           {isDirty && (
             <label className="mb-2 flex cursor-pointer items-center gap-2 text-sm text-foreground/80">
-              <input
-                type="checkbox"
+              <UnifiedCheckbox
+
                 checked={force}
                 onChange={(event) => setForce(event.target.checked)}
                 className="h-4 w-4 rounded border-border accent-primary"
@@ -101,16 +98,16 @@ export default function RemoveWorktreeModal({
           )}
 
           <div className="mt-4 flex justify-end space-x-3">
-            <button
+            <Button variant="ghost" size="compact"
               onClick={onClose}
               className="rounded-lg px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               {t('git:confirm.cancel')}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="compact"
               onClick={() => void handleRemove()}
               disabled={isRemoving || (isDirty && !force)}
-              className="flex items-center space-x-2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center space-x-2 rounded-lg bg-destructive px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-destructive disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isRemoving ? (
                 <>
@@ -123,10 +120,9 @@ export default function RemoveWorktreeModal({
                   <span>{t('git:remove.remove')}</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </UnifiedDialogContent></UnifiedDialog>
   );
 }

@@ -1,4 +1,5 @@
-import { GitBranch, GitCommit, RefreshCw } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { GitBranch, GitCommit, RefreshCw } from '@/shared/icons';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -194,7 +195,7 @@ export default function ChangesView({
             <p className="mb-6 max-w-md text-sm text-muted-foreground">
               {t('git:changes.noCommitsDescription')}
             </p>
-            <button
+            <Button variant="ghost" size="compact"
               onClick={() => void onCreateInitialCommit()}
               disabled={isCreatingInitialCommit}
               className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
@@ -210,7 +211,7 @@ export default function ChangesView({
                   <span>{t('git:changes.createInitial')}</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         ) : !gitStatus || !hasChangedFiles(gitStatus) ? (
           <div className="flex h-32 flex-col items-center justify-center text-muted-foreground">
@@ -225,7 +226,7 @@ export default function ChangesView({
                 {t('git:changes.stagedCount', { n: selectedFiles.size })}
               </span>
               {selectedFiles.size > 0 && (
-                <button
+                <Button variant="ghost" size="compact"
                   onClick={() => {
                     const filesToUnstage = Array.from(selectedFiles);
                     setSelectedFiles(new Set());
@@ -234,7 +235,7 @@ export default function ChangesView({
                   className="text-xs text-primary transition-colors hover:text-primary/80"
                 >
                   {t('git:changes.unstageAll')}
-                </button>
+                </Button>
               )}
             </div>
             {selectedFiles.size > 0 && (
@@ -260,7 +261,7 @@ export default function ChangesView({
                 {t('git:changes.changesCount', { n: unstagedFiles.size })}
               </span>
               {unstagedFiles.size > 0 && (
-                <button
+                <Button variant="ghost" size="compact"
                   onClick={() => {
                     const filesToStage = Array.from(unstagedFiles);
                     setSelectedFiles(new Set(changedFiles));
@@ -269,7 +270,7 @@ export default function ChangesView({
                   className="text-xs text-primary transition-colors hover:text-primary/80"
                 >
                   {t('git:changes.stageAll')}
-                </button>
+                </Button>
               )}
             </div>
             {unstagedFiles.size === 0 ? (

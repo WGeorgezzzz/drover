@@ -1,3 +1,4 @@
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -9,7 +10,7 @@ import {
   Plus,
   Trash2,
   X,
-} from 'lucide-react';
+} from '@/shared/icons';
 
 import { Badge, Button, Input, LLMProviderLogo } from '@/shared/ui';
 import { ProviderQuotaPanel } from '@/modules/chat/modals/ProviderQuotaPanel';
@@ -266,7 +267,7 @@ export default function ModelLibraryPanel({
         {PROVIDERS.map((provider) => {
           const selected = provider.id === selectedProvider;
           return (
-            <button
+            <Button variant="ghost" size="compact"
               key={provider.id}
               type="button"
               onClick={() => selectProvider(provider.id)}
@@ -279,7 +280,7 @@ export default function ModelLibraryPanel({
             >
               <LLMProviderLogo provider={provider.id} className="h-4 w-4" />
               {provider.label}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -351,7 +352,7 @@ export default function ModelLibraryPanel({
                 {providerEffortLevels.map((level) => {
                   const selected = effortLevels.includes(level);
                   return (
-                    <button
+                    <Button variant="ghost" size="compact"
                       key={level}
                       type="button"
                       onClick={() => toggleEffortLevel(level)}
@@ -363,7 +364,7 @@ export default function ModelLibraryPanel({
                       }`}
                     >
                       {level}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -379,7 +380,7 @@ export default function ModelLibraryPanel({
             </div>
           )}
           {notice && !error && (
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+            <div className="mt-3 flex items-center gap-2 rounded-xl border border-success/25 bg-success/10 px-3 py-2 text-xs text-success dark:text-success">
               <Check className="h-3.5 w-3.5" />
               {notice}
             </div>
@@ -402,8 +403,8 @@ export default function ModelLibraryPanel({
             </div>
 
             <label className="mb-2 flex cursor-pointer items-start gap-3 rounded-2xl border border-border/70 bg-background/70 px-3 py-2.5">
-              <input
-                type="checkbox"
+              <UnifiedCheckbox
+
                 checked={customModelsOnly}
                 disabled={savingCustomModelsOnly}
                 onChange={(event) => void handleCustomModelsOnlyChange(selectedProvider, event.target.checked)}

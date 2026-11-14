@@ -1,5 +1,6 @@
+import { Button } from '@/shared/ui/Button';
 import type { ReactNode, Ref } from 'react';
-import { Check } from 'lucide-react';
+import { Check } from '@/shared/icons';
 
 import { cn } from '@/shared/utils';
 import type { ViewportMenuAnchor } from '@/shared/types';
@@ -76,7 +77,7 @@ export function ComposerMenuItem({
   className?: string;
 }) {
   return (
-    <button
+    <Button variant="ghost" size="compact"
       type="button"
       role={role}
       disabled={disabled}
@@ -99,6 +100,6 @@ export function ComposerMenuItem({
       <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center">
         {trailing ?? (isSelected ? <Check className="h-3.5 w-3.5 text-foreground" /> : null)}
       </span>
-    </button>
+    </Button>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { FolderInput, MoreHorizontal } from 'lucide-react';
+import { FolderInput, MoreHorizontal } from '@/shared/icons';
 
 import { ActionMenu } from '@/shared/ui';
 import type { WorkspaceSectionTarget } from '@/shared/types';

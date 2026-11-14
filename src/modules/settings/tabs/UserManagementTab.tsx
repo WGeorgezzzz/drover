@@ -1,7 +1,10 @@
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { FolderOpen, KeyRound, Pencil, Plus, Power, RefreshCw, Trash2, UserPlus, X } from 'lucide-react';
+import { FolderOpen, KeyRound, Pencil, Plus, Power, RefreshCw, Trash2, UserPlus, X } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { readAuthErrorMessage, useAuth } from '@/modules/auth';
@@ -11,7 +14,7 @@ import { UsageBadge } from '@/modules/usage';
 import type { UsageUser } from '@/shared/types';
 import { Button } from '@/shared/ui';
 import { cn } from '@/shared/utils';
-import SettingsCard from '@/modules/settings/SettingsCard';
+import SettingsCard from '@/shared/ui/SettingsCard';
 import { settingsInputClass } from '@/modules/settings/tabs/UsersSettingsTab';
 
 type Role = 'admin' | 'member';
@@ -36,24 +39,16 @@ const formatTime = (value?: string | null) => {
 
 /** Overlay used by the user management dialogs; it sits above the Settings dialog's z-[9999]. */
 function ModalShell({ title, onClose, children, footer }: { title: string; onClose: () => void; children: ReactNode; footer: ReactNode }) {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') { event.stopPropagation(); onClose(); } };
-    window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
-  }, [onClose]);
   return createPortal(
-    <div data-escape-layer className="fixed inset-0 z-[10000] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center sm:p-4"
-      onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <section role="dialog" aria-modal="true" aria-label={title}
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) onClose(); }}><UnifiedDialogContent wrapperClassName="z-[10001]" aria-label={title}
         className="flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-border bg-background text-foreground shadow-2xl sm:max-w-lg sm:rounded-xl">
         <header className="flex shrink-0 items-center justify-between border-b border-border px-5 py-3">
           <h3 className="text-base font-semibold">{title}</h3>
-          <button type="button" className="workspace-icon-button" aria-label="close" onClick={onClose}><X size={16} /></button>
+          <Button variant="ghost" size="compact" type="button" className="workspace-icon-button" aria-label="close" onClick={onClose}><X size={16} /></Button>
         </header>
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">{children}</div>
         <footer className="flex shrink-0 justify-end gap-2 border-t border-border px-5 py-3">{footer}</footer>
-      </section>
-    </div>,
+      </UnifiedDialogContent></UnifiedDialog>,
     document.body,
   );
 }
@@ -160,9 +155,9 @@ export function UserManagementTab({ onUsage }: { onUsage?: (id:number)=>void } =
     </div>
 
     {notice && <div role="status" className={cn('flex items-start justify-between gap-3 rounded-lg border px-3 py-2 text-sm',
-      notice.tone === 'ok' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-destructive/30 bg-destructive/10 text-destructive')}>
+      notice.tone === 'ok' ? 'border-success/30 bg-success/10 text-success dark:text-success' : 'border-destructive/30 bg-destructive/10 text-destructive')}>
       <span className="min-w-0 break-words">{notice.text}</span>
-      <button type="button" className="shrink-0 opacity-70 hover:opacity-100" aria-label="dismiss" onClick={() => setNotice(null)}><X size={14} /></button>
+      <Button variant="ghost" size="compact" type="button" className="shrink-0 opacity-70 hover:opacity-100" aria-label="dismiss" onClick={() => setNotice(null)}><X size={14} /></Button>
     </div>}
 
     <SettingsCard divided className="overflow-hidden">
@@ -180,8 +175,8 @@ export function UserManagementTab({ onUsage }: { onUsage?: (id:number)=>void } =
                 {usageUsers.find(u=>u.userId===account.id) && <UsageBadge user={usageUsers.find(u=>u.userId===account.id)!} onClick={()=>onUsage?.(account.id)} />}
                 {isSelf && <span className="text-xs text-muted-foreground">{t('users.you')}</span>}
                 <span className={cn('inline-flex h-5 items-center rounded-full px-2 text-[11px] font-medium', account.role === 'admin' ? 'bg-primary/10 text-primary dark:bg-primary/20' : 'bg-muted text-muted-foreground')}>{t(account.role === 'admin' ? 'users.admin' : 'users.member')}</span>
-                <span className={cn('inline-flex h-5 items-center gap-1 rounded-full px-2 text-[11px] font-medium', account.is_active ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/10 text-amber-700 dark:text-amber-300')}>
-                  <span className={cn('h-1.5 w-1.5 rounded-full', account.is_active ? 'bg-emerald-500' : 'bg-amber-500')} />{t(account.is_active ? 'users.enabled' : 'users.disabled')}
+                <span className={cn('inline-flex h-5 items-center gap-1 rounded-full px-2 text-[11px] font-medium', account.is_active ? 'bg-success/10 text-success dark:text-success' : 'bg-warning/10 text-warning dark:text-warning')}>
+                  <span className={cn('h-1.5 w-1.5 rounded-full', account.is_active ? 'bg-success' : 'bg-warning')} />{t(account.is_active ? 'users.enabled' : 'users.disabled')}
                 </span>
               </div>
               <div className="mt-0.5 text-[11px] text-muted-foreground">{t('users.createdAt')} {formatTime(account.created_at)}</div>
@@ -190,7 +185,7 @@ export function UserManagementTab({ onUsage }: { onUsage?: (id:number)=>void } =
               <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => openEdit(account)} title={t('users.edit')}><Pencil />{t('users.edit')}</Button>
               <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setDialog({ kind: 'password', user: account })} title={t('users.reset')}><KeyRound />{t('users.reset')}</Button>
               {account.role !== 'admin' && <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" disabled={busy} onClick={() => toggleActive(account)}><Power />{t(account.is_active ? 'users.disable' : 'users.enable')}</Button>}
-              {!isSelf && <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-red-600 hover:bg-red-500/10 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300" onClick={() => setDialog({ kind: 'confirm', action: 'delete', user: account })}><Trash2 />{t('users.delete')}</Button>}
+              {!isSelf && <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive dark:text-destructive dark:hover:text-destructive" onClick={() => setDialog({ kind: 'confirm', action: 'delete', user: account })}><Trash2 />{t('users.delete')}</Button>}
             </div>
           </div>
           <dl className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 rounded-md bg-muted/40 px-3 py-2 text-xs sm:ml-11">
@@ -212,25 +207,25 @@ export function UserManagementTab({ onUsage }: { onUsage?: (id:number)=>void } =
       footer={<><Button variant="outline" size="sm" onClick={close}>{t('users.cancel')}</Button>
         <Button size="sm" disabled={busy || !draftValid} onClick={submitDraft}>{dialog.kind === 'create' ? t('users.create') : t('users.save')}</Button></>}>
       {dialog.kind === 'create' && <>
-        <Field label={t('users.username')} hint={t('users.usernameHint')}><input className={settingsInputClass} name="username" autoComplete="off" value={draft.username} onChange={e => setDraft({ ...draft, username: e.target.value })} /></Field>
-        <Field label={t('users.initialPassword')} hint={t('users.passwordHint')}><input className={settingsInputClass} name="password" type="password" autoComplete="new-password" value={draft.password} onChange={e => setDraft({ ...draft, password: e.target.value })} /></Field>
+        <Field label={t('users.username')} hint={t('users.usernameHint')}><UnifiedInput className={settingsInputClass} name="username" autoComplete="off" value={draft.username} onChange={e => setDraft({ ...draft, username: e.target.value })} /></Field>
+        <Field label={t('users.initialPassword')} hint={t('users.passwordHint')}><UnifiedInput className={settingsInputClass} name="password" type="password" autoComplete="new-password" value={draft.password} onChange={e => setDraft({ ...draft, password: e.target.value })} /></Field>
       </>}
       <Field label={t('users.role')}>
         <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label={t('users.role')}>
           {(['member', 'admin'] as Role[]).map(role => {
             const locked = dialog.kind === 'edit' && dialog.user.id === currentId;
-            return <button key={role} type="button" role="radio" aria-checked={draft.role === role} disabled={locked}
+            return <Button variant="ghost" size="compact" key={role} type="button" role="radio" aria-checked={draft.role === role} disabled={locked}
               onClick={() => setDraft({ ...draft, role })}
               className={cn('rounded-md border px-3 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60', draft.role === role ? 'border-primary bg-primary/5 text-foreground ring-1 ring-primary/40' : 'border-border text-muted-foreground hover:bg-muted/60')}>
               <div className="font-medium">{t(role === 'admin' ? 'users.admin' : 'users.member')}</div>
               <div className="mt-0.5 text-xs text-muted-foreground">{t(role === 'admin' ? 'users.adminHint' : 'users.memberHint')}</div>
-            </button>;
+            </Button>;
           })}
         </div>
       </Field>
       <Field label={t('users.root')} hint={t('users.defaultRoot')}>
         <div className="flex gap-2">
-          <input className={cn(settingsInputClass, 'font-mono text-xs')} name="work_root" value={draft.work_root} onChange={e => setDraft({ ...draft, work_root: e.target.value })} placeholder={t('users.defaultRootShort')} />
+          <UnifiedInput className={cn(settingsInputClass, 'font-mono text-xs')} name="work_root" value={draft.work_root} onChange={e => setDraft({ ...draft, work_root: e.target.value })} placeholder={t('users.defaultRootShort')} />
           <Button type="button" variant="outline" size="sm" className="h-9 w-9 shrink-0 px-0" onClick={() => setPicker('root')} aria-label={t('users.browse')} title={t('users.browse')}><FolderOpen /></Button>
         </div>
       </Field>
@@ -242,13 +237,13 @@ export function UserManagementTab({ onUsage }: { onUsage?: (id:number)=>void } =
         {draft.allowed_folders.length === 0 ? <p className="rounded-md border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">{t('users.noFolders')}</p>
           : <ul className="space-y-1">{draft.allowed_folders.map(folder => <li key={folder} className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-2 py-1">
             <span className="min-w-0 flex-1 truncate font-mono text-xs" title={folder}>{folder}</span>
-            <button type="button" className="workspace-icon-button h-6 w-6" aria-label={t('users.removeFolder')} onClick={() => setDraft({ ...draft, allowed_folders: draft.allowed_folders.filter(item => item !== folder) })}><X size={13} /></button>
+            <Button variant="ghost" size="compact" type="button" className="workspace-icon-button h-6 w-6" aria-label={t('users.removeFolder')} onClick={() => setDraft({ ...draft, allowed_folders: draft.allowed_folders.filter(item => item !== folder) })}><X size={13} /></Button>
           </li>)}</ul>}
         <p className="text-xs text-muted-foreground">{t('users.foldersHint')}</p>
       </div>
-      <Field label={t('users.email')} hint={t('users.emailHint')}><input className={settingsInputClass} name="access_sso_email" type="email" value={draft.access_sso_email} onChange={e => setDraft({ ...draft, access_sso_email: e.target.value })} /></Field>
+      <Field label={t('users.email')} hint={t('users.emailHint')}><UnifiedInput className={settingsInputClass} name="access_sso_email" type="email" value={draft.access_sso_email} onChange={e => setDraft({ ...draft, access_sso_email: e.target.value })} /></Field>
       {dialog.kind === 'edit' && draft.role === 'member' && <label className="flex items-center gap-2 text-sm text-foreground">
-        <input type="checkbox" name="is_active" className="h-4 w-4 accent-[hsl(var(--primary))]" checked={draft.is_active} onChange={e => setDraft({ ...draft, is_active: e.target.checked })} />{t('users.enabled')}
+        <UnifiedCheckbox  name="is_active" className="h-4 w-4 accent-[hsl(var(--primary))]" checked={draft.is_active} onChange={e => setDraft({ ...draft, is_active: e.target.checked })} />{t('users.enabled')}
       </label>}
       {dialogError && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{dialogError}</p>}
     </ModalShell>}
@@ -256,7 +251,7 @@ export function UserManagementTab({ onUsage }: { onUsage?: (id:number)=>void } =
     {dialog?.kind === 'password' && <ModalShell title={t('users.resetTitle', { name: dialog.user.username })} onClose={close}
       footer={<><Button variant="outline" size="sm" onClick={close}>{t('users.cancel')}</Button>
         <Button size="sm" disabled={busy || newPassword.length < 6} onClick={() => { const target = dialog.user; void run(async () => { await read(await api.auth.resetPassword(target.id, newPassword)); }, t('users.resetNotice', { name: target.username })); }}>{t('users.reset')}</Button></>}>
-      <Field label={t('users.newPassword')} hint={t('users.resetHint')}><input className={settingsInputClass} name="password" type="password" autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} autoFocus /></Field>
+      <Field label={t('users.newPassword')} hint={t('users.resetHint')}><UnifiedInput className={settingsInputClass} name="password" type="password" autoComplete="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} autoFocus /></Field>
       {dialogError && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{dialogError}</p>}
     </ModalShell>}
 

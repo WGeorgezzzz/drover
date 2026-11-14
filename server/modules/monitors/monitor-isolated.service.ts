@@ -12,6 +12,7 @@ import { createNormalizedMessage, cleanMonitorReport } from '@/shared/index.js';
 import type { MonitorRecord, LLMProvider } from '@/shared/types.js';
 
 import { normalizeProbe, hydrateProbeDelta } from './monitor-probe.service.js';
+import { notifyMonitorAttention } from './monitor-notice.service.js';
 
 const execFileAsync = promisify(execFile);
 const MAX_FULL_FILE_BYTES = 1024 * 1024;
@@ -135,6 +136,7 @@ export async function finishMonitorReport(row: MonitorRecord, runId: string, ses
     const notice=JSON.stringify({kind:'permission_request',sessionId:row.session_id,requestId:'monitor:'+runId,decisionId:decision.id,toolName:'监测需要答复',input:{question:parsed.report},timestamp:new Date().toISOString()});
     for(const client of connectedClients)if(client.readyState===1&&clientUserIds.get(client)===row.user_id)client.send(notice);
   }
+  notifyMonitorAttention(row, runId, parsed.state);
   if (!isolated) return;
   const source = sessionsDb.getSessionById(row.session_id)!;
   const message = createNormalizedMessage({ id: 'monitor-report:' + runId, kind: 'text', role: 'assistant', provider: source.provider as LLMProvider, sessionId: row.session_id, timestamp: new Date().toISOString(), content: '**监测「' + row.name + '」· 第 ' + (row.run_count + 1) + ' 轮**\n\n' + parsed.report + '\n\n[展开本轮会话](/session/' + sessionId + ')' });

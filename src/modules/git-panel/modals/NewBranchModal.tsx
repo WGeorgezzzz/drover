@@ -1,4 +1,7 @@
-import { Plus, RefreshCw } from 'lucide-react';
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
+import { Button } from '@/shared/ui/Button';
+import { Plus, RefreshCw } from '@/shared/icons';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -51,14 +54,8 @@ export default function NewBranchModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="new-branch-title"
-      >
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) onClose(); }}><UnifiedDialogContent wrapperClassName="z-50" className="w-full max-w-md overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+        aria-labelledby="new-branch-title">
         <div className="p-6">
           <h3 className="mb-4 text-lg font-semibold text-foreground">{t('git:newBranch.title')}</h3>
 
@@ -66,7 +63,7 @@ export default function NewBranchModal({
             <label htmlFor="git-new-branch-name" className="mb-2 block text-sm font-medium text-foreground/80">
               {t('git:newBranch.nameLabel')}
             </label>
-            <input
+            <UnifiedInput
               id="git-new-branch-name"
               type="text"
               value={newBranchName}
@@ -96,13 +93,13 @@ export default function NewBranchModal({
           </p>
 
           <div className="flex justify-end space-x-3">
-            <button
+            <Button variant="ghost" size="compact"
               onClick={onClose}
               className="rounded-lg px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               {t('git:confirm.cancel')}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="compact"
               onClick={() => void handleCreateBranch()}
               disabled={!newBranchName.trim() || isCreatingBranch}
               className="flex items-center space-x-2 rounded-lg bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
@@ -118,10 +115,9 @@ export default function NewBranchModal({
                   <span>{t('git:newBranch.create')}</span>
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </UnifiedDialogContent></UnifiedDialog>
   );
 }

@@ -1,5 +1,7 @@
+import { X as UnifiedX } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import { useEffect, useState } from 'react';
-import { FileIcon, XIcon } from 'lucide-react';
+import { FileIcon, XIcon } from '@/shared/icons';
 
 import { ImageLightbox } from '@/modules/chat/transcript/ChatMessageImages';
 
@@ -37,7 +39,7 @@ const ComposerAttachment = ({ file, onRemove, error }: ComposerAttachmentProps) 
   return (
     <div className="group relative max-w-full">
       {isImage ? (
-        <button
+        <Button variant="ghost" size="compact"
           type="button"
           onClick={() => preview && setExpanded(true)}
           aria-label={`Expand ${file.name}`}
@@ -46,7 +48,7 @@ const ComposerAttachment = ({ file, onRemove, error }: ComposerAttachmentProps) 
           {preview
             ? <img src={preview} alt={file.name} className="h-20 w-20 cursor-zoom-in object-cover" />
             : <div className="h-20 w-20 animate-pulse bg-muted" />}
-        </button>
+        </Button>
       ) : (
         <div className="flex h-20 w-56 max-w-full items-center gap-3 rounded-xl border border-border/50 bg-background/80 px-3 shadow-sm">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -59,20 +61,18 @@ const ComposerAttachment = ({ file, onRemove, error }: ComposerAttachmentProps) 
         </div>
       )}
       {error && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-red-500/50">
-          <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-destructive/50">
+          <UnifiedX className="h-6 w-6 text-primary-foreground" />
         </div>
       )}
-      <button
+      <Button variant="ghost" size="compact"
         type="button"
         onClick={onRemove}
         className="absolute -right-1.5 -top-1.5 rounded-full border border-border/40 bg-background/90 p-1 text-foreground shadow-sm backdrop-blur transition-opacity hover:bg-background focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
         aria-label={`Remove ${file.name}`}
       >
         <XIcon className="h-3 w-3" aria-hidden />
-      </button>
+      </Button>
       {expanded && preview && (
         <ImageLightbox src={preview} alt={file.name} onClose={() => setExpanded(false)} />
       )}

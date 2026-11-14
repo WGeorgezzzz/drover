@@ -152,7 +152,7 @@ test('a session with only background work running gets the purple dot, not the s
 
   assert.equal(recordedOptionsProps[0].isProcessing, false);
   assert.equal(container.querySelectorAll('.animate-spin').length, 0);
-  const dots = container.querySelectorAll('[role="status"].bg-purple-500');
+  const dots = container.querySelectorAll('[role="status"].bg-primary');
   assert.equal(dots.length, 1);
   assert.equal(dots[0].getAttribute('aria-label'), 'tooltips.backgroundWorkIndicator');
   assert.equal(container.querySelectorAll('time').length, 1, 'the other row shows its age');
@@ -164,7 +164,7 @@ test('a session needing attention gets the amber dot', () => {
     makeActions({ attentionSessionIds: new Set(['s2']) }),
   );
 
-  const dots = container.querySelectorAll('[role="status"].bg-amber-500');
+  const dots = container.querySelectorAll('[role="status"].bg-warning');
   assert.equal(dots.length, 1);
   const rows = container.querySelectorAll('[data-testid="recent-conversation-row"]');
   assert.equal(rows.length, 2);

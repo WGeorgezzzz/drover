@@ -1,5 +1,6 @@
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X } from '@/shared/icons';
 
 import { Button } from '@/shared/ui';
 import { api } from '@/shared/api';
@@ -59,18 +60,18 @@ export default function ImageViewer({ file, onClose }: ImageViewerProps) {
   }, [file.projectId, file.path]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="mx-4 max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-800">
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) { onClose(); } }}>
+      <UnifiedDialogContent wrapperClassName="z-50"  className="mx-4 max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-card shadow-xl dark:bg-background">
         <div className="flex items-center justify-between border-b p-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{file.name}</h3>
+          <h3 className="text-lg font-semibold text-foreground dark:text-primary-foreground">{file.name}</h3>
           <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="flex min-h-[400px] items-center justify-center bg-gray-50 p-4 dark:bg-gray-900">
+        <div className="flex min-h-[400px] items-center justify-center bg-muted p-4 dark:bg-background">
           {loading && (
-            <div className="text-center text-gray-500 dark:text-gray-400">
+            <div className="text-center text-muted-foreground dark:text-muted-foreground">
               <p>Loading image...</p>
             </div>
           )}
@@ -82,17 +83,17 @@ export default function ImageViewer({ file, onClose }: ImageViewerProps) {
             />
           )}
           {!loading && !imageUrl && (
-            <div className="text-center text-gray-500 dark:text-gray-400">
+            <div className="text-center text-muted-foreground dark:text-muted-foreground">
               <p>{error || 'Unable to load image'}</p>
               <p className="mt-2 break-all text-sm">{file.path}</p>
             </div>
           )}
         </div>
 
-        <div className="border-t bg-gray-50 p-4 dark:bg-gray-800">
-          <p className="text-sm text-gray-600 dark:text-gray-400">{file.path}</p>
+        <div className="border-t bg-muted p-4 dark:bg-background">
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground">{file.path}</p>
         </div>
-      </div>
-    </div>
+      </UnifiedDialogContent>
+    </UnifiedDialog>
   );
 }

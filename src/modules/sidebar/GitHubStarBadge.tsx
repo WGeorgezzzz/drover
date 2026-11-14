@@ -1,4 +1,5 @@
-import { Star, X } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { Star, X } from '@/shared/icons';
 
 import { useGitHubStars } from '@/modules/sidebar/hooks/useGitHubStars';
 import { IS_PLATFORM } from '@/shared/utils';
@@ -34,7 +35,7 @@ export default function GitHubStarBadge() {
           <span className="border-l border-border/50 pl-1.5 tabular-nums">{formattedCount}</span>
         )}
       </a>
-      <button
+      <Button variant="ghost" size="compact"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -44,7 +45,7 @@ export default function GitHubStarBadge() {
         aria-label="Dismiss"
       >
         <X className="h-2.5 w-2.5" />
-      </button>
+      </Button>
     </div>
   );
 }

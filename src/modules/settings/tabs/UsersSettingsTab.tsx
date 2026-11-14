@@ -1,12 +1,13 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
 import { useState } from 'react';
-import { KeyRound } from 'lucide-react';
+import { KeyRound } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
-import { readAuthErrorMessage, useAuth } from '@/modules/auth';
+import { AccountSecurity, readAuthErrorMessage, useAuth } from '@/modules/auth';
 import { api } from '@/shared/api';
 import { Button } from '@/shared/ui';
-import SettingsCard from '@/modules/settings/SettingsCard';
-import SettingsSection from '@/modules/settings/SettingsSection';
+import SettingsCard from '@/shared/ui/SettingsCard';
+import SettingsSection from '@/shared/ui/SettingsSection';
 
 export const settingsInputClass = 'h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60';
 
@@ -21,6 +22,7 @@ export function UsersSettingsTab() {
   const role=(user as {role?:string}|null)?.role==='admin'?'admin':'member';
   return <div className="space-y-6 md:space-y-8">
     <SettingsSection title={t('account.title')} description={t('account.description')}>
+      <AccountSecurity />
       <SettingsCard className="flex items-center gap-3 px-4 py-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold uppercase text-foreground">{user?.username?.slice(0,1)}</div>
         <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-foreground">{user?.username}</div>
@@ -34,9 +36,9 @@ export function UsersSettingsTab() {
             const body=await response.json().catch(()=>({}));if(!response.ok)throw Error(readAuthErrorMessage(body)||t('users.failed'));form.reset();logout();}
             catch(err){setError(err instanceof Error?err.message:String(err));}finally{setBusy(false);}})();}}>
           <label className="block space-y-1.5"><span className="text-sm font-medium text-foreground">{t('users.currentPassword')}</span>
-            <input className={settingsInputClass} name="current_password" type="password" autoComplete="current-password" required/></label>
+            <UnifiedInput className={settingsInputClass} name="current_password" type="password" autoComplete="current-password" required/></label>
           <label className="block space-y-1.5"><span className="text-sm font-medium text-foreground">{t('users.newPassword')}</span>
-            <input className={settingsInputClass} name="password" type="password" autoComplete="new-password" minLength={6} required/></label>
+            <UnifiedInput className={settingsInputClass} name="password" type="password" autoComplete="new-password" minLength={6} required/></label>
           {error&&<p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
           <div className="flex justify-end"><Button type="submit" size="sm" disabled={busy}><KeyRound/>{t('users.changePassword')}</Button></div>
         </form>

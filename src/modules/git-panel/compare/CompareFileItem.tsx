@@ -1,4 +1,5 @@
-import { AlertCircle, ChevronRight, RefreshCw } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { AlertCircle, ChevronRight, RefreshCw } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import type { GitBranchDiffFile } from '@/shared/types';
@@ -43,7 +44,7 @@ export default function CompareFileItem({
     <div className="border-b border-border last:border-0">
       <div className={`flex items-center transition-colors hover:bg-accent/50 ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'}`}>
         <div className="flex min-w-0 flex-1 items-center">
-          <button
+          <Button variant="ghost" size="compact"
             onClick={(event) => {
               event.stopPropagation();
               onToggleExpanded(file);
@@ -53,7 +54,7 @@ export default function CompareFileItem({
             aria-expanded={isExpanded}
           >
             <ChevronRight className={`h-3 w-3 transition-transform duration-200 ease-in-out ${isExpanded ? 'rotate-90' : 'rotate-0'}`} />
-          </button>
+          </Button>
 
           <span
             className={`flex min-w-0 flex-1 flex-col ${isMobile ? 'text-xs' : 'text-sm'} cursor-pointer hover:text-primary hover:underline`}
@@ -93,7 +94,7 @@ export default function CompareFileItem({
             <span className="text-sm font-medium text-foreground">{statusLabel}</span>
           </span>
           {isMobile && (
-            <button
+            <Button variant="ghost" size="compact"
               onClick={(event) => {
                 event.stopPropagation();
                 onToggleWrapText();
@@ -102,7 +103,7 @@ export default function CompareFileItem({
               title={wrapText ? t('git:item.switchToScroll') : t('git:item.switchToWrap')}
             >
               {wrapText ? t('git:item.scroll') : t('git:item.wrap')}
-            </button>
+            </Button>
           )}
         </div>
 

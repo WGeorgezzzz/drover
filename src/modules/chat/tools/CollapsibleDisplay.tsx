@@ -1,3 +1,4 @@
+import { ChevronRight as UnifiedChevronRight } from '@/shared/icons';
 import React from 'react';
 
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/shared/ui';
@@ -69,14 +70,7 @@ export const CollapsibleDisplay: React.FC<CollapsibleDisplayProps> = ({
         {showRawParameters && rawContent && (
           <Collapsible className="mt-2">
             <CollapsibleTrigger className="flex items-center gap-1.5 py-0.5 text-[11px] text-muted-foreground hover:text-foreground">
-              <svg
-                className="h-2.5 w-2.5 flex-shrink-0 transition-transform duration-150 data-[state=open]:rotate-90"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <UnifiedChevronRight className="h-2.5 w-2.5 flex-shrink-0 transition-transform duration-150 data-[state=open]:rotate-90" />
               raw params
             </CollapsibleTrigger>
             <CollapsibleContent>

@@ -1,7 +1,8 @@
+import { Button } from '@/shared/ui/Button';
 import { copyLocalPath, openLocalFile } from '@/shared/localPath';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, Download, FileText, FolderPlus, Pencil, RefreshCw, Trash2, Upload, type LucideIcon } from 'lucide-react';
+import { Copy, Download, FileText, FolderPlus, Pencil, RefreshCw, Trash2, Upload, type LucideIcon } from '@/shared/icons';
 
 import { cn } from '@/shared/utils';
 
@@ -310,7 +311,7 @@ export default function FileContextMenu({
             menuActions.map((action) => (
               <Fragment key={action.key}>
                 {action.showDividerBefore && <div className="mx-2 my-1 h-px bg-border" />}
-                <button
+                <Button variant="ghost" size="compact"
                   role="menuitem"
                   tabIndex={action.isDisabled ? -1 : 0}
                   disabled={isLoading || action.isDisabled}
@@ -321,7 +322,7 @@ export default function FileContextMenu({
                     action.isDisabled
                       ? 'opacity-50 cursor-not-allowed'
                       : action.isDanger
-                      ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950'
+                      ? 'text-destructive dark:text-destructive hover:bg-destructive/10 dark:hover:bg-destructive'
                       : 'hover:bg-accent',
                     isLoading && 'pointer-events-none',
                   )}
@@ -329,7 +330,7 @@ export default function FileContextMenu({
                   {action.icon && <action.icon className="h-4 w-4 flex-shrink-0" />}
                   <span className="flex-1">{action.label}</span>
                   {action.shortcut && <span className="font-mono text-xs text-muted-foreground">{action.shortcut}</span>}
-                </button>
+                </Button>
               </Fragment>
             ))
           )}

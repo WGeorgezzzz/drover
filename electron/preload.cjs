@@ -26,7 +26,10 @@ if (isCloudCliAppOrigin(window.location)) {
     revealLocalPath: (filePath) => ipcRenderer.invoke('cloudcli-desktop:reveal-local-path', filePath),
     openLocalPath: (filePath) => ipcRenderer.invoke('cloudcli-desktop:open-local-path', filePath),
     getState: () => ipcRenderer.invoke('cloudcli-desktop:get-state'),
+    showDesktopSettings: () => ipcRenderer.invoke('cloudcli-desktop:show-desktop-settings'),
+    showLocalSettings: () => ipcRenderer.invoke('cloudcli-desktop:show-local-settings'),
     update: (settings) => ipcRenderer.invoke('cloudcli-desktop:update-desktop-notifications', settings),
+    test: () => ipcRenderer.invoke('cloudcli-desktop:test-notification'),
     onStateUpdated: onDesktopStateUpdated,
   });
 }

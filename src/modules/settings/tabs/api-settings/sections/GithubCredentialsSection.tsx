@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Github, Plus, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Github, Plus, Trash2 } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import { Button, Input } from '@/shared/ui';
@@ -73,14 +73,14 @@ export default function GithubCredentialsSection({
               onChange={(event) => onNewGithubTokenChange(event.target.value)}
               className="pr-10"
             />
-            <button
+            <Button variant="ghost" size="compact"
               type="button"
               onClick={onToggleNewTokenVisibility}
               aria-label={showNewTokenPlainText ? t('common:misc.hideToken') : t('common:misc.showToken')}
               className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
             >
               {showNewTokenPlainText ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
 
           <Input

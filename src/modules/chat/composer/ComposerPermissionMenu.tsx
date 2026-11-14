@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import { memo, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +10,7 @@ import {
   ShieldQuestion,
   Smile,
   type LucideIcon,
-} from 'lucide-react';
+} from '@/shared/icons';
 
 import type { PermissionMode } from '@/shared/types';
 import { useViewportMenuAnchor } from '@/shared/hooks/useViewportMenuAnchor';
@@ -43,20 +44,20 @@ const MODE_APPEARANCE: Record<PermissionMode, ModeAppearance> = {
   auto: {
     icon: Bot,
     trigger:
-      'border-blue-300/60 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-600/40 dark:bg-blue-900/15 dark:text-blue-300 dark:hover:bg-blue-900/25',
-    item: 'text-blue-700 dark:text-blue-300',
+      'border-primary/60 bg-primary/10 text-primary hover:bg-primary/10 dark:border-primary/40 dark:bg-primary/15 dark:text-primary dark:hover:bg-primary/25',
+    item: 'text-primary dark:text-primary',
   },
   acceptEdits: {
     icon: Smile,
     trigger:
-      'border-green-300/60 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-600/40 dark:bg-green-900/15 dark:text-green-300 dark:hover:bg-green-900/25',
-    item: 'text-green-700 dark:text-green-300',
+      'border-success/60 bg-success/10 text-success hover:bg-success/10 dark:border-success/40 dark:bg-success/15 dark:text-success dark:hover:bg-success/25',
+    item: 'text-success dark:text-success',
   },
   bypassPermissions: {
     icon: AlertTriangle,
     trigger:
-      'border-orange-300/60 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-600/40 dark:bg-orange-900/15 dark:text-orange-300 dark:hover:bg-orange-900/25',
-    item: 'text-orange-600 dark:text-orange-400',
+      'border-warning/60 bg-warning/10 text-warning hover:bg-warning/10 dark:border-warning/40 dark:bg-warning/15 dark:text-warning dark:hover:bg-warning/25',
+    item: 'text-warning dark:text-warning',
   },
   plan: {
     icon: ClipboardList,
@@ -114,7 +115,7 @@ function ComposerPermissionMenu({
 
   return (
     <>
-      <button
+      <Button variant="ghost" size="compact"
         ref={triggerRef}
         type="button"
         onClick={() => {
@@ -128,8 +129,8 @@ function ComposerPermissionMenu({
         title={isClaude ? t('input.claudeChangeMode', 'Change permissions (Shift+Tab)') : t('input.clickToChangeMode')}
       >
         <ActiveIcon className="h-4 w-4" />
-        <span className="max-w-28 truncate">{permissionMode==='bypassPermissions'?'免确认':t(`${modeNamespace}.modes.${permissionMode}`, {defaultValue:permissionMode})}</span>
-      </button>
+        <span className="max-w-28 truncate">{permissionMode==='bypassPermissions'?t('composer.noConfirmation'):t(`${modeNamespace}.modes.${permissionMode}`, {defaultValue:permissionMode})}</span>
+      </Button>
 
       {isOpen && anchor && createPortal(
         <ComposerMenuSurface anchor={anchor} menuRef={menuRef} ariaLabel={heading}>

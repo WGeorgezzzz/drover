@@ -2,7 +2,7 @@
   "notConfigured": {
     "title": "TaskMaster AI no está configurado",
     "description": "TaskMaster ayuda a descomponer proyectos complejos en tareas manejables con asistencia de IA",
-    "whatIsTitle": "🎯 ¿Qué es TaskMaster?",
+    "whatIsTitle": "¿Qué es TaskMaster?",
     "features": {
       "aiPowered": "Gestión de tareas con IA: descompone proyectos complejos en subtareas manejables",
       "prdTemplates": "Plantillas PRD: genera tareas a partir de Documentos de Requisitos de Producto",
@@ -35,7 +35,7 @@
         "description": "Pídele a tu asistente de IA que empiece a trabajar en las tareas, actualice su estado y añada tareas nuevas a medida que tu proyecto evoluciona."
       }
     },
-    "tip": "💡 Consejo: empieza con un PRD para sacar el máximo partido a la generación de tareas con IA de TaskMaster"
+    "tip": "Consejo: empieza con un PRD para sacar el máximo partido a la generación de tareas con IA de TaskMaster"
   },
   "setupModal": {
     "title": "Configuración de TaskMaster",
@@ -49,20 +49,20 @@
     "title": "Primeros pasos con TaskMaster",
     "subtitle": "Tu guía para una gestión de tareas productiva",
     "examples": {
-      "parsePRD": "💬 Ejemplo:\n\"Acabo de inicializar un proyecto nuevo con Claude Task Master. Tengo un PRD en .taskmaster/docs/prd.txt. ¿Me ayudas a analizarlo y configurar las tareas iniciales?\"",
-      "expandTask": "💬 Ejemplo:\n\"La tarea 5 parece compleja. ¿Puedes descomponerla en subtareas?\"",
-      "addTask": "💬 Ejemplo:\n\"Añade una tarea nueva para implementar la subida de imágenes de perfil de usuario con Cloudinary, e investiga el mejor enfoque.\""
+      "parsePRD": "Ejemplo:\n\"Acabo de inicializar un proyecto nuevo con Claude Task Master. Tengo un PRD en .taskmaster/docs/prd.txt. ¿Me ayudas a analizarlo y configurar las tareas iniciales?\"",
+      "expandTask": "Ejemplo:\n\"La tarea 5 parece compleja. ¿Puedes descomponerla en subtareas?\"",
+      "addTask": "Ejemplo:\n\"Añade una tarea nueva para implementar la subida de imágenes de perfil de usuario con Cloudinary, e investiga el mejor enfoque.\""
     },
     "moreExamples": "Ver más ejemplos y patrones de uso →",
     "proTips": {
-      "title": "💡 Consejos pro",
+      "title": "Consejos pro",
       "search": "Usa la barra de búsqueda para encontrar tareas específicas rápidamente",
       "views": "Cambia entre las vistas Kanban, Lista y Cuadrícula con los selectores de vista",
       "filters": "Usa los filtros para centrarte en estados o prioridades específicas",
       "details": "Haz clic en cualquier tarea para ver información detallada y gestionar subtareas"
     },
     "learnMore": {
-      "title": "📚 Más información",
+      "title": "Más información",
       "description": "TaskMaster AI es un sistema avanzado de gestión de tareas creado para desarrolladores. Consulta la documentación, ejemplos y contribuye al proyecto.",
       "githubButton": "Ver en GitHub"
     }
@@ -99,12 +99,12 @@
     "grid": "Vista de cuadrícula"
   },
   "kanban": {
-    "pending": "📋 Por hacer",
-    "inProgress": "🚀 En curso",
-    "done": "✅ Hechas",
-    "blocked": "🚫 Bloqueadas",
-    "deferred": "⏳ Aplazadas",
-    "cancelled": "❌ Canceladas",
+    "pending": "Por hacer",
+    "inProgress": "En curso",
+    "done": "Hechas",
+    "blocked": "Bloqueadas",
+    "deferred": "Aplazadas",
+    "cancelled": "Canceladas",
     "noTasksYet": "Aún no hay tareas",
     "tasksWillAppear": "Las tareas aparecerán aquí",
     "moveTasksHere": "Mueve las tareas aquí cuando empiecen",

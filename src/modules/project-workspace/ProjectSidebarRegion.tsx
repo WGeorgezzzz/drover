@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import { memo, useCallback, useEffect, useRef } from 'react';
 import type {
   KeyboardEvent as ReactKeyboardEvent,
@@ -157,7 +158,7 @@ function ProjectSidebarRegion({
       }`}
       style={{ top: 'var(--visual-viewport-top, 0px)', bottom: 'var(--keyboard-height, 0px)' }}
     >
-      <button
+      <Button variant="ghost" size="compact"
         className="fixed inset-0 bg-background/60 backdrop-blur-sm transition-opacity duration-150 ease-out"
         onClick={handleBackdropClick}
         onPointerDown={handleBackdropPointerDown}

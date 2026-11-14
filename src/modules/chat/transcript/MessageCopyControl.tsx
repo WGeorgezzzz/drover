@@ -1,3 +1,5 @@
+import { Check as UnifiedCheck, Copy as UnifiedCopy, ChevronDown as UnifiedChevronDown } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
@@ -127,7 +129,7 @@ const MessageCopyControl = ({
 
   const toneClass = messageType === 'user'
     ? 'text-muted-foreground hover:text-foreground'
-    : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300';
+    : 'text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-muted-foreground';
   const copyTitle = copied ? t('copyMessage.copied') : t('copyMessage.copy');
   const rootClassName = canSelectCopyFormat
     ? 'relative flex min-w-0 flex-1 items-center gap-0.5 sm:min-w-max sm:flex-none sm:w-auto'
@@ -135,7 +137,7 @@ const MessageCopyControl = ({
 
   return (
     <div className={rootClassName}>
-      <button
+      <Button variant="ghost" size="compact"
         type="button"
         onClick={handleCopyClick}
         title={copyTitle}
@@ -143,33 +145,16 @@ const MessageCopyControl = ({
         className={`inline-flex items-center gap-1 rounded px-1 py-0.5 transition-colors ${toneClass}`}
       >
         {copied ? (
-          <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-            <path
-              fillRule="evenodd"
-              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
+          <UnifiedCheck className="h-3.5 w-3.5" />
         ) : (
-          <svg
-            className="h-3.5 w-3.5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-          </svg>
+          <UnifiedCopy className="h-3.5 w-3.5" />
         )}
         <span className="text-[10px] font-semibold uppercase tracking-wide">{selectedFormatTag}</span>
-      </button>
+      </Button>
 
       {canSelectCopyFormat && (
         <>
-          <button
+          <Button variant="ghost" size="compact"
             ref={triggerRef}
             type="button"
             onClick={() => (isDropdownOpen ? setIsDropdownOpen(false) : openDropdown())}
@@ -177,15 +162,8 @@ const MessageCopyControl = ({
             aria-label={t('copyMessage.selectFormat', { defaultValue: 'Select copy format' })}
             title={t('copyMessage.selectFormat', { defaultValue: 'Select copy format' })}
           >
-            <svg
-              className={`h-3 w-3 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+            <UnifiedChevronDown className={`h-3 w-3 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+          </Button>
 
           {isDropdownOpen && anchor && createPortal(
             <div
@@ -198,7 +176,7 @@ const MessageCopyControl = ({
               {copyFormatOptions.map((option) => {
                 const isSelected = option.format === selectedFormat;
                 return (
-                  <button
+                  <Button variant="ghost" size="compact"
                     key={option.format}
                     type="button"
                     onClick={() => handleFormatChange(option.format)}
@@ -208,7 +186,7 @@ const MessageCopyControl = ({
                       }`}
                   >
                     <span className="block text-xs font-medium">{option.label}</span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>,

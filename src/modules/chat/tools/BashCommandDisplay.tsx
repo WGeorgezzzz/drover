@@ -1,6 +1,7 @@
+import { Button } from '@/shared/ui/Button';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronRight, Copy, Check } from 'lucide-react';
+import { ChevronRight, Copy, Check } from '@/shared/icons';
 
 import { cn,copyTextToClipboard } from '@/shared/utils';
 import { ToolStatusBadge } from '@/modules/chat/tools/ToolStatusBadge';
@@ -77,7 +78,7 @@ export const BashCommandDisplay: React.FC<BashCommandDisplayProps> = ({
     <div
       className={cn(
         'group/cmd overflow-hidden rounded-lg border bg-muted/40 backdrop-blur-sm transition-all duration-200',
-        isError ? 'border-red-500/30' : 'border-border/60',
+        isError ? 'border-destructive/30' : 'border-border/60',
         hasOutput && !open && 'hover:border-border hover:bg-muted/60',
         open && 'bg-muted/50 shadow-sm',
       )}
@@ -131,15 +132,15 @@ export const BashCommandDisplay: React.FC<BashCommandDisplayProps> = ({
           </span>
         )}
 
-        <button
+        <Button variant="ghost" size="compact"
           onClick={handleCopy}
           onKeyDown={(event) => event.stopPropagation()}
           className="flex-shrink-0 rounded p-0.5 text-muted-foreground/60 opacity-0 transition-all hover:bg-foreground/10 hover:text-foreground focus:opacity-100 group-hover/cmd:opacity-100"
           title={t('chat:misc.copyCommand')}
           aria-label={t('chat:misc.copyCommand')}
         >
-          {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-        </button>
+          {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+        </Button>
       </div>
 
       {description && !open && (
@@ -157,7 +158,7 @@ export const BashCommandDisplay: React.FC<BashCommandDisplayProps> = ({
           <pre
             className={cn(
               'max-h-80 overflow-auto whitespace-pre-wrap break-all px-3 py-2 font-mono text-xs leading-relaxed',
-              isError ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground',
+              isError ? 'text-destructive dark:text-destructive' : 'text-muted-foreground',
             )}
           >
             {trimmedOutput}

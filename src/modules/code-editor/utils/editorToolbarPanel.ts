@@ -1,3 +1,7 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { Button } from '@/shared/ui/Button';
+import { ChevronUp, ChevronDown, Eye, EyeOff, ExternalLink, Minimize2, Maximize2, type LucideIcon } from '@/shared/icons';
 import { getChunks } from '@codemirror/merge';
 import { EditorView, showPanel } from '@codemirror/view';
 
@@ -11,6 +15,7 @@ type EditorToolbarLabels = {
   showDiff: string;
   collapse: string;
   expand: string;
+  openInModal: string;
 };
 
 type CreateEditorToolbarPanelParams = {
@@ -24,21 +29,7 @@ type CreateEditorToolbarPanelParams = {
   labels: EditorToolbarLabels;
 };
 
-const getDiffVisibilityIcon = (showDiff: boolean) => {
-  if (showDiff) {
-    return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />';
-  }
-
-  return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />';
-};
-
-const getExpandIcon = (isExpanded: boolean) => {
-  if (isExpanded) {
-    return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />';
-  }
-
-  return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />';
-};
+const renderButton = (className: string, title: string, Icon: LucideIcon, disabled = false) => renderToStaticMarkup(createElement(Button, { type: 'button', variant: 'ghost', size: 'icon-sm', className, title, 'aria-label': title, disabled }, createElement(Icon)));
 
 const escapeHtml = (value: string): string => (
   value
@@ -86,9 +77,7 @@ export const createEditorToolbarPanelExtension = ({
         collapse: escapeHtml(labels.collapse),
         expand: escapeHtml(labels.expand),
       };
-      // Icons are static SVG path fragments controlled by this module.
-      const diffVisibilityIcon = getDiffVisibilityIcon(showDiff);
-      const expandIcon = getExpandIcon(isExpanded);
+
 
       let toolbarHtml = '<div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">';
       toolbarHtml += '<div style="display: flex; align-items: center; gap: 8px;">';
@@ -96,16 +85,8 @@ export const createEditorToolbarPanelExtension = ({
       if (hasDiff) {
         toolbarHtml += `
           <span style="font-weight: 500;">${chunkCount > 0 ? `${currentIndex + 1}/${chunkCount}` : '0'} ${escapedLabels.changes}</span>
-          <button class="cm-diff-nav-btn cm-diff-nav-prev" title="${escapedLabels.previousChange}" ${chunkCount === 0 ? 'disabled' : ''}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-            </svg>
-          </button>
-          <button class="cm-diff-nav-btn cm-diff-nav-next" title="${escapedLabels.nextChange}" ${chunkCount === 0 ? 'disabled' : ''}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          ${renderButton('cm-diff-nav-btn cm-diff-nav-prev', labels.previousChange, ChevronUp, chunkCount === 0)}
+          ${renderButton('cm-diff-nav-btn cm-diff-nav-next', labels.nextChange, ChevronDown, chunkCount === 0)}
         `;
       }
 
@@ -114,31 +95,19 @@ export const createEditorToolbarPanelExtension = ({
 
       if (file.diffInfo) {
         toolbarHtml += `
-          <button class="cm-toolbar-btn cm-toggle-diff-btn" title="${showDiff ? escapedLabels.hideDiff : escapedLabels.showDiff}">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              ${diffVisibilityIcon}
-            </svg>
-          </button>
+          ${renderButton('cm-toolbar-btn cm-toggle-diff-btn', showDiff ? labels.hideDiff : labels.showDiff, showDiff ? EyeOff : Eye)}
         `;
       }
 
       if (isSidebar && onPopOut) {
         toolbarHtml += `
-          <button class="cm-toolbar-btn cm-popout-btn" title="Open in modal">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
-            </svg>
-          </button>
+          ${renderButton('cm-toolbar-btn cm-popout-btn', labels.openInModal, ExternalLink)}
         `;
       }
 
       if (isSidebar && onToggleExpand) {
         toolbarHtml += `
-          <button class="cm-toolbar-btn cm-expand-btn" title="${isExpanded ? escapedLabels.collapse : escapedLabels.expand}">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              ${expandIcon}
-            </svg>
-          </button>
+          ${renderButton('cm-toolbar-btn cm-expand-btn', isExpanded ? labels.collapse : labels.expand, isExpanded ? Minimize2 : Maximize2)}
         `;
       }
 

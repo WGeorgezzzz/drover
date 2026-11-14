@@ -1,5 +1,6 @@
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
 import { useCallback, useEffect, useState } from 'react';
-import { CheckCircle2, Download, LogIn, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Download, LogIn, RefreshCw } from '@/shared/icons';
 import { api } from '@/shared/api';
 import type { AgentDiscoverySnapshot, LLMProvider } from '@/shared/types';
 import { useAuth } from '@/modules/auth';
@@ -52,9 +53,9 @@ export function AgentDiscoveryPanel({ onLogin }: { onLogin: (provider: LLMProvid
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium">{agent.name}</span>
           <span className="min-w-0 break-all text-xs text-muted-foreground">{agent.version}</span>
-          {agent.enabled && <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-label="已接入" />}
+          {agent.enabled && <CheckCircle2 className="h-4 w-4 text-success" aria-label="已接入" />}
           {isAdmin && agent.supported && <label className="ml-auto flex items-center gap-2 text-xs">
-            <input type="checkbox" checked={!agent.disabled} disabled={pending} onChange={e => void toggle(agent.id, e.target.checked)} aria-label={`启用 ${agent.name}`} />启用
+            <UnifiedCheckbox  checked={!agent.disabled} disabled={pending} onChange={e => void toggle(agent.id, e.target.checked)} aria-label={`启用 ${agent.name}`} />启用
           </label>}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">

@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, type Dispatch, type SetStateAction, useState } from 'react';
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
+import { Button } from '@/shared/ui/Button';
+import React, { useCallback, useEffect, useRef, type Dispatch, type SetStateAction, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X } from '@/shared/icons';
 
 import { ChatInterface } from '@/modules/chat';
 import { FileTree } from '@/modules/file-tree';
@@ -20,6 +22,8 @@ import WorkspaceStateView from '@/modules/project-workspace/WorkspaceStateView';
 import WorkspaceErrorBoundary from '@/modules/project-workspace/WorkspaceErrorBoundary';
 import { useWorkspaceSplit } from '@/modules/project-workspace/hooks/useWorkspaceSplit';
 import { SideChatPanel } from '@/modules/project-workspace/SideChatPanel';
+import { Tooltip } from '@/shared/ui/Tooltip';
+import { useWorkspaceLayoutPreference } from '@/shared/hooks/useWorkspaceLayoutPreference';
 
 type WorkspaceMainProps = {
   onOpenTasks?: (projectId: string) => void;
@@ -72,8 +76,26 @@ function WorkspaceMain({
   const preferences = useUiPreferences();
   const setPreference = useSetUiPreference();
   const { showRawParameters, showThinking, sendByCtrlEnter } = preferences;
-  // Retains the user's choice of a side-by-side Claude workspace across reloads.
-  const [splitEnabled, setSplitEnabled] = useState(() => localStorage.getItem('claude-workspace-split') !== 'false');
+  const [splitEnabled, setSplitEnabled] = useWorkspaceLayoutPreference();
+  // Expanding within the header reserves space so downloads and chat controls stay usable.
+  const [displayOptionsOpen, setDisplayOptionsOpen] = useState(false);
+  const displayOptionsTrigger = useRef<HTMLButtonElement>(null);
+  const displayOptionsPanel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!displayOptionsOpen) return;
+    const closeOnOutside = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!displayOptionsTrigger.current?.contains(target) && !displayOptionsPanel.current?.contains(target)) setDisplayOptionsOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault(); event.stopPropagation();
+      setDisplayOptionsOpen(false); displayOptionsTrigger.current?.focus();
+    };
+    document.addEventListener('pointerdown', closeOnOutside);
+    window.addEventListener('keydown', closeOnEscape, true);
+    return () => { document.removeEventListener('pointerdown', closeOnOutside); window.removeEventListener('keydown', closeOnEscape, true); };
+  }, [displayOptionsOpen]);
   const workspaceSplit = useWorkspaceSplit();
   const paletteOps = usePaletteOps();
   // The parent ID prevents a panel belonging to one conversation appearing in another.
@@ -136,7 +158,7 @@ function WorkspaceMain({
     && ['shell', 'files', 'git', 'browser'].includes(activeTab);
   const panelClass = splitPane ? 'workspace-pane flex h-full min-w-0 shrink-0 flex-col overflow-hidden border-l border-border' : 'h-full w-full overflow-hidden';
   const panelStyle = splitPane ? { width: `${workspaceSplit.percent}%` } : undefined;
-  const paneHeader=splitPane?<div className="flex h-9 shrink-0 items-center justify-between border-b border-border/60 px-3 text-xs text-muted-foreground"><span>{t(`ui.panes.${activeTab}`)}</span><button type="button" className="workspace-icon-button" aria-label={t('desktop.closePane')} onClick={()=>setActiveTab('chat')}><X size={14}/></button></div>:null;
+  const paneHeader=splitPane?<div className="flex h-9 shrink-0 items-center justify-between border-b border-border/60 px-3 text-xs text-muted-foreground"><span>{t(`ui.panes.${activeTab}`)}</span><Button variant="ghost" size="compact" type="button" className="workspace-icon-button" aria-label={t('desktop.closePane')} onClick={()=>setActiveTab('chat')}><X size={14}/></Button></div>:null;
   const openWorkspaceFile = useCallback((filePath: string) => {
     if (handleFileOpen(filePath) && isClaude) setActiveTab('chat');
   }, [handleFileOpen, isClaude, setActiveTab]);
@@ -211,21 +233,18 @@ function WorkspaceMain({
         claudeLayout={isClaude}
         onOpenSideChat={isClaude && selectedSession ? openSelectedSideChat : undefined}
         sideChatOpen={sideChatOpen}
-        displayOptions={isClaude&&<details className="workspace-display-menu relative shrink-0 self-center">
-          <summary aria-label={t('ui.displayOptions')} title={t('ui.displayOptions')} className="workspace-icon-button cursor-pointer list-none"><SlidersHorizontal size={16}/></summary>
-          <div className="workspace-view-options absolute right-0 top-full z-50 mt-2 flex w-56 flex-col gap-3 rounded-xl border border-border bg-popover p-3 text-xs text-muted-foreground shadow-lg" data-testid="claude-workspace-controls">
-          {!isMobile && <label className="flex items-center gap-1.5"><input type="checkbox" checked={splitEnabled} onChange={event => {
-            setSplitEnabled(event.target.checked);
-            localStorage.setItem('claude-workspace-split', String(event.target.checked));
-          }} />{t('desktop.sideBySide', 'Side by side')}</label>}
-          <label className="flex items-center gap-1.5"><input type="checkbox" checked={showThinking} onChange={event => setPreference('showThinking',event.target.checked)} />{t('desktop.showThinking', 'Show thinking')}</label>
-          <label className="flex items-center gap-1.5"><input type="checkbox" checked={showRawParameters} onChange={event => setPreference('showRawParameters',event.target.checked)} />{t('desktop.showParameters', 'Show tool parameters')}</label>
-          {(activeTab !== 'chat' || editingFile) && <button type="button" className="ml-auto rounded px-2 py-1 hover:bg-muted" onClick={() => {
+        displayOptions={isClaude&&<Tooltip content={t('ui.displayOptions')} position="bottom" disabled={displayOptionsOpen}>
+          <Button ref={displayOptionsTrigger} variant="ghost" size="compact" type="button" aria-label={t('ui.displayOptions')} aria-expanded={displayOptionsOpen} aria-controls="workspace-display-options" className="workspace-icon-button" onClick={() => setDisplayOptionsOpen(open => !open)}><SlidersHorizontal size={16}/></Button>
+        </Tooltip>}
+        displayOptionsPanel={isClaude&&displayOptionsOpen&&<div ref={displayOptionsPanel} id="workspace-display-options" role="group" aria-label={t('ui.displayOptions')} className="workspace-view-options ml-auto mt-2 flex w-56 max-w-full flex-col gap-3 rounded-xl border border-border bg-popover p-3 text-xs text-muted-foreground shadow-sm" data-testid="claude-workspace-controls">
+          {!isMobile && <label className="flex items-center gap-1.5"><UnifiedCheckbox checked={splitEnabled} onChange={event => setSplitEnabled(event.target.checked)} />{t('desktop.sideBySide')}</label>}
+          <label className="flex items-center gap-1.5"><UnifiedCheckbox  checked={showThinking} onChange={event => setPreference('showThinking',event.target.checked)} />{t('desktop.showThinking', 'Show thinking')}</label>
+          <label className="flex items-center gap-1.5"><UnifiedCheckbox  checked={showRawParameters} onChange={event => setPreference('showRawParameters',event.target.checked)} />{t('desktop.showParameters', 'Show tool parameters')}</label>
+          {(activeTab !== 'chat' || editingFile) && <Button variant="ghost" size="compact" type="button" className="ml-auto rounded px-2 py-1 hover:bg-muted" onClick={() => {
             if (editingFile) handleCloseEditor();
             else setActiveTab('chat');
-          }}>{t('desktop.closePane', 'Close pane')}</button>}
-          </div>
-        </details>}
+          }}>{t('desktop.closePane', 'Close pane')}</Button>}
+          </div>}
       />
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">

@@ -1,5 +1,8 @@
+import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
+import { Dialog as UnifiedDialog, DialogContent as UnifiedDialogContent } from '@/shared/ui/Dialog';
+import { Button } from '@/shared/ui/Button';
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Check, Download, RotateCcw, Trash2, Upload } from 'lucide-react';
+import { AlertTriangle, Check, Download, RotateCcw, Trash2, Upload } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import type { ConfirmActionType, ConfirmationRequest } from '@/shared/types';
@@ -27,25 +30,25 @@ const CONFIRMATION_ACTION_LABELS: Record<ConfirmActionType, string> = {
 };
 
 const CONFIRMATION_BUTTON_CLASSES: Record<ConfirmActionType, string> = {
-  discard: 'bg-red-600 hover:bg-red-700',
-  delete: 'bg-red-600 hover:bg-red-700',
+  discard: 'bg-destructive hover:bg-destructive',
+  delete: 'bg-destructive hover:bg-destructive',
   commit: 'bg-primary hover:bg-primary/90',
-  pull: 'bg-green-600 hover:bg-green-700',
-  push: 'bg-orange-600 hover:bg-orange-700',
-  publish: 'bg-purple-600 hover:bg-purple-700',
-  revertLocalCommit: 'bg-yellow-600 hover:bg-yellow-700',
-  deleteBranch: 'bg-red-600 hover:bg-red-700',
+  pull: 'bg-success hover:bg-success',
+  push: 'bg-warning hover:bg-warning',
+  publish: 'bg-primary hover:bg-primary',
+  revertLocalCommit: 'bg-warning hover:bg-warning',
+  deleteBranch: 'bg-destructive hover:bg-destructive',
 };
 
 const CONFIRMATION_ICON_CONTAINER_CLASSES: Record<ConfirmActionType, string> = {
-  discard: 'bg-red-100 dark:bg-red-900/30',
-  delete: 'bg-red-100 dark:bg-red-900/30',
-  commit: 'bg-yellow-100 dark:bg-yellow-900/30',
-  pull: 'bg-yellow-100 dark:bg-yellow-900/30',
-  push: 'bg-yellow-100 dark:bg-yellow-900/30',
-  publish: 'bg-yellow-100 dark:bg-yellow-900/30',
-  revertLocalCommit: 'bg-yellow-100 dark:bg-yellow-900/30',
-  deleteBranch: 'bg-red-100 dark:bg-red-900/30',
+  discard: 'bg-destructive/10 dark:bg-destructive/30',
+  delete: 'bg-destructive/10 dark:bg-destructive/30',
+  commit: 'bg-warning/10 dark:bg-warning/30',
+  pull: 'bg-warning/10 dark:bg-warning/30',
+  push: 'bg-warning/10 dark:bg-warning/30',
+  publish: 'bg-warning/10 dark:bg-warning/30',
+  revertLocalCommit: 'bg-warning/10 dark:bg-warning/30',
+  deleteBranch: 'bg-destructive/10 dark:bg-destructive/30',
 };
 
 type ConfirmActionModalProps = {
@@ -114,19 +117,14 @@ export default function ConfirmActionModal({ action, onCancel, onConfirm }: Conf
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={handleCancel} />
+    <UnifiedDialog open onOpenChange={(open) => { if (!open) { handleCancel(); } }}>
+
       {/*
         Capped to the viewport with only the message scrolling, so a long body
         (a multi-paragraph commit message, a long file list) can never push the
         Cancel/Confirm buttons off screen.
       */}
-      <div
-        className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-      >
+      <UnifiedDialogContent wrapperClassName="z-50"  className=" flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl" aria-labelledby={titleId}>
         <div className="flex shrink-0 items-center px-6 pt-6">
           <div className={`mr-3 rounded-full p-2 ${CONFIRMATION_ICON_CONTAINER_CLASSES[action.type]}`}>
             {renderConfirmActionIcon(action.type)}
@@ -147,8 +145,8 @@ export default function ConfirmActionModal({ action, onCancel, onConfirm }: Conf
 
         {action.alternateConfirmation && (
           <label className="mx-6 mb-5 flex cursor-pointer items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 transition-colors hover:bg-destructive/10">
-            <input
-              type="checkbox"
+            <UnifiedCheckbox
+
               checked={useAlternateConfirmation}
               onChange={(event) => setUseAlternateConfirmation(event.target.checked)}
               className="mt-0.5 h-4 w-4 shrink-0 accent-destructive"
@@ -166,15 +164,15 @@ export default function ConfirmActionModal({ action, onCancel, onConfirm }: Conf
         )}
 
         <div className="flex shrink-0 justify-end space-x-3 px-6 pb-6">
-          <button
+          <Button variant="ghost" size="compact"
             onClick={handleCancel}
             className="rounded-lg px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             {t('git:confirm.cancel')}
-          </button>
-          <button
+          </Button>
+          <Button variant="ghost" size="compact"
             onClick={handleConfirm}
-            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm text-white transition-colors ${CONFIRMATION_BUTTON_CLASSES[action.type]}`}
+            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-sm text-primary-foreground transition-colors ${CONFIRMATION_BUTTON_CLASSES[action.type]}`}
           >
             {renderConfirmActionIcon(action.type)}
             <span>
@@ -182,9 +180,9 @@ export default function ConfirmActionModal({ action, onCancel, onConfirm }: Conf
                 ? action.alternateConfirmation.actionLabel
                 : t(CONFIRMATION_ACTION_LABELS[action.type])}
             </span>
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+      </UnifiedDialogContent>
+    </UnifiedDialog>
   );
 }

@@ -1,5 +1,6 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
 import { memo, useEffect, useRef } from 'react';
-import { Check, ChevronDown, ChevronRight, Edit3, Star, Trash2, X, Folder } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Edit3, Star, Trash2, X, Folder } from '@/shared/icons';
 import type { TFunction } from 'i18next';
 
 import { SectionRow } from '@/modules/sidebar/SectionRow';
@@ -170,18 +171,18 @@ function SidebarProjectItem({
               isSelected && 'bg-primary/5 border-primary/20',
               isStarred &&
                 !isSelected &&
-                'bg-yellow-50/50 dark:bg-yellow-900/5 border-yellow-200/30 dark:border-yellow-800/30',
+                'bg-warning/10 dark:bg-warning/5 border-warning/30 dark:border-warning/30',
             )}
             onClick={toggleProject}
           >
             <div className="flex items-center justify-between">
               <div className="flex min-w-0 flex-1 items-center gap-3">
-                <button
+                <Button variant="ghost" size="compact"
                   className={cn(
                     'w-8 h-8 rounded-lg flex items-center justify-center active:scale-90 transition-all duration-150 border',
                     isStarred
-                      ? 'bg-yellow-500/10 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800'
-                      : 'bg-gray-500/10 dark:bg-gray-900/30 border-gray-200 dark:border-gray-800',
+                      ? 'bg-warning/10 dark:bg-warning/30 border-warning dark:border-warning'
+                      : 'bg-muted/10 dark:bg-background/30 border-border dark:border-border',
                   )}
                   onClick={(event) => {
                     event.stopPropagation();
@@ -193,15 +194,15 @@ function SidebarProjectItem({
                     className={cn(
                       'w-4 h-4 transition-colors',
                       isStarred
-                        ? 'text-yellow-600 dark:text-yellow-400 fill-current'
-                        : 'text-gray-600 dark:text-gray-400',
+                        ? 'text-warning dark:text-warning fill-current'
+                        : 'text-muted-foreground dark:text-muted-foreground',
                     )}
                   />
-                </button>
+                </Button>
 
                 <div className="min-w-0 flex-1">
                   {isEditing ? (
-                    <input
+                    <UnifiedInput
                       ref={mobileRenameInputRef}
                       type="text"
                       value={renameDraft}
@@ -249,38 +250,38 @@ function SidebarProjectItem({
               <div className="flex items-center gap-1">
                 {isEditing ? (
                   <>
-                    <button
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500 shadow-sm transition-all duration-150 active:scale-90 active:shadow-none dark:bg-green-600"
+                    <Button variant="ghost" size="compact"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-success shadow-sm transition-all duration-150 active:scale-90 active:shadow-none dark:bg-success"
                       onClick={(event) => {
                         event.stopPropagation();
                         saveProjectName();
                       }}
                     >
-                      <Check className="h-4 w-4 text-white" />
-                    </button>
-                    <button
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-500 shadow-sm transition-all duration-150 active:scale-90 active:shadow-none dark:bg-gray-600"
+                      <Check className="h-4 w-4 text-primary-foreground" />
+                    </Button>
+                    <Button variant="ghost" size="compact"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted shadow-sm transition-all duration-150 active:scale-90 active:shadow-none dark:bg-muted"
                       onClick={(event) => {
                         event.stopPropagation();
                         onCancelEditingProject();
                       }}
                     >
-                      <X className="h-4 w-4 text-white" />
-                    </button>
+                      <X className="h-4 w-4 text-primary-foreground" />
+                    </Button>
                   </>
                 ) : (
                   <>
-                    <button
-                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200 bg-red-500/10 active:scale-90 dark:border-red-800 dark:bg-red-900/30"
+                    <Button variant="ghost" size="compact"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-destructive bg-destructive/10 active:scale-90 dark:border-destructive dark:bg-destructive/30"
                       onClick={(event) => {
                         event.stopPropagation();
                         onDeleteProject(project);
                       }}
                     >
-                      <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
-                    </button>
+                      <Trash2 className="h-4 w-4 text-destructive dark:text-destructive" />
+                    </Button>
 
-                    <button
+                    <Button variant="ghost" size="compact"
                       className="flex h-8 w-8 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 active:scale-90 dark:border-primary/30 dark:bg-primary/20"
                       onClick={(event) => {
                         event.stopPropagation();
@@ -288,7 +289,7 @@ function SidebarProjectItem({
                       }}
                     >
                       <Edit3 className="h-4 w-4 text-primary" />
-                    </button>
+                    </Button>
 
                     <div className="flex h-6 w-6 items-center justify-center rounded-md bg-muted/30">
                       {isExpanded ? (
@@ -318,7 +319,7 @@ function SidebarProjectItem({
                 : 'bg-background',
             isStarred &&
               !isSelected &&
-              'bg-yellow-50/50 dark:bg-yellow-900/10 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/20',
+              'bg-warning/10 dark:bg-warning/10 hover:bg-warning/10 dark:hover:bg-warning/20',
           )}
           onClick={selectAndToggleProject}
         >
@@ -327,7 +328,7 @@ function SidebarProjectItem({
               className={cn(
                 'project-favorite w-5 h-5 flex items-center justify-center rounded cursor-pointer transition-all duration-200',
                 isStarred
-                  ? 'hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+                  ? 'hover:bg-warning/10 dark:hover:bg-warning/20'
                   : 'text-muted-foreground hover:bg-accent',
               )}
               onClick={(event) => {
@@ -341,7 +342,7 @@ function SidebarProjectItem({
                 className={cn(
                   'project-star-icon w-3 h-3 transition-colors',
                   isStarred
-                    ? 'text-yellow-600 dark:text-yellow-400 fill-current'
+                    ? 'text-warning dark:text-warning fill-current'
                     : 'text-muted-foreground hidden',
                 )}
               />
@@ -349,7 +350,7 @@ function SidebarProjectItem({
             <div className="min-w-0 flex-1 text-left">
               {isEditing ? (
                 <div className="space-y-1">
-                  <input
+                  <UnifiedInput
                     type="text"
                     value={renameDraft}
                     onChange={(event) => onRenameDraftChange(event.target.value)}
@@ -394,7 +395,7 @@ function SidebarProjectItem({
             {isEditing ? (
               <>
                 <div
-                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-green-600 transition-colors hover:bg-green-50 hover:text-green-700 dark:hover:bg-green-900/20"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-success transition-colors hover:bg-success/10 hover:text-success dark:hover:bg-success/20"
                   onClick={(event) => {
                     event.stopPropagation();
                     saveProjectName();
@@ -403,7 +404,7 @@ function SidebarProjectItem({
                   <Check className="h-3 w-3" />
                 </div>
                 <div
-                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 dark:hover:bg-gray-800"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground dark:hover:bg-background"
                   onClick={(event) => {
                     event.stopPropagation();
                     onCancelEditingProject();
@@ -425,14 +426,14 @@ function SidebarProjectItem({
                   <Edit3 className="h-3 w-3" />
                 </div>
                 <div
-                  className="touch:opacity-100 flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all duration-200 hover:bg-red-50 group-hover:opacity-100 dark:hover:bg-red-900/20"
+                  className="touch:opacity-100 flex h-6 w-6 cursor-pointer items-center justify-center rounded opacity-0 transition-all duration-200 hover:bg-destructive/10 group-hover:opacity-100 dark:hover:bg-destructive/20"
                   onClick={(event) => {
                     event.stopPropagation();
                     onDeleteProject(project);
                   }}
                   title={t('tooltips.deleteProject')}
                 >
-                  <Trash2 className="h-3 w-3 text-red-600 dark:text-red-400" />
+                  <Trash2 className="h-3 w-3 text-destructive dark:text-destructive" />
                 </div>
                 {isExpanded ? (
                   <ChevronDown className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />

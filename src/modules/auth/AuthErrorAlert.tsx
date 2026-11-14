@@ -1,4 +1,4 @@
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle } from '@/shared/icons';
 
 type AuthErrorAlertProps = {
   errorMessage: string;

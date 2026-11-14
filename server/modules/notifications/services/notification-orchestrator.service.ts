@@ -1,22 +1,25 @@
-import webPush from 'web-push';
+import { createRequire } from 'node:module';
+import type { AnyRecord } from '@/shared/types.js';
+// web-push ships CommonJS without declarations in this repository.
+const webPush = createRequire(import.meta.url)('web-push') as { sendNotification(subscription: AnyRecord, payload: string): Promise<unknown> };
 
 import { notificationPreferencesDb, pushSubscriptionsDb, sessionsDb } from '@/modules/database/index.js';
 import { sendDesktopNotification as sendDesktopNotificationToClients } from '@/modules/notifications/services/desktop-notification-clients.service.js';
 
-const KIND_TO_PREF_KEY = {
+const KIND_TO_PREF_KEY: Record<string, string> = {
   action_required: 'actionRequired',
   stop: 'stop',
   error: 'error'
 };
 
-const PROVIDER_LABELS = {
+const PROVIDER_LABELS: Record<string, string> = {
   claude: 'Claude',
   cursor: 'Cursor',
   codex: 'Codex',
   system: 'System'
 };
 
-const recentEventKeys = new Map();
+const recentEventKeys = new Map<string, number>();
 const DEDUPE_WINDOW_MS = 20000;
 
 const cleanupOldEventKeys = () => {
@@ -28,16 +31,16 @@ const cleanupOldEventKeys = () => {
   }
 };
 
-function isNotificationEventEnabled(preferences, event) {
+function isNotificationEventEnabled(preferences: AnyRecord, event: AnyRecord) {
   const prefEventKey = KIND_TO_PREF_KEY[event.kind];
   const eventEnabled = prefEventKey ? Boolean(preferences?.events?.[prefEventKey]) : true;
 
   return eventEnabled;
 }
 
-function isDuplicate(event) {
+function isDuplicate(userId: string | number, event: AnyRecord) {
   cleanupOldEventKeys();
-  const key = event.dedupeKey || `${event.provider}:${event.kind || 'info'}:${event.code || 'generic'}:${event.sessionId || 'none'}`;
+  const key = String(userId) + ':' + (event.dedupeKey || `${event.provider}:${event.kind || 'info'}:${event.code || 'generic'}:${event.sessionId || 'none'}:${event.createdAt || ''}`);
   if (recentEventKeys.has(key)) {
     return true;
   }
@@ -45,7 +48,8 @@ function isDuplicate(event) {
   return false;
 }
 
-function createNotificationEvent({
+/** Provider runtimes, monitor alerts and Settings create channel-neutral events. */
+export function createNotificationEvent({
   provider,
   sessionId = null,
   kind = 'info',
@@ -54,7 +58,7 @@ function createNotificationEvent({
   severity = 'info',
   dedupeKey = null,
   requiresUserAction = false
-}) {
+}: AnyRecord) {
   return {
     provider,
     sessionId,
@@ -68,12 +72,12 @@ function createNotificationEvent({
   };
 }
 
-function normalizeErrorMessage(error) {
+function normalizeErrorMessage(error: unknown) {
   if (typeof error === 'string') {
     return error;
   }
 
-  if (error && typeof error.message === 'string') {
+  if (error instanceof Error) {
     return error.message;
   }
 
@@ -84,7 +88,7 @@ function normalizeErrorMessage(error) {
   return String(error);
 }
 
-function normalizeSessionName(sessionName) {
+function normalizeSessionName(sessionName: unknown) {
   if (typeof sessionName !== 'string') {
     return null;
   }
@@ -97,11 +101,11 @@ function normalizeSessionName(sessionName) {
   return normalized.length > 80 ? `${normalized.slice(0, 77)}...` : normalized;
 }
 
-function rowMatchesProvider(row, provider) {
+function rowMatchesProvider(row: AnyRecord | null, provider: string) {
   return row && (!provider || row.provider === provider);
 }
 
-function resolveSessionRow(sessionId, provider) {
+function resolveSessionRow(sessionId: string, provider: string) {
   if (!sessionId) {
     return null;
   }
@@ -119,7 +123,7 @@ function resolveSessionRow(sessionId, provider) {
   return null;
 }
 
-function normalizeNotificationSession(event) {
+function normalizeNotificationSession(event: AnyRecord) {
   if (!event?.sessionId || !event.provider || event.provider === 'system') {
     return event;
   }
@@ -135,7 +139,7 @@ function normalizeNotificationSession(event) {
   };
 }
 
-function resolveSessionName(event) {
+function resolveSessionName(event: AnyRecord) {
   const explicitSessionName = normalizeSessionName(event.meta?.sessionName);
   if (explicitSessionName) {
     return explicitSessionName;
@@ -148,9 +152,10 @@ function resolveSessionName(event) {
   return normalizeSessionName(sessionsDb.getSessionName(event.sessionId, event.provider));
 }
 
-function buildNotificationPayload(event) {
+/** Delivery channels and tests resolve app session ids and display payloads. */
+export function buildNotificationPayload(event: AnyRecord) {
   const normalizedEvent = normalizeNotificationSession(event);
-  const CODE_MAP = {
+  const CODE_MAP: Record<string, string> = {
     'permission.required': normalizedEvent.meta?.toolName
       ? `Action Required: Tool "${normalizedEvent.meta.toolName}" needs approval`
       : 'Action Required: A tool needs your approval',
@@ -172,13 +177,14 @@ function buildNotificationPayload(event) {
       code: normalizedEvent.code,
       provider: normalizedEvent.provider || null,
       sessionName,
-      tag: `${normalizedEvent.provider || 'assistant'}:${normalizedEvent.sessionId || 'none'}:${normalizedEvent.code}`
+      tag: normalizedEvent.dedupeKey || `${normalizedEvent.provider || 'assistant'}:${normalizedEvent.sessionId || 'none'}:${normalizedEvent.code}:${normalizedEvent.createdAt || ''}`,
+      silent: false,
     }
   };
 }
 
-function sendWebPushPayload(userId, payload) {
-  const subscriptions = pushSubscriptionsDb.getSubscriptions(userId);
+function sendWebPushPayload(userId: string | number, payload: AnyRecord) {
+  const subscriptions = pushSubscriptionsDb.getSubscriptions(Number(userId)) as AnyRecord[];
   if (!subscriptions.length) return Promise.resolve();
 
   const serializedPayload = JSON.stringify(payload);
@@ -212,17 +218,18 @@ const notificationChannels = [
     id: 'webPush',
     // TODO: Web push still uses push_subscriptions. Do not remove that table until
     // browser push subscriptions are migrated into notification_channel_endpoints.
-    isEnabled: (preferences) => Boolean(preferences?.channels?.webPush),
-    send: ({ userId, payload }) => sendWebPushPayload(userId, payload)
+    isEnabled: (preferences: AnyRecord) => Boolean(preferences?.channels?.webPush),
+    send: ({ userId, payload }: AnyRecord) => sendWebPushPayload(userId, payload)
   },
   {
     id: 'desktop',
-    isEnabled: (preferences) => Boolean(preferences?.channels?.desktop),
-    send: ({ userId, payload }) => sendDesktopNotificationToClients(userId, payload)
+    isEnabled: (preferences: AnyRecord) => Boolean(preferences?.channels?.desktop),
+    send: ({ userId, payload }: AnyRecord) => sendDesktopNotificationToClients(userId, payload)
   }
 ];
 
-function notifyUserIfEnabled({ userId, event }) {
+/** Provider runtimes and monitor alerts deliver this event using saved user preferences. */
+export function notifyUserIfEnabled({ userId, event }: AnyRecord) {
   if (!userId || !event) {
     return;
   }
@@ -232,11 +239,12 @@ function notifyUserIfEnabled({ userId, event }) {
   if (!isNotificationEventEnabled(preferences, normalizedEvent)) {
     return;
   }
-  if (isDuplicate(normalizedEvent)) {
+  if (isDuplicate(userId, normalizedEvent)) {
     return;
   }
 
   const payload = buildNotificationPayload(normalizedEvent);
+  payload.data.silent = !preferences?.channels?.sound;
   for (const channel of notificationChannels) {
     if (!channel.isEnabled(preferences)) {
       continue;
@@ -247,7 +255,8 @@ function notifyUserIfEnabled({ userId, event }) {
   }
 }
 
-function notifyRunStopped({ userId, provider, sessionId = null, stopReason = 'completed', sessionName = null }) {
+/** Provider runtimes and monitor alerts deliver this event using saved user preferences. */
+export function notifyRunStopped({ userId, provider, sessionId = null, stopReason = 'completed', sessionName = null }: AnyRecord) {
   notifyUserIfEnabled({
     userId,
     event: createNotificationEvent({
@@ -257,7 +266,7 @@ function notifyRunStopped({ userId, provider, sessionId = null, stopReason = 'co
       code: 'run.stopped',
       meta: { stopReason, sessionName },
       severity: 'info',
-      dedupeKey: `${provider}:run:stop:${sessionId || 'none'}:${stopReason}`
+      dedupeKey: null
     })
   });
 }
@@ -269,7 +278,8 @@ function notifyRunStopped({ userId, provider, sessionId = null, stopReason = 'co
  * than needing a new opt-in that would default to off. No explicit dedupeKey, so
  * the default composite key collapses repeats inside the dedupe window.
  */
-function notifyBackgroundWorkCompleted({ userId, provider, sessionId = null, sessionName = null }) {
+/** Provider runtimes and monitor alerts deliver this event using saved user preferences. */
+export function notifyBackgroundWorkCompleted({ userId, provider, sessionId = null, sessionName = null }: AnyRecord) {
   notifyUserIfEnabled({
     userId,
     event: createNotificationEvent({
@@ -283,7 +293,8 @@ function notifyBackgroundWorkCompleted({ userId, provider, sessionId = null, ses
   });
 }
 
-function notifyRunFailed({ userId, provider, sessionId = null, error, sessionName = null }) {
+/** Provider runtimes and monitor alerts deliver this event using saved user preferences. */
+export function notifyRunFailed({ userId, provider, sessionId = null, error, sessionName = null }: AnyRecord) {
   const errorMessage = normalizeErrorMessage(error);
 
   notifyUserIfEnabled({
@@ -295,16 +306,8 @@ function notifyRunFailed({ userId, provider, sessionId = null, error, sessionNam
       code: 'run.failed',
       meta: { error: errorMessage, sessionName },
       severity: 'error',
-      dedupeKey: `${provider}:run:error:${sessionId || 'none'}:${errorMessage}`
+      dedupeKey: null
     })
   });
 }
 
-export {
-  buildNotificationPayload,
-  createNotificationEvent,
-  notifyUserIfEnabled,
-  notifyRunStopped,
-  notifyRunFailed,
-  notifyBackgroundWorkCompleted
-};

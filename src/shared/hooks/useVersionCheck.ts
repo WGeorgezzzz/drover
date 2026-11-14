@@ -1,3 +1,4 @@
+import { api } from '@/shared/api';
 import { useState, useEffect } from 'react';
 
 import { APP_VERSION } from '@/shared/constants';
@@ -6,14 +7,14 @@ import type { InstallMode, ReleaseInfo } from '@/shared/types';
 /**
  * Compare two semantic version strings
  * Works only with numeric versions separated by dots (e.g. "1.2.3")
- * @param {string} v1 
+ * @param {string} v1
  * @param {string} v2
  * @returns positive if v1 > v2, negative if v1 < v2, 0 if equal
  */
 const compareVersions = (v1: string, v2: string) => {
   const parts1 = v1.split('.').map(Number);
   const parts2 = v2.split('.').map(Number);
-  
+
   for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
     const p1 = parts1[i] || 0;
     const p2 = parts2[i] || 0;
@@ -34,7 +35,7 @@ export const useVersionCheck = (owner: string, repo: string) => {
   useEffect(() => {
     const fetchHealth = async () => {
       try {
-        const response = await fetch('/health');
+        const response = await api.system.health();
         const data = await response.json();
         if (data.installMode === 'npm' || data.installMode === 'git') {
           setInstallMode(data.installMode);
@@ -58,14 +59,14 @@ export const useVersionCheck = (owner: string, repo: string) => {
   useEffect(() => {
     const checkVersion = async () => {
       try {
-        const health=await fetch('/health').then(response=>response.json());
+        const health=await api.system.health().then(response=>response.json());
         if (health.distribution==='workbench') {
           // The standalone distribution is updated by its own installer,
           // never by replacing it with the upstream npm package.
           setUpdateAvailable(false);
           return;
         }
-        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`);
+        const response = await api.github.latestRelease(owner, repo);
         const data = await response.json();
 
         // Handle the case where there might not be any releases

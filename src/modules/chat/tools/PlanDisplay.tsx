@@ -1,6 +1,7 @@
+import { ChevronRight as UnifiedChevronRight } from '@/shared/icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronsUpDown, FileText } from 'lucide-react';
+import { ChevronsUpDown, FileText } from '@/shared/icons';
 
 import {
   Card,
@@ -99,14 +100,7 @@ export const PlanDisplay: React.FC<PlanDisplayProps> = ({
             {showRawParameters && rawContent && (
               <Collapsible className="mt-3">
                 <CollapsibleTrigger className="flex items-center gap-1.5 py-0.5 text-[11px] text-muted-foreground hover:text-foreground">
-                  <svg
-                    className="h-2.5 w-2.5 flex-shrink-0 transition-transform duration-150 data-[state=open]:rotate-90"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <UnifiedChevronRight className="h-2.5 w-2.5 flex-shrink-0 transition-transform duration-150 data-[state=open]:rotate-90" />
                   raw params
                 </CollapsibleTrigger>
                 <CollapsibleContent>

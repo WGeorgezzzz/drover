@@ -64,15 +64,15 @@ beforeEach(() => {
 
 test('background work shows as the purple dot in place of the green one, with nothing spinning', () => {
   const idle = renderRow({ isProcessing: false, hasBackgroundWork: false });
-  assert.ok(idle.container.querySelector('[role="status"].bg-green-500'), 'the fixture is a recently touched session');
+  assert.ok(idle.container.querySelector('[role="status"].bg-success'), 'the fixture is a recently touched session');
   idle.unmount();
 
   const { container } = renderRow({ isProcessing: false, hasBackgroundWork: true });
 
   const dot = container.querySelector('[role="status"]');
   assert.ok(dot);
-  assert.ok(dot.className.includes('bg-purple-500'));
-  assert.ok(!dot.className.includes('bg-green-500'));
+  assert.ok(dot.className.includes('bg-primary'));
+  assert.ok(!dot.className.includes('bg-success'));
   assert.equal(dot.getAttribute('aria-label'), 'tooltips.backgroundWorkIndicator');
   assert.equal(container.querySelectorAll('.animate-spin').length, 0);
   assert.equal(recordedOptionsProps.at(-1)?.isProcessing, false, 'the row is not locked the way a responding one is');

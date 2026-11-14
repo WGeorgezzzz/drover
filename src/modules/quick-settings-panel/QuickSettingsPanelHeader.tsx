@@ -1,4 +1,5 @@
-import { Pin, PinOff, Settings2, X } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { Pin, PinOff, Settings2, X } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 type QuickSettingsPanelHeaderProps = {
@@ -27,7 +28,7 @@ export default function QuickSettingsPanelHeader({
       </h3>
       <div className="flex items-center gap-1">
         {canPin && (
-          <button
+          <Button variant="ghost" size="compact"
             type="button"
             onClick={onTogglePin}
             aria-pressed={isPinned}
@@ -36,11 +37,11 @@ export default function QuickSettingsPanelHeader({
             className={`rounded-md p-1.5 transition-colors hover:bg-accent ${isPinned ? 'text-foreground' : 'text-muted-foreground'}`}
           >
             {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-          </button>
+          </Button>
         )}
         {/* A docked panel is collapsed with the edge handle or unpinned, so the close button is overlay-only. */}
         {!isPinned && (
-          <button
+          <Button variant="ghost" size="compact"
             type="button"
             onClick={onClose}
             aria-label={t('quickSettings.close')}
@@ -48,7 +49,7 @@ export default function QuickSettingsPanelHeader({
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         )}
       </div>
     </div>

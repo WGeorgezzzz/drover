@@ -1,3 +1,4 @@
+import { Button as UnifiedButton } from '@/shared/ui/Button';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { cn } from '@/shared/utils';
@@ -29,7 +30,7 @@ type PillProps = Omit<ComponentPropsWithoutRef<'button'>, 'onClick'> & {
 /** A single tab inside PillBar, used by the project-workspace and settings modules. */
 export function Pill({ isActive, onClick, children, className, ...props }: PillProps) {
   return (
-    <button
+    <UnifiedButton variant="ghost" size="compact"
       type="button"
       onClick={onClick}
       className={cn(
@@ -42,6 +43,6 @@ export function Pill({ isActive, onClick, children, className, ...props }: PillP
       {...props}
     >
       {children}
-    </button>
+    </UnifiedButton>
   );
 }

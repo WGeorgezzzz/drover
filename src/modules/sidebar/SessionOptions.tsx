@@ -1,5 +1,7 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { useEffect, useRef } from 'react';
-import { Check, Clock3, Edit2, FolderInput, GitBranch, Mail, MailOpen, MoreHorizontal, Sparkles, Pin, PinOff, Trash2, X } from 'lucide-react';
+import { Check, Clock3, Edit2, FolderInput, GitBranch, Mail, MailOpen, MoreHorizontal, Sparkles, Pin, PinOff, Trash2, X } from '@/shared/icons';
 import type { TFunction } from 'i18next';
 
 import { useWorkspaceSections } from '@/modules/sidebar/context/WorkspaceSectionsContext';
@@ -117,7 +119,7 @@ export default function SessionOptions({
     <div ref={containerRef} className={cn('flex items-center gap-1', className)}>
       {isEditing ? (
         <>
-          <input
+          <UnifiedInput
             type="text"
             value={renameDraft}
             onChange={(event) => onRenameDraftChange(event.target.value)}
@@ -133,26 +135,26 @@ export default function SessionOptions({
             className="w-32 rounded border border-border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
             autoFocus
           />
-          <button
-            className="flex h-6 w-6 items-center justify-center rounded bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:hover:bg-green-900/40"
+          <Button variant="ghost" size="compact"
+            className="flex h-6 w-6 items-center justify-center rounded bg-success/10 hover:bg-success/10 dark:bg-success/20 dark:hover:bg-success/40"
             onClick={(event) => {
               event.stopPropagation();
               saveRename();
             }}
             title={t('tooltips.save')}
           >
-            <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-          </button>
-          <button
-            className="flex h-6 w-6 items-center justify-center rounded bg-gray-50 hover:bg-gray-100 dark:bg-gray-900/20 dark:hover:bg-gray-900/40"
+            <Check className="h-3 w-3 text-success dark:text-success" />
+          </Button>
+          <Button variant="ghost" size="compact"
+            className="flex h-6 w-6 items-center justify-center rounded bg-muted hover:bg-muted dark:bg-background/20 dark:hover:bg-background/40"
             onClick={(event) => {
               event.stopPropagation();
               onCancelEditingSession();
             }}
             title={t('tooltips.cancel')}
           >
-            <X className="h-3 w-3 text-gray-600 dark:text-gray-400" />
-          </button>
+            <X className="h-3 w-3 text-muted-foreground dark:text-muted-foreground" />
+          </Button>
         </>
       ) : (
         <ActionMenu

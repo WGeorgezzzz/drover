@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { TFunction } from 'i18next';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare } from '@/shared/icons';
 import { Button } from '@/shared/ui';
 import type { ProjectSession, RecentConversationListItem, SessionRowActions } from '@/shared/types';
 import { formatCompactAge } from '@/modules/sidebar/utils/sidebarProjectFormatting';

@@ -1,6 +1,7 @@
+import { Button } from '@/shared/ui/Button';
 import { Fragment } from 'react';
-import { Activity, Archive, Folder, MessageSquare, MoreHorizontal } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { Activity, Archive, Folder, MessageSquare, MoreHorizontal } from '@/shared/icons';
+import type { LucideIcon } from '@/shared/icons';
 import type { TFunction } from 'i18next';
 
 import { ActionMenu, Tooltip } from '@/shared/ui';
@@ -55,7 +56,7 @@ export default function SidebarModeTabs({
     const Icon = tab.icon;
 
     const button = (
-      <button
+      <Button variant="ghost" size="compact"
         onClick={() => onSearchModeChange(tab.mode)}
         aria-pressed={isActive}
         aria-label={tab.showLabel ? undefined : tab.label}
@@ -67,14 +68,14 @@ export default function SidebarModeTabs({
           isActive
             ? 'bg-background text-foreground shadow-sm'
             : 'text-muted-foreground hover:text-foreground',
-          isActive && tab.mode === 'running' && 'ring-1 ring-emerald-500/15',
+          isActive && tab.mode === 'running' && 'ring-1 ring-success/15',
         )}
       >
         {tab.mode === 'running' ? (
           <span className="relative flex h-3 w-3 items-center justify-center">
-            <Activity className={cn('h-3 w-3', runningSessionsCount > 0 && 'text-emerald-500')} />
+            <Activity className={cn('h-3 w-3', runningSessionsCount > 0 && 'text-success')} />
             {runningSessionsCount > 0 && (
-              <span className="absolute -right-2.5 -top-2 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-emerald-500 px-0.5 text-[8px] font-semibold leading-none text-white shadow-sm ring-1 ring-background">
+              <span className="absolute -right-2.5 -top-2 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-success px-0.5 text-[8px] font-semibold leading-none text-primary-foreground shadow-sm ring-1 ring-background">
                 {runningBadgeText}
               </span>
             )}
@@ -83,7 +84,7 @@ export default function SidebarModeTabs({
           <Icon className="h-3 w-3" />
         )}
         {tab.showLabel && <span className="truncate">{tab.label}</span>}
-      </button>
+      </Button>
     );
 
     // The labelled tabs say what they are; the icon-only ones need the tooltip.

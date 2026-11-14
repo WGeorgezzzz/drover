@@ -1,5 +1,6 @@
+import { Button } from '@/shared/ui/Button';
 import type { KeyboardEvent } from 'react';
-import { Settings2, Terminal, type LucideIcon } from 'lucide-react';
+import { Settings2, Terminal, type LucideIcon } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 import type { QuickSettingsTab } from '@/shared/types';
@@ -45,7 +46,7 @@ export default function QuickSettingsTabs({ activeTab, onSelectTab }: QuickSetti
       {TABS.map(({ id, labelKey, icon: Icon }) => {
         const isActive = id === activeTab;
         return (
-          <button
+          <Button variant="ghost" size="compact"
             key={id}
             type="button"
             role="tab"
@@ -64,7 +65,7 @@ export default function QuickSettingsTabs({ activeTab, onSelectTab }: QuickSetti
           >
             <Icon className="h-4 w-4" />
             {t(labelKey)}
-          </button>
+          </Button>
         );
       })}
     </div>

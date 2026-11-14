@@ -1,7 +1,8 @@
+import { Button } from '@/shared/ui/Button';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight } from '@/shared/icons';
 
 import type { LLMProvider, ProviderModelOption } from '@/shared/types';
 import { DEFAULT_EFFORT_VALUE } from '@/shared/constants';
@@ -93,7 +94,7 @@ function ComposerModelMenu({
 
   return (
     <>
-      <button
+      <Button variant="ghost" size="compact"
         ref={triggerRef}
         type="button"
         onClick={() => {
@@ -111,7 +112,7 @@ function ComposerModelMenu({
         {hasModelSection && hasEffortSection && effort !== DEFAULT_EFFORT_VALUE && (
           <span className="hidden shrink-0 capitalize text-muted-foreground sm:inline">· {effortLabel}</span>
         )}
-      </button>
+      </Button>
 
       {isOpen && anchor && createPortal(
         <ComposerMenuSurface anchor={anchor} menuRef={menuRef} ariaLabel={ariaLabel}>

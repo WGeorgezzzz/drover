@@ -1,4 +1,5 @@
-import { Palette, RotateCcw, Shield, ShieldOff, X } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
+import { Palette, RotateCcw, Shield, ShieldOff, X } from '@/shared/icons';
 
 type ShellHeaderProps = {
   isConnected: boolean;
@@ -54,29 +55,29 @@ export default function ShellHeader({
     <div className="flex-shrink-0 border-b border-border bg-card px-4 py-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+          <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-success' : 'bg-destructive'}`} />
 
           {hasSession && sessionDisplayNameShort && (
-            <span className="text-xs text-blue-600 dark:text-blue-300">({sessionDisplayNameShort}...)</span>
+            <span className="text-xs text-primary dark:text-primary">({sessionDisplayNameShort}...)</span>
           )}
 
           {!hasSession && <span className="text-xs text-muted-foreground">{statusNewSessionText}</span>}
 
-          {!isInitialized && <span className="text-xs text-yellow-700 dark:text-yellow-400">{statusInitializingText}</span>}
+          {!isInitialized && <span className="text-xs text-warning dark:text-warning">{statusInitializingText}</span>}
 
-          {isRestarting && <span className="text-xs text-blue-600 dark:text-blue-400">{statusRestartingText}</span>}
+          {isRestarting && <span className="text-xs text-primary dark:text-primary">{statusRestartingText}</span>}
         </div>
 
         <div className="flex items-center gap-2">
           {showBypassToggle && (
-            <button
+            <Button variant="ghost" size="compact"
               type="button"
               onClick={onToggleBypass}
               aria-pressed={bypassEnabled}
               className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-card ${
                 bypassEnabled
-                  ? 'border-orange-700 bg-orange-700 text-white hover:bg-orange-800 focus:ring-orange-400/70 dark:border-orange-500/70 dark:bg-orange-600/80 dark:hover:bg-orange-700'
-                  : 'border-input bg-background text-foreground shadow-sm hover:border-orange-700 hover:bg-orange-700 hover:text-white focus:ring-orange-400/70 dark:hover:border-orange-400/70 dark:hover:bg-orange-600/60'
+                  ? 'border-warning bg-warning text-primary-foreground hover:bg-warning focus:ring-warning/70 dark:border-warning/70 dark:bg-warning/80 dark:hover:bg-warning'
+                  : 'border-input bg-background text-foreground shadow-sm hover:border-warning hover:bg-warning hover:text-primary-foreground focus:ring-warning/70 dark:hover:border-warning/70 dark:hover:bg-warning/60'
               }`}
               title={bypassTitle}
             >
@@ -86,31 +87,31 @@ export default function ShellHeader({
                 <Shield className="h-3.5 w-3.5" aria-hidden="true" />
               )}
               <span>{bypassLabel}</span>
-            </button>
+            </Button>
           )}
 
           {isConnected && (
-            <button
+            <Button variant="ghost" size="compact"
               type="button"
               onClick={onDisconnect}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-red-600 px-3 text-xs font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400/70 focus:ring-offset-2 focus:ring-offset-card"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md bg-destructive px-3 text-xs font-medium text-primary-foreground transition-colors hover:bg-destructive focus:outline-none focus:ring-2 focus:ring-destructive/70 focus:ring-offset-2 focus:ring-offset-card"
               title={disconnectTitle}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
               <span>{disconnectLabel}</span>
-            </button>
+            </Button>
           )}
 
-          <button
+          <Button variant="ghost" size="compact"
             type="button"
             onClick={onRestart}
             disabled={disableRestart}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:border-blue-400/70 hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400/70 focus:ring-offset-2 focus:ring-offset-card disabled:cursor-not-allowed disabled:border-transparent disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-60 disabled:shadow-none"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm transition-colors hover:border-primary/70 hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary/70 focus:ring-offset-2 focus:ring-offset-card disabled:cursor-not-allowed disabled:border-transparent disabled:bg-transparent disabled:text-muted-foreground disabled:opacity-60 disabled:shadow-none"
             title={restartTitle}
           >
             <RotateCcw className={`h-3.5 w-3.5 ${isRestarting ? 'animate-spin' : ''}`} aria-hidden="true" />
             <span>{restartLabel}</span>
-          </button>
+          </Button>
         </div>
       </div>
 

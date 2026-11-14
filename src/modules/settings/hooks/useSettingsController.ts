@@ -247,6 +247,7 @@ export function useSettingsController({ isOpen, initialTab }: UseSettingsControl
       if (!notificationResponse.ok) {
         throw new Error('Failed to save notification preferences');
       }
+      window.dispatchEvent(new Event('drover:notification-preferences'));
 
       setSaveStatus('success');
     } catch (error) {

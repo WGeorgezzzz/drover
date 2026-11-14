@@ -1,3 +1,6 @@
+import { DialogSurface } from '@/shared/ui/Dialog';
+import { File as UnifiedFile, X as UnifiedX, Minimize2 as UnifiedMinimize2, Maximize2 as UnifiedMaximize2 } from '@/shared/icons';
+import { Button } from '@/shared/ui/Button';
 import DownloadButton from '@/shared/ui/DownloadButton';
 import FileMetadata from '@/modules/code-editor/FileMetadata';
 import LocalFileActions from '@/shared/ui/LocalFileActions';
@@ -29,21 +32,19 @@ export default function CodeEditorBinaryFile({
     <div className="flex h-full w-full flex-col items-center justify-center bg-background p-8 text-muted-foreground">
       <div className="flex max-w-md flex-col items-center gap-4 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-          <svg className="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
+          <UnifiedFile className="h-8 w-8 text-muted-foreground" />
         </div>
         <FileMetadata path={file.path} projectId={projectId ?? file.projectId} /><LocalFileActions path={file.path} compact={false} />
         <div>
           <h3 className="mb-2 text-lg font-medium text-foreground">{title}</h3>
           <p className="text-sm text-muted-foreground">{message}</p>
         </div>
-        <button
+        <Button variant="ghost" size="compact"
           onClick={onClose}
           className="mt-4 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90"
         >
           Close
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -53,18 +54,16 @@ export default function CodeEditorBinaryFile({
       <div className="flex h-full w-full flex-col bg-background">
         <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-3 py-1.5">
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <h3 className="truncate text-sm font-medium text-gray-900 dark:text-white">{file.name}</h3>
+            <h3 className="truncate text-sm font-medium text-foreground dark:text-primary-foreground">{file.name}</h3>
           </div>
-          <DownloadButton projectId={projectId ?? file.projectId} path={file.path} /><button
+          <DownloadButton projectId={projectId ?? file.projectId} path={file.path} /><Button variant="ghost" size="compact"
             type="button"
             onClick={onClose}
-            className="flex items-center justify-center rounded-md p-1.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+            className="flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground dark:text-muted-foreground dark:hover:bg-background dark:hover:text-primary-foreground"
             title="Close"
           >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            <UnifiedX className="h-4 w-4" />
+          </Button>
         </div>
         {binaryContent}
       </div>
@@ -73,50 +72,44 @@ export default function CodeEditorBinaryFile({
 
   const containerClassName = isFullscreen
     ? 'fixed inset-0 z-[9999] bg-background flex flex-col'
-    : 'fixed inset-0 z-[9999] md:bg-black/50 md:flex md:items-center md:justify-center md:p-4';
+    : 'fixed inset-0 z-[9999] md:bg-overlay/50 md:flex md:items-center md:justify-center md:p-4';
 
   const innerClassName = isFullscreen
     ? 'bg-background flex flex-col w-full h-full'
     : 'bg-background shadow-2xl flex flex-col w-full h-full md:rounded-lg md:shadow-2xl md:w-full md:max-w-2xl md:h-auto md:max-h-[60vh]';
 
   return (
-    <div className={containerClassName}>
+    <DialogSurface className={containerClassName}  onClose={() => { onClose(); }}>
       <div className={innerClassName}>
         <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-3 py-1.5">
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <h3 className="truncate text-sm font-medium text-gray-900 dark:text-white">{file.name}</h3>
+            <h3 className="truncate text-sm font-medium text-foreground dark:text-primary-foreground">{file.name}</h3>
           </div>
           <div className="flex shrink-0 items-center gap-0.5"><DownloadButton projectId={projectId ?? file.projectId} path={file.path} />
-            <button
+            <Button variant="ghost" size="compact"
               type="button"
               onClick={onToggleFullscreen}
-              className="flex items-center justify-center rounded-md p-1.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+              className="flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground dark:text-muted-foreground dark:hover:bg-background dark:hover:text-primary-foreground"
               title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
             >
               {isFullscreen ? (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.5 3.5M9 15v4.5M9 15H4.5M9 15l-5.5 5.5M15 9h4.5M15 9V4.5M15 9l5.5-5.5M15 15h4.5M15 15v4.5m0-4.5l5.5 5.5" />
-                </svg>
+                <UnifiedMinimize2 className="h-4 w-4" />
               ) : (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
+                <UnifiedMaximize2 className="h-4 w-4" />
               )}
-            </button>
-            <button
+            </Button>
+            <Button variant="ghost" size="compact"
               type="button"
               onClick={onClose}
-              className="flex items-center justify-center rounded-md p-1.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+              className="flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground dark:text-muted-foreground dark:hover:bg-background dark:hover:text-primary-foreground"
               title="Close"
             >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <UnifiedX className="h-4 w-4" />
+            </Button>
           </div>
         </div>
         {binaryContent}
       </div>
-    </div>
+    </DialogSurface>
   );
 }

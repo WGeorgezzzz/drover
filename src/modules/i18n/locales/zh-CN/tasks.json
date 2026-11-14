@@ -2,7 +2,7 @@
   "notConfigured": {
     "title": "TaskMaster AI 尚未配置",
     "description": "一键准备任务集，之后可从日常对话自动整理待办。",
-    "whatIsTitle": "🎯 什么是 TaskMaster？",
+    "whatIsTitle": "什么是 TaskMaster？",
     "features": {
       "aiPowered": "AI 驱动的任务管理：将复杂项目分解为可管理的子任务",
       "prdTemplates": "PRD 模板：从产品需求文档生成任务",
@@ -49,20 +49,20 @@
     "title": "开始使用 TaskMaster",
     "subtitle": "您的高效任务管理指南",
     "examples": {
-      "parsePRD": "💬 示例：\n「我刚用 Claude Task Master 初始化了一个新项目。我有一个 PRD 在 .taskmaster/docs/prd.txt。你能帮我解析它并设置初始任务吗？」",
-      "expandTask": "💬 示例：\n「任务 5 看起来很复杂。你能把它分解成子任务吗？」",
-      "addTask": "💬 示例：\n「请添加一个新任务来实现使用 Cloudinary 的用户个人头像上传功能，研究最佳方法。」"
+      "parsePRD": "示例：\n「我刚用 Claude Task Master 初始化了一个新项目。我有一个 PRD 在 .taskmaster/docs/prd.txt。你能帮我解析它并设置初始任务吗？」",
+      "expandTask": "示例：\n「任务 5 看起来很复杂。你能把它分解成子任务吗？」",
+      "addTask": "示例：\n「请添加一个新任务来实现使用 Cloudinary 的用户个人头像上传功能，研究最佳方法。」"
     },
     "moreExamples": "查看更多示例和使用模式 →",
     "proTips": {
-      "title": "💡 专业提示",
+      "title": "专业提示",
       "search": "使用搜索栏快速找到特定任务",
       "views": "使用视图切换在看板、列表和网格视图之间切换",
       "filters": "使用筛选器聚焦特定任务状态或优先级",
       "details": "点击任何任务以查看详细信息和管理子任务"
     },
     "learnMore": {
-      "title": "📚 了解更多",
+      "title": "了解更多",
       "description": "TaskMaster AI 是为开发者打造的高级任务管理系统。获取文档、示例并为项目做出贡献。",
       "githubButton": "在 GitHub 上查看"
     }
@@ -99,12 +99,12 @@
     "grid": "网格视图"
   },
   "kanban": {
-    "pending": "📋 待办",
-    "inProgress": "🚀 进行中",
-    "done": "✅ 已完成",
-    "blocked": "🚫 已阻止",
-    "deferred": "⏳ 已延后",
-    "cancelled": "❌ 已取消",
+    "pending": "待办",
+    "inProgress": "进行中",
+    "done": "已完成",
+    "blocked": "已阻止",
+    "deferred": "已延后",
+    "cancelled": "已取消",
     "noTasksYet": "暂无任务",
     "tasksWillAppear": "任务将显示在这里",
     "moveTasksHere": "开始后将任务移到这里",

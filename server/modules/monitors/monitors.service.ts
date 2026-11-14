@@ -5,6 +5,7 @@ import { AppError } from '@/shared/utils.js';
 import { parseMonitorCalendarSchedule, compactMonitorProbeState, summarizeMonitorProbeEvent } from '@/shared/index.js';
 
 import { normalizeProbe } from './monitor-probe.service.js';
+import { notifyMonitorResolved } from './monitor-notice.service.js';
 
 /** Used by monitor HTTP routes for validation and lifecycle changes. */
 export const monitorsService = {
@@ -102,6 +103,7 @@ export const monitorsService = {
     if(row.status==='stopped' || (action==='run-now' && (row.status!=='active'||row.running_id)))
       throw new AppError('该任务当前不能执行此操作。',{code:'MONITOR_CONFLICT',statusCode:409});
     monitorsDb.action(userId,id,action);
+    notifyMonitorResolved(row);
     return monitorsDb.get(userId,id);
   },
 };

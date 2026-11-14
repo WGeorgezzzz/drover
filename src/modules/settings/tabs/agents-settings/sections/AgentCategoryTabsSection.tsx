@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/shared/utils';
@@ -23,7 +24,7 @@ export default function AgentCategoryTabsSection({
     <div className="flex-shrink-0 border-b border-border">
       <div role="tablist" className="flex overflow-x-auto px-2 md:px-4">
         {categories.map((category) => (
-          <button
+          <Button variant="ghost" size="compact"
             key={category}
             role="tab"
             aria-selected={selectedCategory === category}
@@ -41,7 +42,7 @@ export default function AgentCategoryTabsSection({
             {category === 'skills' && t('tabs.skills', {
               defaultValue: selectedAgent === 'opencode' ? 'Shared Skills' : 'Skills',
             })}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

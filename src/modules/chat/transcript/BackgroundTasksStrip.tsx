@@ -1,7 +1,8 @@
+import { Button } from '@/shared/ui/Button';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { X } from 'lucide-react';
+import { X } from '@/shared/icons';
 
 import type { BackgroundTaskSummary, ChatMessage } from '@/shared/types';
 import {
@@ -129,19 +130,19 @@ export const BackgroundTasksStrip = memo(({ messages, tasks, sessionId, sendMess
         const title = [kind, name, progress].filter(Boolean).join(' · ');
         return (
           <span key={message.toolId} className="flex min-w-0 max-w-full items-center">
-            <button
+            <Button variant="ghost" size="compact"
               type="button"
               onClick={() => onReveal(message)}
               title={title}
               className="flex min-w-0 max-w-xs items-center gap-1.5 rounded px-1.5 py-0.5 hover:bg-muted hover:text-foreground"
             >
-              <span className="h-1.5 w-1.5 flex-shrink-0 animate-pulse rounded-full bg-purple-500 dark:bg-purple-400" />
+              <span className="h-1.5 w-1.5 flex-shrink-0 animate-pulse rounded-full bg-primary dark:bg-primary" />
               <span className="flex-shrink-0 font-medium text-foreground">{kind}</span>
               {name && <span className="min-w-0 truncate">{name}</span>}
               {progress && <span className="min-w-0 truncate text-muted-foreground/70">· {progress}</span>}
-            </button>
+            </Button>
             {sessionId && taskId && (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={() => sendMessage({ type: 'chat.stop-task', sessionId, taskId })}
                 aria-label={t('workflow.stopTask', 'Stop')}
@@ -149,7 +150,7 @@ export const BackgroundTasksStrip = memo(({ messages, tasks, sessionId, sendMess
                 className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-muted-foreground/60 hover:bg-muted hover:text-destructive"
               >
                 <X className="h-3 w-3" />
-              </button>
+              </Button>
             )}
           </span>
         );
@@ -163,7 +164,7 @@ export const BackgroundTasksStrip = memo(({ messages, tasks, sessionId, sendMess
         const name = task.workflowName ?? task.description;
         const label = (
           <>
-            <span className="h-1.5 w-1.5 flex-shrink-0 animate-pulse rounded-full bg-purple-500 dark:bg-purple-400" />
+            <span className="h-1.5 w-1.5 flex-shrink-0 animate-pulse rounded-full bg-primary dark:bg-primary" />
             <span className="flex-shrink-0 font-medium text-foreground">{kind}</span>
             {name && <span className="min-w-0 truncate">{name}</span>}
           </>
@@ -180,17 +181,17 @@ export const BackgroundTasksStrip = memo(({ messages, tasks, sessionId, sendMess
                 {label}
               </span>
             ) : (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={onLoadAll}
                 title={`${[kind, name].filter(Boolean).join(' · ')} · ${t('workflow.taskRowNotLoaded', 'Launched earlier in this conversation; click to load it')}`}
                 className="flex min-w-0 max-w-xs items-center gap-1.5 rounded px-1.5 py-0.5 hover:bg-muted hover:text-foreground"
               >
                 {label}
-              </button>
+              </Button>
             )}
             {sessionId && (
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={() => sendMessage({ type: 'chat.stop-task', sessionId, taskId: task.taskId })}
                 aria-label={t('workflow.stopTask', 'Stop')}
@@ -198,7 +199,7 @@ export const BackgroundTasksStrip = memo(({ messages, tasks, sessionId, sendMess
                 className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-muted-foreground/60 hover:bg-muted hover:text-destructive"
               >
                 <X className="h-3 w-3" />
-              </button>
+              </Button>
             )}
           </span>
         );

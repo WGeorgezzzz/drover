@@ -1,3 +1,4 @@
+import { DialogSurface } from '@/shared/ui/Dialog';
 import { useState } from 'react';
 
 import { cn } from '@/shared/utils';
@@ -51,15 +52,13 @@ export default function PrdEditorWorkspace({
   };
 
   return (
-    <div
-      className={cn(
-        'fixed inset-0 z-[200] md:bg-black/50 md:flex md:items-center md:justify-center',
+    <DialogSurface className={cn(
+        'fixed inset-0 z-[200]  md:flex md:items-center md:justify-center',
         isFullscreen ? 'md:p-0' : 'md:p-4',
-      )}
-    >
+      )}  onClose={() => { onClose(); }}>
       <div
         className={cn(
-          'bg-white dark:bg-gray-900 shadow-2xl flex flex-col',
+          'bg-card dark:bg-background shadow-2xl flex flex-col',
           'w-full h-full md:rounded-lg md:shadow-2xl',
           isFullscreen
             ? 'md:w-full md:h-full md:rounded-none'
@@ -67,7 +66,7 @@ export default function PrdEditorWorkspace({
         )}
       >
         {loadError && (
-          <div className="border-b border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+          <div className="border-b border-warning bg-warning/10 px-4 py-3 text-sm text-warning dark:border-warning dark:bg-warning/20 dark:text-warning">
             {loadError}
           </div>
         )}
@@ -111,6 +110,6 @@ export default function PrdEditorWorkspace({
         fileName={ensurePrdExtension(fileName || 'prd')}
         onClose={() => setShowGenerateModal(false)}
       />
-    </div>
+    </DialogSurface>
   );
 }

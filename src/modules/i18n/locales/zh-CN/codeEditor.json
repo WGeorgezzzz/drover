@@ -24,7 +24,8 @@
     "fullscreen": "全屏",
     "close": "关闭",
     "previewMarkdown": "预览 Markdown",
-    "editMarkdown": "编辑 Markdown"
+    "editMarkdown": "编辑 Markdown",
+    "openInModal": "在弹窗中打开"
   },
   "footer": {
     "lines": "行数：",

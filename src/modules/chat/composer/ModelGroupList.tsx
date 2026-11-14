@@ -1,5 +1,6 @@
+import { Button } from '@/shared/ui/Button';
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Check, ChevronDown, ChevronRight } from "lucide-react";
+import { Check, ChevronDown, ChevronRight } from '@/shared/icons';
 
 import type { LLMProvider, ProviderModelOption } from "@/shared/types";
 import { Badge, CommandGroup, CommandItem, LLMProviderLogo } from "@/shared/ui";
@@ -83,7 +84,7 @@ export default function ModelGroupList({
                 : "[&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider"
             }
             heading={
-              <button
+              <Button variant="ghost" size="compact"
                 type="button"
                 onClick={() => toggle(group.key)}
                 className="flex w-full items-center gap-1.5 text-left hover:text-foreground"
@@ -99,7 +100,7 @@ export default function ModelGroupList({
                 <span className="ml-auto text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
                   {group.models.length}
                 </span>
-              </button>
+              </Button>
             }
           >
             {group.models.length === 0 && loading ? (

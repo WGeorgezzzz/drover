@@ -1,5 +1,6 @@
+import { Button } from '@/shared/ui/Button';
 import { memo } from 'react';
-import { ActivityIcon } from 'lucide-react';
+import { ActivityIcon } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
 type TokenUsageSummaryProps = {
@@ -47,7 +48,7 @@ function TokenUsageSummary({ usage, onClick }: TokenUsageSummaryProps) {
   const usedTokens = readUsageNumber(usage?.used) || inputTokens + outputTokens;
 
   return (
-    <button
+    <Button variant="ghost" size="compact"
       type="button"
       onClick={onClick}
       className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-1.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -58,7 +59,7 @@ function TokenUsageSummary({ usage, onClick }: TokenUsageSummaryProps) {
         <ActivityIcon className="h-3.5 w-3.5" />
       </span>
       <span>{formatTokenCount(usedTokens)}</span>
-    </button>
+    </Button>
   );
 }
 

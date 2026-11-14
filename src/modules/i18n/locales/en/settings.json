@@ -170,6 +170,21 @@
       "actionRequired": "Action required",
       "stop": "Run stopped",
       "error": "Run failed"
+    },
+    "notice": {
+      "stop": "Completed · unread",
+      "actionRequired": "Waiting for your answer",
+      "error": "Run failed",
+      "close": "Dismiss notification",
+      "inApp": "In-app notifications",
+      "system": "System notifications",
+      "permission": "Permission",
+      "request": "Request permission",
+      "test": "Send test notification",
+      "unsupported": "System notifications are unavailable",
+      "granted": "Granted",
+      "denied": "Denied",
+      "default": "Not requested"
     }
   },
   "appearanceSettings": {
@@ -312,7 +327,7 @@
     "title": "API Keys",
     "description": "Generate API keys to access the external API from other applications.",
     "newKey": {
-      "alertTitle": "⚠️ Save Your API Key",
+      "alertTitle": "Save Your API Key",
       "alertMessage": "This is the only time you'll see this key. Store it securely.",
       "iveSavedIt": "I've saved it"
     },
@@ -955,5 +970,36 @@
     "area": "Stacked area",
     "empty": "No usage in this period",
     "failed": "Unable to load usage"
+  },
+  "taskAutomation": {
+    "enabled": "Automatically organize tasks from conversations",
+    "suggestOnly": "Suggest changes and wait for confirmation",
+    "project": "Organize tasks in this project",
+    "description": "Organizes new replies after 90 idle seconds. Low-confidence changes stay as suggestions. Conversations without a project are skipped. Changes can be undone.",
+    "loading": "Loading task settings…",
+    "loadFailed": "Unable to load task settings",
+    "saveFailed": "Unable to save task settings"
   }
+,
+  "desktopShell": {
+  "title": "Desktop shell",
+  "description": "Window theme, local service and network access",
+  "open": "Desktop options"
+}
+,
+  "accountDevices": {
+  "title": "Account and devices",
+  "currentUser": "Current user: {{name}}",
+  "boundary": "The local desktop uses the operating system identity. Remote access uses email verification and Cloudflare Access.",
+  "remoteAccount": "Remote account: {{name}}",
+  "unconfigured": "Not configured",
+  "devices": "Signed-in devices",
+  "local": "Local identity",
+  "remote": "Remote account",
+  "password": "Password sign-in",
+  "currentDevice": " · This device",
+  "loggedIn": "Signed in at {{time}}",
+  "revoke": "Revoke",
+  "revokeHint": "Revoking disconnects this device without interrupting server tasks. Legacy local sign-in cannot access remote environments."
+}
 }

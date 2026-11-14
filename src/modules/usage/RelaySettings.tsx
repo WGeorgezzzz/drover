@@ -1,5 +1,7 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { useEffect, useState } from 'react';
-import { Save } from 'lucide-react';
+import { Save } from '@/shared/icons';
 
 import { api, readApiJson } from '@/shared/api';
 import { useAuth } from '@/modules/auth';
@@ -29,7 +31,7 @@ export function RelaySettings({ onSaved }: { onSaved: () => Promise<void> }) {
     }).catch(() => setStatus('保存失败，请检查 HTTPS 地址或环境变量')).finally(() => setBusy(false));
   }}>
     <label htmlFor="relay-base-url" className="text-sm font-medium">中转地址</label>
-    <div className="flex gap-2"><input id="relay-base-url" type="url" value={baseUrl} disabled={source === 'environment'} onChange={event => setBaseUrl(event.target.value)} placeholder="https://relay.example.com" className="min-w-0 flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm"/><button title="保存中转地址" aria-label="保存中转地址" disabled={busy || source === 'environment'} className="rounded-md border border-border p-2 disabled:opacity-50"><Save size={16}/></button></div>
+    <div className="flex gap-2"><UnifiedInput id="relay-base-url" type="url" value={baseUrl} disabled={source === 'environment'} onChange={event => setBaseUrl(event.target.value)} placeholder="https://relay.example.com" className="min-w-0 flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm"/><Button variant="ghost" size="compact" title="保存中转地址" aria-label="保存中转地址" disabled={busy || source === 'environment'} className="rounded-md border border-border p-2 disabled:opacity-50"><Save size={16}/></Button></div>
     {source === 'environment' && <p className="text-xs text-muted-foreground">由环境变量管理</p>}
     {status && <p role="status" className="text-xs">{status}</p>}
   </form>;

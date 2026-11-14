@@ -290,7 +290,7 @@
     "title": "Claves API",
     "description": "Genera claves API para acceder a la API externa desde otras aplicaciones.",
     "newKey": {
-      "alertTitle": "⚠️ Guarda tu clave API",
+      "alertTitle": "Guarda tu clave API",
       "alertMessage": "Esta es la única vez que verás esta clave. Guárdala en un lugar seguro.",
       "iveSavedIt": "Ya la guardé"
     },

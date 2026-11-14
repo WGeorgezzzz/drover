@@ -3,6 +3,7 @@ import { withUserContext } from '@/modules/auth/index.js';
 import type { AnyRecord } from '@/shared/types.js';
 
 import { finishMonitorReport } from './monitor-isolated.service.js';
+import { notifyMonitorAttention } from './monitor-notice.service.js';
 
 // Provider supervision replays this receipt after owner death. The monitor's
 // running_id is the compare-and-set owner; already finalized receipts are inert.
@@ -13,6 +14,7 @@ export async function finishSupervisedMonitorRound(receipt: AnyRecord, outcome: 
     const failure = outcome.providerError || (!outcome.completed ? 'Provider ended without completion confirmation.' : null);
     if (!failure) await finishMonitorReport(current, receipt.runId, receipt.sessionId, outcome.finalText || '', receipt.isolated, receipt.fingerprint, outcome.usage);
     monitorsDb.finish(current.id, receipt.runId, failure);
+    if (failure) notifyMonitorAttention(current, receipt.runId, '', String(failure));
     return getConnection().prepare('SELECT id,report,total_tokens,status,finished_at,round_number FROM monitor_runs WHERE id=?').get(receipt.runId) as AnyRecord;
   });
 }

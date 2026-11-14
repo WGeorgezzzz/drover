@@ -1,7 +1,9 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import { useState } from 'react';
 import type { ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from '@/shared/icons';
 
 type AuthInputFieldProps = {
   id: string;
@@ -50,7 +52,7 @@ export default function AuthInputField({
         {Icon && (
           <Icon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
         )}
-        <input
+        <UnifiedInput
           id={id}
           type={resolvedType}
           name={name ?? id}
@@ -65,7 +67,7 @@ export default function AuthInputField({
           disabled={isDisabled}
         />
         {isPasswordField && (
-          <button
+          <Button variant="ghost" size="compact"
             type="button"
             onClick={() => setIsPasswordVisible((previous) => !previous)}
             disabled={isDisabled}
@@ -73,7 +75,7 @@ export default function AuthInputField({
             className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-60"
           >
             {isPasswordVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
+          </Button>
         )}
       </div>
     </div>

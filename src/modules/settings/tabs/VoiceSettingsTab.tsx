@@ -1,7 +1,8 @@
+import { Input as UnifiedInput } from '@/shared/ui/Input';
 import type { InputHTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import SettingsSection from '@/modules/settings/SettingsSection';
+import SettingsSection from '@/shared/ui/SettingsSection';
 import SettingsToggle from '@/modules/settings/SettingsToggle';
 import { useUiPreferences, useSetUiPreference } from '@/shared/context/UiPreferencesContext';
 import { useVoiceConfig } from '@/modules/settings/hooks/useVoiceConfig';
@@ -13,7 +14,7 @@ function Field({ label, ...props }: { label: string } & InputHTMLAttributes<HTML
   return (
     <label className="block space-y-1">
       <span className="text-sm font-medium text-foreground">{label}</span>
-      <input className={inputClass} {...props} />
+      <UnifiedInput className={inputClass} {...props} />
     </label>
   );
 }
