@@ -5,6 +5,7 @@ import { ChevronDown, Loader2, type LucideIcon } from '@/shared/icons';
 
 import { cn } from '@/shared/utils';
 import { Button } from '@/shared/ui/Button';
+import { useDialogLayer } from '@/shared/ui/Dialog';
 import { useViewportMenuAnchor } from '@/shared/hooks/useViewportMenuAnchor';
 
 type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
@@ -59,6 +60,7 @@ export function ActionMenu({
   header,
   onOpenChange,
 }: ActionMenuProps) {
+  const dialogLayer = useDialogLayer();
   const [isOpen, setIsOpen] = React.useState(false);
   // Whether closing should move focus back to the trigger. Set for keyboard
   // (Escape) and item selection, but left false for outside pointer clicks so
@@ -134,7 +136,7 @@ export function ActionMenu({
         !portal && (align === 'right' ? 'right-0' : 'left-0'),
         menuClassName,
       )}
-      style={portal && anchor ? { ...anchor, width: anchor.maxWidth } : undefined}
+      style={portal && anchor ? { ...anchor, width: anchor.maxWidth, zIndex: dialogLayer + 1 } : undefined}
     >
       {header}
       {items.map((item) => {

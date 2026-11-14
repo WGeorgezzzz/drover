@@ -10,12 +10,16 @@ let scrollLockCount = 0;
 let previousOverflow = '';
 
 type DialogContextValue = {
+  layer: number;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   triggerRef: React.MutableRefObject<HTMLElement | null>;
 };
 
 const DialogContext = React.createContext<DialogContextValue | null>(null);
+
+/** Shared portaled menus use their owning dialog's layer to stay clickable. */
+export function useDialogLayer() { return React.useContext(DialogContext)?.layer ?? 70; }
 
 export function useDialog() {
   const ctx = React.useContext(DialogContext);
@@ -32,6 +36,8 @@ type DialogProps = {
 
 /** Used by the chat, command-palette, sidebar and skills modules as the modal container. */
 export const Dialog: React.FC<DialogProps> = ({ open: controlledOpen, onOpenChange: controlledOnOpenChange, defaultOpen = false, children }) => {
+  const parent = React.useContext(DialogContext);
+  const layer = (parent?.layer ?? 10000) + 10;
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen);
   const triggerRef = React.useRef<HTMLElement | null>(null) as React.MutableRefObject<HTMLElement | null>;
   const isControlled = controlledOpen !== undefined;
@@ -44,7 +50,7 @@ export const Dialog: React.FC<DialogProps> = ({ open: controlledOpen, onOpenChan
     [isControlled, controlledOnOpenChange]
   );
 
-  const value = React.useMemo(() => ({ open, onOpenChange, triggerRef }), [open, onOpenChange]);
+  const value = React.useMemo(() => ({ open, onOpenChange, triggerRef, layer }), [open, onOpenChange, layer]);
 
   return <DialogContext.Provider value={value}>{children}</DialogContext.Provider>;
 };
@@ -111,6 +117,7 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled
 /** Focus-trapped panel of Dialog, used by the chat, command-palette, sidebar and skills modules. */
 export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
   ({ className, children, onEscapeKeyDown, onPointerDownOutside, wrapperClassName, animationClassName, initialFocusRef, ...props }, ref) => {
+    const layer = useDialogLayer();
     const { open, onOpenChange, triggerRef } = useDialog();
     const contentRef = React.useRef<HTMLDivElement | null>(null);
     const previousFocusRef = React.useRef<HTMLElement | null>(null);
@@ -198,7 +205,7 @@ export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps
     if (!open) return null;
 
     return createPortal(
-      <div className={cn('fixed inset-0 z-50', wrapperClassName)}>
+      <div className={cn('fixed inset-0 z-50', wrapperClassName)} style={{ zIndex: layer }}>
         {/* Overlay */}
         <div
           className="fixed inset-0 animate-dialog-overlay-show bg-overlay/50 backdrop-blur-sm"
