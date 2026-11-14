@@ -164,7 +164,7 @@ export default function GitPanelHeader({
                     </span>
                   )}
                   {remoteStatus.isUpToDate && (
-                    <span className="text-muted-foreground" title={t('git:header.upToDate')}>✓</span>
+                    <Check className="text-muted-foreground" aria-label={t('git:header.upToDate')} />
                   )}
                 </span>
               )}

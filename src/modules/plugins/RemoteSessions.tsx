@@ -109,7 +109,7 @@ export function RemoteFolders() {
     setFolders(next); localStorage.setItem('remote.folders.v1',JSON.stringify(next));setAdding(false);
   }
   return <section className="space-y-2 px-3 py-2 text-xs" aria-label="远程目录">
-    <div className="flex items-center justify-between"><strong>远程目录</strong><Button variant="ghost" size="compact" aria-label="添加远程目录" onClick={()=>setAdding(!adding)}>＋ 添加目录</Button></div>
+    <div className="flex items-center justify-between"><strong>远程目录</strong><Button variant="ghost" size="compact" aria-label="添加远程目录" onClick={()=>setAdding(!adding)}><Plus aria-hidden="true" />添加目录</Button></div>
     {adding && <form className="grid gap-1" onSubmit={e=>{e.preventDefault();add()}}>
       <Select aria-label="远程主机" value={host} onChange={e=>setHost(e.target.value)}><option>H200-1</option><option>H200-2</option></Select>
       <UnifiedInput required pattern="/.*" aria-label="远程绝对路径" value={cwd} onChange={e=>setCwd(e.target.value)}/>
