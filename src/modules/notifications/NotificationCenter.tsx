@@ -3,13 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CircleCheck, MessageCircleQuestion, TriangleAlert } from '@/shared/icons';
 import { useAuth } from '@/modules/auth';
-import { api, readApiJson } from '@/shared/api';
+import { alwaysOnApi, api, readApiJson } from '@/shared/api';
 import { useWebSocket } from '@/shared/context/WebSocketContext';
 import { Toast } from '@/shared/ui/Toast';
 import { playNotificationSound } from '@/shared/utils';
-import type { NotificationPreferencesState } from '@/shared/types';
+import type { AlwaysOnSnapshot, NotificationPreferencesState } from '@/shared/types';
 
-type Notice = { id: string; sessionId: string; kind: 'stop' | 'actionRequired' | 'error'; expires: number };
+type Notice = { id: string; sessionId: string; href?: string; kind: 'stop' | 'actionRequired' | 'error'; expires: number };
 // Memoized sidebar rows subscribe to the same unread snapshot as the toast host.
 let unread: Record<string, Notice['kind']> = {};
 const listeners = new Set<() => void>();
@@ -68,7 +68,9 @@ export function NotificationCenter() {
     return () => { window.removeEventListener('focus', acknowledge); document.removeEventListener('visibilitychange', acknowledge); };
   }, [pathname, storageKey]);
 
-  useEffect(() => subscribeEvents(event => {
+  useEffect(() => {
+    let cancelled = false;
+    const receive = (event: unknown) => {
     const envelope = event as unknown as Record<string, unknown>;
     const e = envelope.type === 'session_notice' && envelope.event && typeof envelope.event === 'object' ? envelope.event as Record<string, unknown> : envelope;
     const sid = typeof e.sessionId === 'string' ? e.sessionId : '';
@@ -79,7 +81,7 @@ export function NotificationCenter() {
       persist(); publish(); setRevision(value => value + 1); return;
     }
     if (e.kind === 'permission_resolved' || e.kind === 'permission_cancelled') {
-      pending.current[sid] = e.requestId ? (pending.current[sid] || []).filter(id => id !== e.requestId) : [];
+      pending.current[sid] = (pending.current[sid] || []).filter(id => e.decisionId ? id !== `decision:${e.decisionId}` && id !== e.requestId : id.startsWith('decision:') || Boolean(e.requestId && id !== e.requestId));
       if (!pending.current[sid].length) { unread = { ...unread }; delete unread[sid]; }
       persist(); publish(); setRevision(value => value + 1); return;
     }
@@ -88,25 +90,58 @@ export function NotificationCenter() {
     const time = typeof e.timestamp === 'number' ? e.timestamp : Date.parse(String(e.timestamp || ''));
     // Never turn historical replay into a fresh announcement.
     if (!Number.isFinite(time) || time < startedAt.current) return;
-    const id = [sid, e.runId || '', e.kind, e.requestId || e.id || e.seq || e.timestamp].join(':');
+    const decisionKey = e.decisionId ? `decision:${e.decisionId}` : '';
+    const id = decisionKey ? decisionKey + (e.reminder ? ':reminder' : '') : [sid, e.runId || '', e.kind, e.requestId || e.id || e.seq || e.timestamp].join(':');
+    const href = decisionKey ? `/inbox#decision-${e.decisionId}` : `/session/${encodeURIComponent(sid)}`;
     // Another same-origin tab may already have claimed this exact event.
     try { const saved = JSON.parse(localStorage.getItem(storageKey) || '{}'); for (const key of saved.seen || []) seen.current.add(key); } catch { /* Storage is optional. */ }
     if (seen.current.has(id)) return;
     seen.current.add(id);
-    const viewing = activePath.current === `/session/${encodeURIComponent(sid)}` && document.visibilityState === 'visible' && document.hasFocus();
-    if (kind === 'actionRequired') pending.current[sid] = [...new Set([...(pending.current[sid] || []), String(e.requestId || e.id || id)])];
+    const viewing = activePath.current === (decisionKey ? '/inbox' : `/session/${encodeURIComponent(sid)}`) && document.visibilityState === 'visible' && document.hasFocus();
+    if (kind === 'actionRequired') pending.current[sid] = [...new Set([...(pending.current[sid] || []).filter(key => !decisionKey || key !== e.requestId), decisionKey || String(e.requestId || e.id || id)])];
     unread = { ...unread }; if (pending.current[sid]?.length) unread[sid] = 'actionRequired'; else if (viewing) delete unread[sid]; else unread[sid] = kind;
     persist(); publish(); setRevision(value => value + 1);
     const p = preferences.current;
     if (!p.events[kind]) return;
-    const notice: Notice = { id, sessionId: sid, kind, expires: Date.now() + 9000 };
+    const notice: Notice = { id, sessionId: sid, href, kind, expires: Date.now() + 9000 };
     if (p.channels.inApp && !viewing) setToasts(old => [...old.filter(n => n.sessionId !== sid || n.kind !== kind), notice].slice(-4));
     if (p.channels.sound && !viewing && !(window as unknown as { cloudcliDesktopNotifications?: unknown }).cloudcliDesktopNotifications && !p.channels.webPush) void playNotificationSound({ force: true });
     // Electron and Web Push already receive the server orchestrator event.
     if ((document.visibilityState !== 'visible' || !document.hasFocus()) && p.channels.desktop && !(window as unknown as { cloudcliDesktopNotifications?: unknown }).cloudcliDesktopNotifications && !p.channels.webPush && 'Notification' in window && Notification.permission === 'granted') {
-      try { const n = new Notification('Drover', { body: t(`notifications.notice.${kind}`), tag: id }); n.onclick = () => { window.focus(); navigate(`/session/${encodeURIComponent(sid)}`); n.close(); }; } catch { /* Mobile uses the existing push subscription. */ }
+      try { const n = new Notification('Drover', { body: t(`notifications.notice.${kind}`), tag: id }); n.onclick = () => { window.focus(); navigate(href); n.close(); }; } catch { /* Mobile uses the existing push subscription. */ }
     }
-  }), [subscribeEvents, storageKey, navigate, t]);
+  };
+    const unsubscribe = subscribeEvents(receive);
+    // Rebuild pending badges from persisted decisions after refresh, without replaying completed history.
+    const restore = async () => {
+      try {
+        const { data } = await readApiJson<{ data: AlwaysOnSnapshot }>(await alwaysOnApi.snapshot());
+        if (cancelled) return;
+        const waiting = data.decisions.filter(decision => decision.status === 'pending');
+        const keys = new Set(waiting.map(decision => 'decision:' + decision.id));
+        for (const sid of Object.keys(pending.current)) {
+          pending.current[sid] = pending.current[sid].filter(key => !key.startsWith('decision:') || keys.has(key));
+          if (!pending.current[sid].length && unread[sid] === 'actionRequired') { unread = { ...unread }; delete unread[sid]; }
+        }
+        for (const decision of data.decisions) {
+          const sid = decision.target;
+          pending.current[sid] = (pending.current[sid] || []).filter(key => key !== decision.request_id);
+          if (decision.status !== 'pending') {
+            if (!pending.current[sid].length && unread[sid] === 'actionRequired') { unread = { ...unread }; delete unread[sid]; }
+            continue;
+          }
+          pending.current[sid] = [...new Set([...pending.current[sid], 'decision:' + decision.id])];
+          unread = { ...unread, [sid]: 'actionRequired' };
+          receive({ kind: 'permission_request', sessionId: sid, decisionId: decision.id, requestId: decision.request_id,
+            reminder: Boolean(decision.reminded_at), timestamp: Date.now() });
+        }
+        persist(); publish(); setRevision(value => value + 1);
+      } catch { /* A temporary network outage must not dismiss pending questions. */ }
+    };
+    void restore();
+    const poll = window.setInterval(() => { void restore(); }, 5000);
+    return () => { cancelled = true; unsubscribe(); window.clearInterval(poll); };
+  }, [subscribeEvents, storageKey, navigate, t]);
 
   useEffect(() => { const timer = window.setInterval(() => setToasts(old => old.filter(n => n.expires > Date.now())), 1000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {
@@ -121,5 +156,5 @@ export function NotificationCenter() {
     return () => { observer.disconnect(); document.title=document.title.replace(/^\(\d+\)\s*/, ''); for (const { icon, href, type } of originals) { icon.href = href; icon.type = type; } created?.remove(); };
   }, [revision]);
 
-  return <div aria-live="polite" aria-label={t('notifications.title')} className="pointer-events-none fixed bottom-4 right-4 z-[10000] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2">{toasts.map(n => <div key={n.id} className="pointer-events-auto"><Toast closeLabel={t('notifications.notice.close')} onClose={() => setToasts(old => old.filter(x => x.id !== n.id))} onOpen={() => { navigate(`/session/${encodeURIComponent(n.sessionId)}`); setToasts(old => old.filter(x => x.id !== n.id)); }}>{t(`notifications.notice.${n.kind}`)}</Toast></div>)}</div>;
+  return <div aria-live="polite" aria-label={t('notifications.title')} className="pointer-events-none fixed bottom-4 right-4 z-[10000] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2">{toasts.map(n => <div key={n.id} data-notice-id={n.id} className="pointer-events-auto"><Toast closeLabel={t('notifications.notice.close')} onClose={() => setToasts(old => old.filter(x => x.id !== n.id))} onOpen={() => { navigate(n.href || `/session/${encodeURIComponent(n.sessionId)}`); setToasts(old => old.filter(x => x.id !== n.id)); }}>{t(`notifications.notice.${n.kind}`)}</Toast></div>)}</div>;
 }

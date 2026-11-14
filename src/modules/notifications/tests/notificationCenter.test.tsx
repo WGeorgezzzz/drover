@@ -3,17 +3,21 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import '@/modules/i18n';
 import { NotificationCenter, SessionNotificationBadge } from '@/modules/notifications/NotificationCenter';
+import type * as SharedUtils from '@/shared/utils';
 
-const state = vi.hoisted(() => ({ receive: null as null | ((event: unknown) => void), native: vi.fn(), sound: vi.fn() }));
+const state = vi.hoisted(() => ({ receive: null as null | ((event: unknown) => void), native: vi.fn(), sound: vi.fn(), decisions: [] as Array<Record<string, unknown>> }));
 vi.mock('@/modules/auth', () => ({ useAuth: () => ({ user: { id: 42 } }) }));
-vi.mock('@/shared/context/WebSocketContext', () => ({ useWebSocket: () => ({ subscribe: (fn: (event: unknown) => void) => { state.receive = fn; return () => { state.receive = null; }; } }) }));
-vi.mock('@/shared/api', () => ({ api: { settings: { notificationPreferences: async () => ({ preferences: { channels: { inApp: true, desktop: true, webPush: false, sound: true }, events: { stop: true, actionRequired: true, error: true } } }) } }, readApiJson: async (value: unknown) => value }));
-vi.mock('@/shared/utils', async original => ({ ...await original<typeof import('@/shared/utils')>(), playNotificationSound: state.sound }));
+vi.mock('@/shared/context/WebSocketContext', () => {
+  const subscribe = (fn: (event: unknown) => void) => { state.receive = fn; return () => { state.receive = null; }; };
+  return { useWebSocket: () => ({ subscribe }) };
+});
+vi.mock('@/shared/api', () => ({ alwaysOnApi: { snapshot: async () => ({ data: { enabled: true, events: [], decisions: state.decisions } }) }, api: { settings: { notificationPreferences: async () => ({ preferences: { channels: { inApp: true, desktop: true, webPush: false, sound: true }, events: { stop: true, actionRequired: true, error: true } } }) } }, readApiJson: async (value: unknown) => value }));
+vi.mock('@/shared/utils', async original => ({ ...await original<typeof SharedUtils>(), playNotificationSound: state.sound }));
 
-function Path() { return <output data-testid="path">{useLocation().pathname}</output>; }
+function Path() { return <output data-testid="path">{useLocation().pathname + useLocation().hash}</output>; }
 function mount(path = '/') { return render(<MemoryRouter initialEntries={[path]}><NotificationCenter /><SessionNotificationBadge sessionId="s1" /><Path /></MemoryRouter>); }
 beforeEach(() => {
-  localStorage.clear(); document.title = 'Drover';
+  state.decisions = []; localStorage.clear(); document.title = 'Drover';
   vi.spyOn(document, 'hasFocus').mockReturnValue(false);
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   class FakeNotification { static permission = 'granted'; onclick: null | (() => void) = null; close() {} constructor(...args: unknown[]) { state.native(...args); } }
@@ -61,3 +65,35 @@ test('acknowledging a monitor preserves an unrelated unanswered question', async
   emit('permission_resolved', { requestId: 'ask-1' });
   await waitFor(() => expect(screen.queryByLabelText('Waiting for your answer')).toBeNull());
 });
+
+
+test('durable decisions restore after refresh, survive permission cancellation and resolve from the other entry', async () => {
+  state.decisions = [{ id: 'durable-1', target: 's1', request_id: 'ask-durable', status: 'pending', reminded_at: null }];
+  const first = mount(); await act(async () => {});
+  await waitFor(() => expect(screen.getByLabelText('Waiting for your answer')).toBeTruthy());
+  emit('permission_cancelled', { requestId: 'ask-durable' });
+  expect(screen.getByLabelText('Waiting for your answer')).toBeTruthy();
+  expect(screen.getAllByRole('button', { name: 'Waiting for your answer' })).toHaveLength(1);
+  first.unmount(); mount(); await act(async () => {});
+  expect(screen.getByLabelText('Waiting for your answer')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Waiting for your answer' })).toBeNull();
+  state.decisions = [{ ...state.decisions[0], status: 'answered' }];
+  emit('permission_resolved', { requestId: 'ask-durable', decisionId: 'durable-1' });
+  await waitFor(() => expect(screen.queryByLabelText('Waiting for your answer')).toBeNull());
+});
+
+test('the shared action toast opens the persisted inbox question', async () => {
+  state.decisions = [{ id: 'durable-2', target: 's1', request_id: 'ask-two', status: 'pending', reminded_at: null }];
+  mount(); await act(async () => {});
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Waiting for your answer' })).toBeTruthy());
+  fireEvent.click(screen.getByRole('button', { name: 'Waiting for your answer' }));
+  expect(screen.getByTestId('path').textContent).toBe('/inbox#decision-durable-2');
+});
+
+test('poll reconciles answers missed while the websocket was disconnected', async () => {
+  state.decisions = [{ id: 'durable-3', target: 's1', request_id: 'ask-three', status: 'pending', reminded_at: null }];
+  mount(); await act(async () => {});
+  await waitFor(() => expect(screen.getByLabelText('Waiting for your answer')).toBeTruthy());
+  state.decisions = [{ ...state.decisions[0], status: 'answered' }];
+  await waitFor(() => expect(screen.queryByLabelText('Waiting for your answer')).toBeNull(), { timeout: 7000 });
+}, 10000);
