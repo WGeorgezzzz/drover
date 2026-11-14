@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { KeyRound } from '@/shared/icons';
 import { useTranslation } from 'react-i18next';
 
-import { readAuthErrorMessage, useAuth } from '@/modules/auth';
+import { AccountSecurity, readAuthErrorMessage, useAuth } from '@/modules/auth';
 import { api } from '@/shared/api';
 import { Button } from '@/shared/ui';
 import SettingsCard from '@/shared/ui/SettingsCard';
@@ -22,6 +22,7 @@ export function UsersSettingsTab() {
   const role=(user as {role?:string}|null)?.role==='admin'?'admin':'member';
   return <div className="space-y-6 md:space-y-8">
     <SettingsSection title={t('account.title')} description={t('account.description')}>
+      <AccountSecurity />
       <SettingsCard className="flex items-center gap-3 px-4 py-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold uppercase text-foreground">{user?.username?.slice(0,1)}</div>
         <div className="min-w-0 flex-1"><div className="truncate text-sm font-medium text-foreground">{user?.username}</div>

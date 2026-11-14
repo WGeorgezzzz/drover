@@ -11,22 +11,8 @@ type TooltipProps = {
   position?: TooltipPosition;
   className?: string;
   delay?: number;
+  disabled?: boolean;
 };
-
-function getArrowClasses(position: TooltipPosition): string {
-  switch (position) {
-    case 'top':
-      return 'top-full left-1/2 transform -translate-x-1/2 border-t-gray-900 dark:border-t-gray-100';
-    case 'bottom':
-      return 'bottom-full left-1/2 transform -translate-x-1/2 border-b-gray-900 dark:border-b-gray-100';
-    case 'left':
-      return 'left-full top-1/2 transform -translate-y-1/2 border-l-gray-900 dark:border-l-gray-100';
-    case 'right':
-      return 'right-full top-1/2 transform -translate-y-1/2 border-r-gray-900 dark:border-r-gray-100';
-    default:
-      return 'top-full left-1/2 transform -translate-x-1/2 border-t-gray-900 dark:border-t-gray-100';
-  }
-}
 
 /** Used by the project-workspace, sidebar and task-master modules and by the shared PromptInput primitive. */
 export function Tooltip({
@@ -35,6 +21,7 @@ export function Tooltip({
   position = 'top',
   className = '',
   delay = 350,
+  disabled = false,
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   // Store the timer id without forcing re-renders while hovering.
@@ -50,37 +37,23 @@ export function Tooltip({
 
     const rect = container.getBoundingClientRect();
     const spacing = 8;
-    const style: React.CSSProperties = {
-      position: 'fixed',
-      zIndex: 9999,
-    };
-
-    // Calculate tooltip position based on the specified position prop.
-    switch (position) {
-      case 'bottom':
-        style.left = rect.left + rect.width / 2;
-        style.top = rect.bottom + spacing;
-        style.transform = 'translateX(-50%)';
-        break;
-      case 'left':
-        style.left = rect.left - spacing;
-        style.top = rect.top + rect.height / 2;
-        style.transform = 'translate(-100%, -50%)';
-        break;
-      case 'right':
-        style.left = rect.right + spacing;
-        style.top = rect.top + rect.height / 2;
-        style.transform = 'translateY(-50%)';
-        break;
-      case 'top':
-      default:
-        style.left = rect.left + rect.width / 2;
-        style.top = rect.top - spacing;
-        style.transform = 'translate(-50%, -100%)';
-        break;
+    const tooltip = tooltipRef.current;
+    const viewport = window.visualViewport;
+    const minX = (viewport?.offsetLeft ?? 0) + spacing;
+    const minY = (viewport?.offsetTop ?? 0) + spacing;
+    const maxX = minX + (viewport?.width ?? window.innerWidth) - spacing * 2;
+    const maxY = minY + (viewport?.height ?? window.innerHeight) - spacing * 2;
+    const width = Math.min(tooltip?.offsetWidth ?? 0, maxX - minX);
+    const height = tooltip?.offsetHeight ?? 0;
+    let x = rect.left + (rect.width - width) / 2;
+    let y = position === 'bottom' ? rect.bottom + spacing : rect.top - height - spacing;
+    if (position === 'left' || position === 'right') {
+      x = position === 'left' ? rect.left - width - spacing : rect.right + spacing;
+      y = rect.top + (rect.height - height) / 2;
     }
-
-    setTooltipStyle(style);
+    if (y < minY) y = rect.bottom + spacing;
+    if (y + height > maxY) y = rect.top - height - spacing;
+    setTooltipStyle({ position: 'fixed', zIndex: 10050, left: Math.max(minX, Math.min(x, maxX - width)), top: Math.max(minY, Math.min(y, maxY - height)), maxWidth: maxX - minX });
   }, [position]);
 
   const clearTooltipTimer = () => {
@@ -91,6 +64,7 @@ export function Tooltip({
   };
 
   const handleMouseEnter = () => {
+    if (disabled) return;
     clearTooltipTimer();
     timeoutRef.current = window.setTimeout(() => {
       setIsVisible(true);
@@ -103,6 +77,7 @@ export function Tooltip({
   };
 
   const handleTouchStart = () => {
+    if (disabled) return;
     clearTooltipTimer();
     longPressTriggeredRef.current = false;
     timeoutRef.current = window.setTimeout(() => {
@@ -120,6 +95,10 @@ export function Tooltip({
   };
 
   useEffect(() => {
+    if (disabled) { clearTooltipTimer(); setIsVisible(false); }
+  }, [disabled]);
+
+  useEffect(() => {
     // Avoid delayed updates after unmount.
     return () => {
       clearTooltipTimer();
@@ -131,17 +110,15 @@ export function Tooltip({
       return;
     }
 
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (target instanceof Node && containerRef.current?.contains(target)) {
-        return;
-      }
+    const handlePointerDown = () => {
       setIsVisible(false);
       longPressTriggeredRef.current = false;
     };
 
+    const handleKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsVisible(false); };
     document.addEventListener('pointerdown', handlePointerDown, true);
-    return () => document.removeEventListener('pointerdown', handlePointerDown, true);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => { document.removeEventListener('pointerdown', handlePointerDown, true); document.removeEventListener('keydown', handleKeyDown); };
   }, [isVisible]);
 
   useEffect(() => {
@@ -153,11 +130,15 @@ export function Tooltip({
     const rafId = window.requestAnimationFrame(updateTooltipPosition);
     const handleViewportChange = () => updateTooltipPosition();
 
+    window.visualViewport?.addEventListener('resize', handleViewportChange);
+    window.visualViewport?.addEventListener('scroll', handleViewportChange);
     window.addEventListener('resize', handleViewportChange);
     window.addEventListener('scroll', handleViewportChange, true);
 
     return () => {
       window.cancelAnimationFrame(rafId);
+      window.visualViewport?.removeEventListener('resize', handleViewportChange);
+      window.visualViewport?.removeEventListener('scroll', handleViewportChange);
       window.removeEventListener('resize', handleViewportChange);
       window.removeEventListener('scroll', handleViewportChange, true);
     };
@@ -176,21 +157,23 @@ export function Tooltip({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
+      onFocus={handleMouseEnter}
+      onBlur={handleMouseLeave}
+      onPointerDown={handleMouseLeave}
     >
       {children}
-      {isVisible && typeof document !== 'undefined' && createPortal(
+      {isVisible && !disabled && typeof document !== 'undefined' && createPortal(
         <div
+          role="tooltip"
           ref={tooltipRef}
           style={tooltipStyle || { position: 'fixed', top: '-9999px', left: '-9999px', opacity: 0 }}
           className={cn(
-            'px-2 py-1 text-xs font-medium text-primary-foreground bg-background dark:bg-muted dark:text-foreground rounded shadow-lg whitespace-nowrap pointer-events-none',
+            'px-2 py-1 text-xs font-medium text-popover-foreground bg-popover border border-border rounded shadow-lg whitespace-normal break-words pointer-events-none',
             'animate-in fade-in-0 zoom-in-95 duration-200',
             className
           )}
         >
           {content}
-          {/* Arrow */}
-          <div className={cn('absolute w-0 h-0 border-4 border-transparent', getArrowClasses(position))} />
         </div>,
         document.body
       )}

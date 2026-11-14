@@ -1,3 +1,4 @@
+import { Button } from '@/shared/ui/Button';
 import { Select } from '@/shared/ui/Select';
 import { useTranslation } from 'react-i18next';
 
@@ -8,6 +9,8 @@ import SettingsCard from '@/shared/ui/SettingsCard';
 import SettingsRow from '@/shared/ui/SettingsRow';
 import SettingsSection from '@/shared/ui/SettingsSection';
 import SettingsToggle from '@/modules/settings/SettingsToggle';
+import { useUiPreferences, useSetUiPreference } from '@/shared/context/UiPreferencesContext';
+import { useWorkspaceLayoutPreference } from '@/shared/hooks/useWorkspaceLayoutPreference';
 
 type AppearanceSettingsTabProps = {
   projectSortOrder: ProjectSortOrder;
@@ -31,9 +34,21 @@ export default function AppearanceSettingsTab({
 }: AppearanceSettingsTabProps) {
   const { t } = useTranslation('settings');
   const { themeMode, setThemeMode } = useTheme();
+  const preferences = useUiPreferences();
+  const setPreference = useSetUiPreference();
+  const [splitEnabled, setSplitEnabled] = useWorkspaceLayoutPreference();
 
   return (
     <div className="space-y-8">
+      <SettingsSection title={t('quickSettings.sections.toolDisplay')}>
+        <SettingsCard divided>
+          <SettingsRow label={t('chat:desktop.sideBySide')}><SettingsToggle checked={splitEnabled} onChange={setSplitEnabled} ariaLabel={t('chat:desktop.sideBySide')} /></SettingsRow>
+          {(['showThinking', 'showRawParameters', 'sendByCtrlEnter'] as const).map(key => <SettingsRow key={key} label={t(`quickSettings.${key}`)}>
+            <SettingsToggle checked={preferences[key]} onChange={value => setPreference(key, value)} ariaLabel={t(`quickSettings.${key}`)} />
+          </SettingsRow>)}
+        </SettingsCard>
+      </SettingsSection>
+      {(window as unknown as { cloudcliDesktopNotifications?: { showDesktopSettings?: () => Promise<unknown> } }).cloudcliDesktopNotifications?.showDesktopSettings && <SettingsSection title={t('desktopShell.title')}><SettingsCard><SettingsRow label={t('desktopShell.description')}><Button variant="outline" size="sm" onClick={() => { void (window as unknown as { cloudcliDesktopNotifications: { showDesktopSettings: () => Promise<unknown> } }).cloudcliDesktopNotifications.showDesktopSettings(); }}>{t('desktopShell.open')}</Button></SettingsRow></SettingsCard></SettingsSection>}
       <SettingsSection title={t('appearanceSettings.theme.label')}>
         <SettingsCard>
           <SettingsRow

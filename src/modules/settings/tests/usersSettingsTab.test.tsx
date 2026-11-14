@@ -5,15 +5,16 @@ import { UsersSettingsTab } from '@/modules/settings/tabs/UsersSettingsTab';
 import { UserManagementTab } from '@/modules/settings/tabs/UserManagementTab';
 import { api } from '@/shared/api';
 const fixture=vi.hoisted(()=>({role:'member'}));
-vi.mock('@/modules/auth',()=>({useAuth:()=>({user:{id:1,username:'test',role:fixture.role},logout:vi.fn()})}));
+vi.mock('@/modules/auth',()=>({AccountSecurity:()=> <button>accountDevices.title</button>,useAuth:()=>({user:{id:1,username:'test',role:fixture.role},logout:vi.fn()})}));
 vi.mock('react-i18next',()=>({useTranslation:()=>({t:(key:string)=>key})}));
 vi.mock('@/modules/project-creation-wizard',()=>({FolderBrowserModal:()=>null}));
 vi.mock('@/shared/api',()=>({readApiErrorMessage:()=>'',api:{usage:{overview:vi.fn(async()=>new Response(JSON.stringify({perUser:[{userId:2,today:{total:1,requests:1},last7d:{total:1000,requests:2},last30d:{total:1200000,requests:3}}]})))},auth:{users:vi.fn(async()=>new Response(JSON.stringify({users:[{id:2,username:'alice',role:'member',work_root:'D:/alice',allowed_folders:'["D:/shared"]',access_sso_email:'alice@example.com',is_active:1,created_at:'2026-10-23 10:00:00'}]})))}}}));
 afterEach(()=>{cleanup();vi.clearAllMocks();});
-test('the account tab only offers self password controls',()=>{
+test('the account tab offers self password and device controls without user administration',()=>{
   fixture.role='member';render(<UsersSettingsTab/>);
   expect(screen.queryByText('users.create')).toBeNull();
   expect(screen.getByText('users.currentPassword')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'accountDevices.title'})).toBeTruthy();
 });
 test('administrators see the user list with access details',async()=>{
   fixture.role='admin';render(<UserManagementTab/>);

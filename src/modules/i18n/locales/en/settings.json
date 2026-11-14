@@ -980,4 +980,26 @@
     "loadFailed": "Unable to load task settings",
     "saveFailed": "Unable to save task settings"
   }
+,
+  "desktopShell": {
+  "title": "Desktop shell",
+  "description": "Window theme, local service and network access",
+  "open": "Desktop options"
+}
+,
+  "accountDevices": {
+  "title": "Account and devices",
+  "currentUser": "Current user: {{name}}",
+  "boundary": "The local desktop uses the operating system identity. Remote access uses email verification and Cloudflare Access.",
+  "remoteAccount": "Remote account: {{name}}",
+  "unconfigured": "Not configured",
+  "devices": "Signed-in devices",
+  "local": "Local identity",
+  "remote": "Remote account",
+  "password": "Password sign-in",
+  "currentDevice": " · This device",
+  "loggedIn": "Signed in at {{time}}",
+  "revoke": "Revoke",
+  "revokeHint": "Revoking disconnects this device without interrupting server tasks. Legacy local sign-in cannot access remote environments."
+}
 }

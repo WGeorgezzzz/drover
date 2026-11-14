@@ -1,3 +1,4 @@
+import { Tooltip } from '@/shared/ui/Tooltip';
 import { Button } from '@/shared/ui/Button';
 import { ChevronLeft, ChevronRight, PanelRightOpen } from '@/shared/icons';
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction, type ReactNode } from 'react';
@@ -12,6 +13,7 @@ import WorkspaceTitle from '@/modules/project-workspace/WorkspaceTitle';
 
 type WorkspaceHeaderProps = {
   displayOptions?: ReactNode;
+  displayOptionsPanel?: ReactNode;
   onOpenSideChat?: () => void;
   sideChatOpen?: boolean;
   claudeLayout?: boolean;
@@ -30,6 +32,7 @@ type WorkspaceHeaderProps = {
 /** Rendered by WorkspaceMain to show the workspace title and chat connection status alongside the scrollable tab bar. */
 export default function WorkspaceHeader({
   displayOptions,
+  displayOptionsPanel,
   onOpenSideChat,
   sideChatOpen,
   claudeLayout = false,
@@ -117,12 +120,11 @@ export default function WorkspaceHeader({
             onRenameSession={onRenameSession}
           />
           <WorkspaceConnectionStatus />
-          {onOpenSideChat && <Button variant="ghost" size="compact" type="button" className="workspace-icon-button shrink-0"
+          {onOpenSideChat && <Tooltip content={`${t('chat:sideChat.open')} (Ctrl+Alt+S)`} position="bottom"><Button variant="ghost" size="compact" type="button" className="workspace-icon-button shrink-0"
             aria-label={t('chat:sideChat.open')} aria-pressed={Boolean(sideChatOpen)}
-            title={`${t('chat:sideChat.open')} (Ctrl+Alt+S)`}
             onMouseDown={event => event.preventDefault()} onClick={onOpenSideChat}>
             <PanelRightOpen size={17}/>
-          </Button>}
+          </Button></Tooltip>}
         </div>
 
         <div className="min-w-0 flex-1 sm:flex-none sm:shrink-0">
@@ -174,6 +176,7 @@ export default function WorkspaceHeader({
         </div>
         {displayOptions && <div className="flex h-8 shrink-0 items-center">{displayOptions}</div>}
       </div>
+      {displayOptionsPanel}
     </header>
   );
 }

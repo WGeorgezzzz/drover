@@ -742,4 +742,26 @@
     "loadFailed": "无法读取任务设置",
     "saveFailed": "无法保存任务设置"
   }
+,
+  "desktopShell": {
+  "title": "桌面窗口",
+  "description": "窗口主题、本地服务和网络访问",
+  "open": "桌面选项"
+}
+,
+  "accountDevices": {
+  "title": "账号与设备",
+  "currentUser": "当前用户：{{name}}",
+  "boundary": "本机桌面使用操作系统身份。远程入口使用邮箱身份验证，并受 Cloudflare Access 保护。",
+  "remoteAccount": "远程账号：{{name}}",
+  "unconfigured": "尚未配置",
+  "devices": "登录设备",
+  "local": "本机身份",
+  "remote": "远程账号",
+  "password": "密码登录",
+  "currentDevice": " · 当前设备",
+  "loggedIn": "登录于 {{time}}",
+  "revoke": "撤销",
+  "revokeHint": "撤销会立即断开该设备的连接，不中止服务器上的任务。旧版本机登录不能用于远程入口。"
+}
 }

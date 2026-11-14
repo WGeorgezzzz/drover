@@ -1,10 +1,8 @@
 import { Button } from '@/shared/ui/Button';
-import { Settings, MoreHorizontal, ArrowUpCircle, AlertTriangle, SlidersHorizontal } from '@/shared/icons';
+import { Settings, MoreHorizontal, ArrowUpCircle, AlertTriangle } from '@/shared/icons';
 import type { TFunction } from 'i18next';
 
 import type { ReleaseInfo } from '@/shared/types';
-import { toggleQuickSettingsPanel } from '@/modules/quick-settings-panel';
-import { AccountSecurity } from '@/modules/auth';
 import { QuotaIndicator } from '@/modules/usage';
 
 type SidebarFooterProps={updateAvailable:boolean;restartRequired:boolean;releaseInfo:ReleaseInfo|null;latestVersion:string|null;currentVersion:string;onShowVersionModal:()=>void;onShowSettings:(tab?:string)=>void;t:TFunction};
@@ -15,10 +13,8 @@ export default function SidebarFooter({updateAvailable,restartRequired,releaseIn
     <QuotaIndicator onOpen={() => onShowSettings('usage')}/>
     {restartRequired&&<p className="mb-2 flex items-center gap-2 px-2 text-xs text-warning dark:text-warning"><AlertTriangle size={14}/>{t('version.restartRequired')}</p>}
     {updateAvailable&&<Button variant="ghost" size="compact" type="button" className="sidebar-nav-action" onClick={onShowVersionModal}><ArrowUpCircle size={15}/><span>{releaseInfo?.title||`v${latestVersion}`}</span></Button>}
-    <div className="flex items-center gap-1">
-      <Button variant="ghost" size="compact" type="button" className="sidebar-nav-action flex-1" onClick={() => onShowSettings()}><Settings size={16}/><span>{t('actions.settings')}</span></Button>
-      <Button variant="ghost" size="compact" type="button" className="workspace-icon-button" onClick={toggleQuickSettingsPanel} aria-label={t('ui.quickSettings')} title={t('ui.quickSettings')}><SlidersHorizontal size={15}/></Button>
-      <AccountSecurity/>
+    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_30px] items-center gap-1">
+      <Button variant="ghost" size="compact" type="button" className="sidebar-nav-action" onClick={() => onShowSettings()}><Settings size={16}/><span>{t('actions.settings')}</span></Button>
       <details className="relative">
         <summary className="workspace-icon-button cursor-pointer list-none" aria-label={t('ui.about')} title={t('ui.about')}><MoreHorizontal size={16}/></summary>
         <div className="absolute bottom-full right-0 z-50 mb-2 w-56 rounded-xl border border-border bg-popover p-2 text-xs shadow-lg">

@@ -1,9 +1,10 @@
+import { ListTodo } from '@/shared/icons';
 import { Input as UnifiedInput } from '@/shared/ui/Input';
 import { Select } from '@/shared/ui/Select';
 import { Button } from '@/shared/ui/Button';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '@/shared/api';
 import { startVisiblePolling } from '@/shared/utils';
 
@@ -13,7 +14,7 @@ type Prompt={text:string;revision:number;history:{revision:number;at:string;text
 type Snapshot={revision:number;settings:Record<string,any>;tickets:Ticket[];sources:Record<string,{state:string;error?:string}>;decisions:{id:string;kind:string;dismissed?:boolean;reason:unknown[]}[];outbox:{id:string;status:string;sending:number;error?:string;message:{text:string;channel:{source:string;thread:string}}}[];prompts:{worker:Prompt;orchestrator:Prompt};pendingApprovals?:{ticketId:string;title:string;assignmentId:string;scope:string;createdAt:string}[]};
 const control='rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50';
 async function request(path='',body?:unknown,method?:string){const response=await api.superagent.request(path,body,method);const value=await response.json();if(!response.ok)throw new Error(value.message??value.error??response.statusText);return value;}
-export function SuperagentNavigation(){const {i18n}=useTranslation(),navigate=useNavigate(),zh=i18n.language.startsWith('zh');const [count,setCount]=useState<number>();useEffect(()=>startVisiblePolling(async()=>{try{const s:Snapshot=await request();setCount(s.tickets.filter(t=>t.stage.stage==='person').length+s.outbox.filter(o=>o.status==='pending'&&o.sending).length);}catch{/* Preserve last count while offline. */}},15000),[]);return <Button variant="ghost" size="compact" type="button" className="sidebar-nav-action" onClick={()=>navigate('/tasks')}><span>{zh?'任务':'Tasks'}</span><span className="ml-auto text-xs">{count??'…'}</span></Button>;}
+export function SuperagentNavigation(){const {i18n}=useTranslation(),navigate=useNavigate(),location=useLocation(),zh=i18n.language.startsWith('zh');const [count,setCount]=useState<number>();useEffect(()=>startVisiblePolling(async()=>{try{const s:Snapshot=await request();setCount(s.tickets.filter(t=>t.stage.stage==='person').length+s.outbox.filter(o=>o.status==='pending'&&o.sending).length);}catch{/* Preserve last count while offline. */}},15000),[]);return <Button variant="ghost" size="compact" type="button" className="sidebar-nav-action" aria-current={location.pathname === '/tasks' ? 'page' : undefined} onClick={()=>navigate('/tasks')}><ListTodo size={16}/><span>{zh?'任务':'Tasks'}</span><span className="ml-auto text-xs">{count??'…'}</span></Button>;}
 export function SuperagentPanel({onMenuClick}:{onMenuClick:()=>void}){
  const {i18n}=useTranslation(),zh=i18n.language.startsWith('zh'),t=(cn:string,en:string)=>zh?cn:en;
  const [snapshot,setSnapshot]=useState<Snapshot>(),[error,setError]=useState(''),[busy,setBusy]=useState(false),[search,setSearch]=useState(''),[expanded,setExpanded]=useState(''),[settings,setSettings]=useState(''),[settingsRevision,setSettingsRevision]=useState(0),[promptName,setPromptName]=useState<'worker'|'orchestrator'>('worker'),[prompt,setPrompt]=useState(''),[promptRevision,setPromptRevision]=useState(0);

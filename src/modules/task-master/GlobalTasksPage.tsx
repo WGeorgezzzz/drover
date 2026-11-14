@@ -7,7 +7,7 @@ import { IntelligentTasksPanel } from '@/modules/task-master/IntelligentTasksPan
 import { TaskExecutionPanel } from '@/modules/task-master/TaskExecutionPanel';
 import type { LLMProvider } from '@/shared/types';
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertCircle, Check, ChevronDown, ExternalLink, ListTodo, Menu, Play, RefreshCw, RotateCcw, Search, X } from '@/shared/icons';
 
 import { startVisiblePolling } from '@/shared/utils';
@@ -62,12 +62,13 @@ function LegacyTasksNavigation() {
   // Retain the legacy feed only as a fallback until that endpoint succeeds.
   // Fetch the legacy count only if the semantic feed is unavailable.
   const [semanticFailed,setSemanticFailed]=useState(!inboxTasksApi.intelligence);
+  const location = useLocation();
   const navigate = useNavigate(), { projects, error, loading } = useGlobalTasks(counts === null && semanticFailed);
   const tasks = projects.flatMap(p => p.tasks).filter(isOpenTask);
   useEffect(()=>{if(!inboxTasksApi.intelligence)return;let active=true;const load=async()=>{try{const snapshot=await read(await inboxTasksApi.intelligence());const rows=snapshot.tasks.filter((r:any)=>!r.testSource&&!snapshot.entries[r.id]?.mergedInto&&!['done','cancelled'].includes(r.task.status));if(active){const next={open:rows.length,attention:rows.filter((r:any)=>['blocked','review'].includes(r.task.status)||r.task.forMe||snapshot.entries[r.id]?.kind==='todo').length};setCounts(previous=>previous?.open===next.open&&previous?.attention===next.attention?previous:next);}}catch{if(active)setSemanticFailed(true);}};const stop=startVisiblePolling(load,30000);return()=>{active=false;stop();};},[]);
   const high = counts?.attention??tasks.filter(t => ['blocked','review'].includes(t.status)||t.forMe).length;
   const openCount=counts?.open??tasks.length;
-  return <Button variant="ghost" size="compact" type="button" className="sidebar-nav-action" onClick={() => navigate('/tasks')} title={`需要你处理 ${high} · 未完成 ${openCount}`} aria-label={`任务，需要你处理 ${high} · 未完成 ${openCount}`}>
+  return <Button variant="ghost" size="compact" type="button" className="sidebar-nav-action" aria-current={location.pathname === '/tasks' ? 'page' : undefined} onClick={() => navigate('/tasks')} title={`需要你处理 ${high} · 未完成 ${openCount}`} aria-label={`任务，需要你处理 ${high} · 未完成 ${openCount}`}>
     <ListTodo size={16}/><span>任务</span><span className="ml-auto text-xs text-muted-foreground">{error && !counts ? '连接异常' : loading && !counts ? '…' : high}</span>
 
   </Button>;
@@ -75,8 +76,9 @@ function LegacyTasksNavigation() {
 
 /** SidebarHeader places the authenticated info-hub beside the unified task entry. */
 export function InfoHubNavigation() {
+  const location = useLocation();
   const navigate = useNavigate();
-  return <Button variant="ghost" size="compact" type="button" className="sidebar-nav-action" onClick={() => navigate('/information')} aria-label="信息看板"><ListTodo size={16}/><span>信息看板</span></Button>;
+  return <Button variant="ghost" size="compact" type="button" className="sidebar-nav-action" aria-current={location.pathname === '/information' ? 'page' : undefined} onClick={() => navigate('/information')} aria-label="信息看板"><ListTodo size={16}/><span>信息看板</span></Button>;
 }
 
 /** ProjectMainRegion shows broad workstreams first and expands the original task records on demand. */

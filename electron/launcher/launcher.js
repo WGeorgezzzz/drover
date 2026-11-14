@@ -19,7 +19,7 @@ window.__MOCK_STATE__ = {
 (function cloudCliLauncher() {
   var MOCK = window.__MOCK_STATE__ || {};
   var VERSION = window.__APP_VERSION__ || '';
-  var LOGO_URL = new URL('../../public/logo-32.png', window.location.href).toString();
+  var LOGO_URL = new URL('../../public/drover-mark.svg', window.location.href).toString();
   var SEARCH = new URLSearchParams(window.location.search || '');
 
   function clone(value) {
@@ -346,7 +346,6 @@ window.__MOCK_STATE__ = {
       '<span style="flex:1"></span>' +
       refreshAction +
       envActions +
-      '<button class="icon-btn tb-action no-drag" data-cc-action="settings-toggle" title="Settings">' + icon('settings', 16) + '</button>' +
       '</div>';
   };
 

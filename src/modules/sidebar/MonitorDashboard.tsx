@@ -55,7 +55,7 @@ export function MonitorDashboard(){
   const button='rounded-md border px-3 py-1.5 text-sm hover:bg-muted disabled:opacity-40';
   const statuses:Record<string,string>={active:'已启用',paused:'已暂停',stopped:'已停止',succeeded:'完成',failed:'失败',interrupted:'中断',skipped:'已跳过',running:'运行中'};
   return <>
-    <Button variant="ghost" size="compact" type="button" onClick={()=>setOpen(true)} aria-label={`自动监测，${active} 个已启用`} className="sidebar-nav-action">
+    <Button variant="ghost" size="compact" type="button" onClick={()=>setOpen(true)} aria-label={`自动监测，${active} 个已启用`} className="sidebar-nav-action" aria-expanded={open}>
       <Repeat className="h-4 w-4"/><span>自动监测</span>{(error||active>0)&&<span className="ml-auto text-[11px] text-muted-foreground">{error?'连接异常':active}</span>}
     </Button>
     {open&&createPortal(<UnifiedDialog open onOpenChange={(open) => { if (!open) { setOpen(false); } }}>
