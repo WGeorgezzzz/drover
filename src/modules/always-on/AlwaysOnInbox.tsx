@@ -16,7 +16,19 @@ function DecisionForm({decision,onAnswer}:{decision:AlwaysOnDecision;onAnswer:(i
     <div className="text-xs text-muted-foreground">{decision.id} · <Link className="underline" to={'/session/'+decision.target}>来源会话</Link> · {new Date(decision.created_at).toLocaleString()}{decision.physical?' · ⚠ 真机 / 物理动作审批':''}</div>
     <p className="whitespace-pre-wrap">{decision.question}</p>
     {decision.status==='pending'?<>
-      {options.length>0&&<pre className="whitespace-pre-wrap text-xs">{JSON.stringify(options,null,2)}</pre>}
+      {options.map((item,index)=>{
+        if(!item||typeof item!=='object')return null;
+        const question=item as {question?:string;label?:string;description?:string;options?:{label:string;description?:string}[];multiSelect?:boolean};
+        const choices=question.options||(question.label?[{label:question.label,description:question.description}]:[]);
+        const selectable=!question.options||(options.length===1&&!question.multiSelect);
+        return <fieldset key={index} className="space-y-2 text-sm">
+          {question.question&&<legend>{question.question}</legend>}
+          <div className="flex flex-wrap gap-2">{choices.map(choice=><div key={choice.label}>
+            {selectable?<Button variant={answer===choice.label?'default':'outline'} onClick={()=>setAnswer(choice.label)}>{choice.label}</Button>:<span>{choice.label}</span>}
+            {choice.description&&<p className="mt-1 max-w-xs text-xs text-muted-foreground">{choice.description}</p>}
+          </div>)}</div>
+        </fieldset>;
+      })}
       <label className="block text-sm">你的答复<Input aria-label={'答复 '+decision.id} value={answer} onChange={event=>setAnswer(event.target.value)} placeholder="明确填写选项或答复" /></label>
       <Button disabled={!answer.trim()} onClick={()=>void onAnswer(decision.id,answer.trim())}>提交答复</Button>
     </>:<p className="text-sm text-muted-foreground">已处理</p>}
