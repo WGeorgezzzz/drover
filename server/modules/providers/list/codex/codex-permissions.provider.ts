@@ -1,3 +1,4 @@
+import { consumeDeferredPermission } from '@/modules/always-on/index.js';
 import { randomUUID } from 'node:crypto';
 import { createNormalizedMessage, readObjectRecord } from '@/shared/index.js';
 import type { AnyRecord, NormalizedMessage, ProviderPermissionDecision, ProviderRuntimeWriter } from '@/shared/index.js';
@@ -7,7 +8,7 @@ export class CodexPermissionBridge {
   private pending = new Map<string, { sessionId: string; nativeId: string | number; event: NormalizedMessage;
     writer: ProviderRuntimeWriter; reply: (result: AnyRecord) => void; method: string; params: AnyRecord }>();
 
-  request(sessionId: string, message: AnyRecord, writer: ProviderRuntimeWriter, reply: (result: AnyRecord) => void): boolean {
+  request(sessionId: string, message: AnyRecord, writer: ProviderRuntimeWriter, reply: (result: AnyRecord) => void, deferredDecisionId?:string): boolean {
     const method = String(message.method);
     const supported = ['item/commandExecution/requestApproval', 'item/fileChange/requestApproval',
       'item/permissions/requestApproval', 'item/tool/requestUserInput'];
@@ -23,6 +24,8 @@ export class CodexPermissionBridge {
     const event = createNormalizedMessage({ kind: 'permission_request', requestId, sessionId, provider: 'codex',
       toolName, toolId: params.itemId, input });
     this.pending.set(requestId, { sessionId, nativeId: message.id, event, writer, reply, method, params });
+    const resumed=consumeDeferredPermission(Number(writer.userId),sessionId,toolName,input,deferredDecisionId);
+    if(resumed!==undefined){this.resolve(requestId,{allow:resumed});return true;}
     writer.send(event);
     return true;
   }

@@ -83,9 +83,12 @@ async function consume(client: DurableProvider, writer: ProviderRuntimeWriter, s
             try {
               await waitForMirroredClaudeReply({ sessionId, userId: Number(spec.userId), messageId: finalReplyId });
             } catch (error) {
-              providerError = true;
-              event.data = { ...event.data, success: false, exitCode: 1 };
-              writer.send(createNormalizedMessage({ kind: 'error', sessionId, provider: spec.provider,
+              // The durable provider journal already proves successful execution.
+              // A delayed transcript mirror must not turn that into a retryable
+              // task failure (and repeat external effects or the memory planner).
+              event.data = { ...event.data, historySyncPending: true };
+              writer.send(createNormalizedMessage({ kind: 'status', sessionId, provider: spec.provider,
+                status: 'history_sync_pending',
                 content: error instanceof Error ? error.message : String(error) }));
             }
           }

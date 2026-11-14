@@ -1,0 +1,144 @@
+--- a/bridge.py
++++ b/bridge.py
+@@ -113,17 +113,31 @@
+ 
+ # ---------------------------------------------------------------- 飞书
+ 
++def lark_job(args, timeout=None):
++    folder = STATE / 'lark-jobs' / uuid.uuid4().hex
++    folder.mkdir(parents=True)
++    spec = dict(args=[CFG['lark_cli'], *args], cwd=str(STATE), timeout=timeout,
++                out=str(folder / 'stdout'), err=str(folder / 'stderr'), result=str(folder / 'result.json'))
++    job = folder / 'job.json'
++    job.write_text(json.dumps(spec, ensure_ascii=False), encoding='utf-8')
++    proc = subprocess.Popen(['conhost.exe', '--headless', sys.executable, str(HERE / 'lark_worker.py'), str(job)],
++                            stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
++                            env=LARK_ENV, cwd=str(STATE), creationflags=CREATE_NO_WINDOW)
++    return proc, folder
++
++
+ def lark(*args, timeout=300):
+-    r = subprocess.run([CFG['lark_cli'], *args], capture_output=True, timeout=timeout, env=LARK_ENV,
+-                       cwd=str(STATE), creationflags=CREATE_NO_WINDOW)
+-    out = r.stdout.decode('utf-8', 'replace')
++    proc, folder = lark_job(args, timeout)
++    proc.wait(timeout=timeout + 20)
++    result = json.loads((folder / 'result.json').read_text(encoding='utf-8'))
++    out = (folder / 'stdout').read_text(encoding='utf-8', errors='replace')
+     try:
+         data = json.loads(out)
+     except json.JSONDecodeError:
+         data = None
+-    if r.returncode != 0 or not (isinstance(data, dict) and data.get('ok')):
+-        err = r.stderr.decode('utf-8', 'replace') or out
+-        raise RuntimeError(f'lark-cli {" ".join(args[:2])} rc={r.returncode}: {err[-600:]}')
++    if result['exitCode'] != 0 or not (isinstance(data, dict) and data.get('ok')):
++        err = (folder / 'stderr').read_text(encoding='utf-8', errors='replace') or out
++        raise RuntimeError(f'lark-cli {" ".join(args[:2])} rc={result["exitCode"]}: {err[-600:]}')
+     return data
+ 
+ 
+@@ -216,20 +230,34 @@
+     backoff = 5
+     while True:
+         log(f'开始监听 {key} ({identity})')
+-        errlog = open(STATE / f'event-{key}.log', 'ab')
+-        # stdin 保持打开：event consume 把 stdin EOF 当成退出信号。
+-        proc = subprocess.Popen([CFG['lark_cli'], 'event', 'consume', key, '--as', identity],
+-                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errlog,
+-                                env=LARK_ENV, cwd=str(STATE), creationflags=CREATE_NO_WINDOW)
+-        started = time.time()
+-        for raw in proc.stdout:
+-            try:
+-                handler(json.loads(raw))
+-            except Exception:
+-                log(f'处理 {key} 事件出错:\n{traceback.format_exc()}')
+-        rc = proc.wait()
+-        errlog.close()
+-        log(f'{key} 监听退出 rc={rc}')
++        proc, folder = lark_job(['event', 'consume', key, '--as', identity])
++        started, position, pending = time.time(), 0, b''
++        ready = False
++        while proc.poll() is None:
++            err = (folder / 'stderr').read_text(encoding='utf-8', errors='replace') if (folder / 'stderr').exists() else ''
++            if not ready and '[event] ready event_key=' + key in err:
++                ready = True
++                log('监听已就绪 ' + key)
++            if ready and (folder / 'stdout').exists():
++                with open(folder / 'stdout', 'rb') as stream:
++                    stream.seek(position)
++                    chunk = stream.read()
++                    position += len(chunk)
++                pending += chunk
++                while b'\n' in pending:
++                    raw, pending = pending.split(b'\n', 1)
++                    if not raw.strip():
++                        continue
++                    try:
++                        handler(json.loads(raw))
++                    except Exception:
++                        log(f'处理 {key} 事件出错:\n{traceback.format_exc()}')
++            time.sleep(0.15)
++        errfile = folder / 'stderr'
++        if errfile.exists():
++            with open(STATE / f'event-{key}.log', 'ab') as output:
++                output.write(errfile.read_bytes())
++        log(f'{key} 监听退出 rc={proc.returncode}')
+         backoff = 5 if time.time() - started > 300 else min(backoff * 2, 600)
+         time.sleep(backoff)
+ 
+@@ -791,12 +819,15 @@
+     return max(1, min(int(m.group()), 30)) if m else CFG['lookback_days']
+ 
+ 
++from always_on import AlwaysOn
++DROVER = AlwaysOn(STATE, CFG, lark, log)
++
++
+ def on_message(ev):
+     mid = ev.get('message_id')
+     seen = load('seen.json', [])
+     if mid in seen:
+         return
+-    save('seen.json', (seen + [mid])[-2000:])
+     if ev.get('sender_id') != OWNER or ev.get('chat_type') != 'p2p':
+         log(f"忽略非本人私聊消息 sender={ev.get('sender_id')} chat_type={ev.get('chat_type')}")
+         return
+@@ -805,6 +836,11 @@
+         save('bridge.json', {**bridge, 'bot_chat_id': ev.get('chat_id')})
+     text = (ev.get('content') or '').strip()
+     log(f'收到: {text[:200]}')
++    if DROVER.accept(mid, text):
++        save('seen.json', (seen + [mid])[-2000:])
++        log('已持久化 Drover 消息: ' + str(mid))
++        return
++    save('seen.json', (seen + [mid])[-2000:])
+     cmd = text.lstrip('/').strip()
+     if cmd in ('帮助', 'help', '?', '？'):
+         send(HELP)
+@@ -817,6 +853,7 @@
+     elif cmd in ('取消', 'cancel', 'stop'):
+         send('已中断当前任务' if RUNNER.cancel() else '当前没有在跑的 Claude 任务')
+     elif cmd in ('新会话', 'new', 'reset'):
++        DROVER.reset()
+         save('session.json', {})
+         send('已清空对话上下文，下一条消息开始新会话')
+     elif re.match(r'^(整理)?(微信|飞书|会议)?待办', cmd) or re.match(r'^todo\b', cmd):
+@@ -836,6 +873,9 @@
+ 
+ 
+ def on_card(ev):
++    if DROVER.accept_card(ev):
++        log('已持久化 Drover 审批按钮: ' + str(ev.get('event_id')))
++        return
+     eid = ev.get('event_id')
+     seen = load('seen.json', [])
+     if eid in seen:
+@@ -957,6 +997,7 @@
+     lock.write(str(os.getpid()))
+     lock.flush()
+     log(f'桥接启动 pid={os.getpid()}')
++    threading.Thread(target=DROVER.watch, daemon=True).start()
+     threading.Thread(target=worker, daemon=True).start()
+     threading.Thread(target=consume, args=('im.message.receive_v1', 'bot', on_message), daemon=True).start()
+     threading.Thread(target=consume, args=('card.action.trigger', 'bot', on_card), daemon=True).start()

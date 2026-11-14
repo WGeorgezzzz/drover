@@ -71,6 +71,15 @@ export const authenticatedFetch = (
 
 type QueryValue = string | number | boolean | null | undefined;
 
+/** Inbox page and decision forms share the authenticated durable-event transport. */
+export const alwaysOnApi={
+  snapshot:()=>authenticatedFetch('/api/always-on'),
+  answer:(id:string,answer:unknown)=>authenticatedFetch('/api/always-on/decisions/'+encodeURIComponent(id)+'/answer',{method:'POST',body:JSON.stringify({answer})}),
+  memory:()=>authenticatedFetch('/api/always-on/memory'),
+  consolidate:()=>authenticatedFetch('/api/always-on/memory',{method:'POST',body:'{}'}),
+  rollback:(stamp:string)=>authenticatedFetch('/api/always-on/memory/rollback',{method:'POST',body:JSON.stringify({stamp})}),
+};
+
 /** Authorizes same-origin iframe navigation using a scoped HttpOnly cookie. */
 export const infoHubApi = { authorize: () => authenticatedFetch('/api/infohub/session', { method: 'POST' }) };
 

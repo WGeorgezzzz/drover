@@ -4,6 +4,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
 
+import { alwaysOnEnabled, deferDecision } from '@/modules/always-on/index.js';
 import { monitorsDb, sessionsDb } from '@/modules/database/index.js';
 import { sessionsService, providerTokenUsageService } from '@/modules/providers/index.js';
 import { connectedClients, clientUserIds } from '@/modules/websocket/index.js';
@@ -129,6 +130,11 @@ export async function finishMonitorReport(row: MonitorRecord, runId: string, ses
   }
   const usage = await providerTokenUsageService.getSessionTokenUsage(sessionId).catch(() => ({used:undefined}));
   monitorsDb.saveReport(row.user_id, row.id, runId, parsed.report, parsed.state, {...(cumulativeUsage??{}),contextTokens:usage.used}, fingerprint);
+  if(alwaysOnEnabled()&&/\bNEED_(USER|CLAUDE)\s*[:：]/.test(parsed.report)){
+    const decision=deferDecision(row.user_id,row.session_id,'monitor:'+runId,parsed.report,[],{monitorId:row.id,runId,sessionId});
+    const notice=JSON.stringify({kind:'permission_request',sessionId:row.session_id,requestId:'monitor:'+runId,decisionId:decision.id,toolName:'监测需要答复',input:{question:parsed.report},timestamp:new Date().toISOString()});
+    for(const client of connectedClients)if(client.readyState===1&&clientUserIds.get(client)===row.user_id)client.send(notice);
+  }
   if (!isolated) return;
   const source = sessionsDb.getSessionById(row.session_id)!;
   const message = createNormalizedMessage({ id: 'monitor-report:' + runId, kind: 'text', role: 'assistant', provider: source.provider as LLMProvider, sessionId: row.session_id, timestamp: new Date().toISOString(), content: '**监测「' + row.name + '」· 第 ' + (row.run_count + 1) + ' 轮**\n\n' + parsed.report + '\n\n[展开本轮会话](/session/' + sessionId + ')' });

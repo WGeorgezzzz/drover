@@ -13,6 +13,13 @@ environment.USERPROFILE = fixture;
 environment.HOME = fixture;
 environment.CLOUDCLI_HOME = path.join(fixture, '.cloudcli');
 environment.DATABASE_PATH = path.join(fixture, 'test.db');
+// The survival test only initializes the installed CLI protocol with its own
+// empty config. Resolve the executable before USERPROFILE redirects os.homedir.
+environment.SURVIVAL_CLAUDE_EXE = process.env.SURVIVAL_CLAUDE_EXE ||
+  path.join(os.homedir(), '.local', 'bin', process.platform === 'win32' ? 'claude.exe' : 'claude');
+// Existing dispatcher contracts exercise the explicit legacy control. Always-on tests
+// enable the new worker themselves; real-provider acceptance runs with it enabled.
+environment.DROVER_ALWAYS_ON = '0';
 mkdirSync(environment.CLOUDCLI_HOME, { recursive: true });
 console.log(`Isolated backend test state: ${fixture}`);
 const supplied = process.argv.slice(2);

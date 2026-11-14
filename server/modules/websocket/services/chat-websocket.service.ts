@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { alwaysOnEnabled, answerDecision, listDecisions } from '@/modules/always-on/index.js';
 
 import path from 'node:path';
 
@@ -267,6 +268,7 @@ async function dispatchRun(
     delete clientOptions.cloudcliSupervisorInitialSeq;
     delete clientOptions.cloudcliMonitorReceipt;
     if(ws)delete clientOptions.cloudcliBridgeUserAuthorization;
+    if(ws)delete clientOptions.cloudcliDeferredDecisionId;
     const command = typeof data.content === 'string' ? data.content : '';
     // This option is server-owned. The command is always the user's exact text.
     delete clientOptions.cloudcliMonitorReportContext;
@@ -643,6 +645,16 @@ function handleChatSubscribe(
 function handlePermissionResponse(data: AnyRecord, dependencies: ChatWebSocketDependencies): void {
   if (typeof data.requestId !== 'string' || data.requestId.length === 0) {
     return;
+  }
+
+  const userId=getCurrentUserContext()?.userId;
+  if(alwaysOnEnabled() && userId) {
+    const decision=listDecisions(userId).find(row=>row.request_id===data.requestId);
+    if(decision){
+      if(typeof data.allow!=='boolean')throw new Error('必须明确允许或拒绝');
+      answerDecision(userId,decision.id,{allow:data.allow,updatedInput:data.updatedInput,message:data.message},'app');
+      return;
+    }
   }
 
   const ownsApproval = sessionsDb.getAllSessions().some(session =>

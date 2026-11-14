@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import { getDatabasePath } from './connection.js';
 import { initializeOwnership, registerOwnershipContext } from './ownership.js';
 import { getConnection } from "@/modules/database/connection.js";
 import { runMigrations } from "@/modules/database/migrations.js";
@@ -20,11 +22,19 @@ export function initializeWorkerDatabase(): void {
 export const initializeDatabase = async () => {
     try {
         const db = getConnection();
+        // SQLite online backup includes committed WAL data; never copy a live db file.
+        if (!db.prepare("SELECT name FROM sqlite_master WHERE name='agent_inbox'").get()) {
+            const backup = getDatabasePath()+'.before-always-on-'+Date.now()+'.db';
+            fs.mkdirSync((await import('node:path')).dirname(backup),{recursive:true});
+            await db.backup(backup);
+        }
         registerOwnershipContext(db);
         db.exec(INIT_SCHEMA_SQL);
         console.log('Database schema applied');
         runMigrations(db);
         initializeAuthSessionTables(db);
+        const { initializeInboxSchema } = await import('@/modules/always-on/index.js');
+        initializeInboxSchema();
         initializeOwnership(db);
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

@@ -2,6 +2,17 @@ import type { TFunction } from 'i18next';
 import type { CSSProperties } from 'react';
 import type { NavigateFunction } from 'react-router-dom';
 
+//----------------- DURABLE AGENT INBOX ------------
+
+/** Inbox forms and the existing notification center share the server's persisted pending decisions. */
+export type AlwaysOnDecision = {id:string;target:string;request_id:string;question:string;options:string;context:string;physical:number;status:string;created_at:number;reminded_at:number|null};
+/** Inbox rows expose delivery progress and bounded execution failures for the signed-in user. */
+export type AlwaysOnEvent = {id:string;source:string;target:string;status:string;attempts:number;error:string|null;created_at:number};
+/** Authenticated inbox polling restores pending questions and event state after reconnect or refresh. */
+export type AlwaysOnSnapshot = {enabled:boolean;events:AlwaysOnEvent[];decisions:AlwaysOnDecision[]};
+
+// ---------------------------
+
 //----------------- LLM PROVIDER MODEL CATALOG ------------
 
 /** Identifies which coding-agent CLI backs a session, project selection or model list. */

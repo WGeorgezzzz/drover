@@ -1,3 +1,5 @@
+import { alwaysOnEnabled, enqueueInbox } from '@/modules/always-on/index.js';
+import { getConnection } from '@/modules/database/index.js';
 import { createHash } from 'node:crypto';
 
 import { withUserContext } from '@/modules/auth/index.js';
@@ -27,7 +29,7 @@ export function registerMessageQueueWakeup(callback: (() => void) | null): void 
 
 /** Queue routes validate ownership and immutable request identity through this service. */
 export const messageQueueService = {
-  enqueue(userId: number, input: Record<string,unknown>, delivery: 'queued'|'live'='queued', bridgeSourceSessionId?: string, authorization?:BridgeUserAuthorization) {
+  enqueue(userId: number, input: Record<string,unknown>, delivery: 'queued'|'live'='queued', bridgeSourceSessionId?: string, authorization?:BridgeUserAuthorization, deferredDecisionId?:string) {
     const sessionId=typeof input.sessionId==='string'?input.sessionId:'';
     const requestId=typeof input.requestId==='string'?input.requestId:'';
     const content=typeof input.content==='string'?input.content:'';
@@ -46,6 +48,7 @@ export const messageQueueService = {
     const mode=raw.permissionMode??'default';
     if (!['default','acceptEdits','plan','bypassPermissions','auto','dontAsk'].includes(String(mode))) throw new AppError('Invalid permission mode.',{statusCode:400});
     options.permissionMode=mode;
+    if(deferredDecisionId)options.cloudcliDeferredDecisionId=deferredDecisionId;
     // Only the internal bridge service supplies provenance; HTTP payloads cannot forge it.
     if (bridgeSourceSessionId) options.cloudcliBridgeSourceSessionId = bridgeSourceSessionId;
     if(authorization && authorization.sourceSessionId===bridgeSourceSessionId && authorization.sourceUserMessageId && authorization.permissionMode!=='plan') {
@@ -71,7 +74,11 @@ export const messageQueueService = {
     if (messageQueueDb.list(userId,sessionId).filter(row=>row.status==='queued').length>=100) {
       throw new AppError('This conversation already has 100 queued messages.',{statusCode:409});
     }
-    const row = messageQueueDb.create(userId,sessionId,requestId,hash,content,serialized,delivery);
+    const row = getConnection().transaction(()=>{
+      const created=messageQueueDb.create(userId,sessionId,requestId,hash,content,serialized,delivery);
+      if(alwaysOnEnabled() && delivery==='queued') enqueueInbox({userId,source:'queue',sourceId:created.id+':'+created.revision,target:sessionId,payload:{queueId:created.id}});
+      return created;
+    })();
     wakeup?.();
     notifyMessageQueueChanged();
     return row;
@@ -84,6 +91,7 @@ export const messageQueueService = {
   update(userId: number, id: string, input: Record<string,unknown>) {
     const row=messageQueueDb.get(userId,id);
     if (!row) throw new AppError('Queued message was not found.',{code:'QUEUE_NOT_FOUND',statusCode:404});
+    if(alwaysOnEnabled() && getConnection().prepare(`SELECT 1 FROM agent_queue_batches b JOIN message_queue q ON q.id=b.leader_id WHERE b.member_id=? AND q.status='running'`).get(id))throw conflict();
     if (getSessionOwnerId(row.session_id)!==userId) throw new AppError('Conversation belongs to another user or is unavailable.',{statusCode:403});
     if (!Number.isSafeInteger(input.revision)) throw conflict();
     if (input.action==='move-up'||input.action==='move-down') {
@@ -97,6 +105,7 @@ export const messageQueueService = {
     }
     if (input.action==='cancel' || input.action==='retry') {
       if (!messageQueueDb.action(userId,id,Number(input.revision),input.action)) throw conflict();
+      if(input.action==='retry' && alwaysOnEnabled())getConnection().prepare('DELETE FROM agent_queue_batches WHERE member_id=?').run(id);
     } else {
       if (typeof input.content!=='string' || !input.content.trim() || input.content.length>200_000) throw new AppError('A bounded, non-empty message is required.',{statusCode:400});
       if (!messageQueueDb.edit(userId,id,Number(input.revision),input.content)) throw conflict();

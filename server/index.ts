@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { initializeInbox, closeInbox, initializeDecisions, initializeIngress, initializeMemoryConsolidation, createAlwaysOnRoutes } from '@/modules/always-on/index.js';
 import { downloadRoutes } from './modules/file-tree/downloads.js';
 import { taskmasterSourcesService } from './modules/taskmaster/taskmaster-sources.service.js';
 import { infohubLifecycle, infohubRequest } from './modules/taskmaster/taskmaster-infohub.service.js';
@@ -242,6 +243,7 @@ app.use('/api/scheduled-messages', authenticateToken, scheduledMessagesRoutes);
 app.use('/api/monitors', authenticateToken, monitorsRoutes);
 app.use('/api/side-chats', authenticateToken, sideChatsRoutes);
 app.use('/api/message-queue', authenticateToken, messageQueueRoutes);
+app.use('/api/always-on', authenticateToken, createAlwaysOnRoutes());
 app.use('/api/session-workspace', authenticateToken, sessionWorkspaceRoutes);
 app.use('/api/workspace-sections', authenticateToken, workspaceSectionsRoutes);
 app.use('/api/project-organization', authenticateToken, projectOrganizationRoutes);
@@ -530,6 +532,10 @@ async function startServer() {
                 if (!superagentEnabled()) initializeTaskIntelligence();
                 sideChatsDb.recover();
                 initializeMessageQueue(providerRuntimeService, protectedProviderSessions);
+                initializeInbox();
+                initializeDecisions();
+                initializeIngress();
+                initializeMemoryConsolidation();
             }
 
             // Start server-side plugin processes for enabled plugins
@@ -545,6 +551,7 @@ async function startServer() {
         closeMessageQueue();
         // Clean up plugin processes on shutdown
         const shutdownRuntimeServices = async () => {
+            closeInbox();
             await closeSuperagent();
             closeUsage();
             closeQuota();
