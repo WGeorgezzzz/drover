@@ -1,8 +1,11 @@
 import { Checkbox as UnifiedCheckbox } from '@/shared/ui/Checkbox';
 import { Button } from '@/shared/ui/Button';
 import React, { useCallback, useEffect, useRef, type Dispatch, type SetStateAction, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { SlidersHorizontal, X } from '@/shared/icons';
+import { useDialogLayer } from '@/shared/ui/Dialog';
+import { useViewportMenuAnchor } from '@/shared/hooks/useViewportMenuAnchor';
 
 import { ChatInterface } from '@/modules/chat';
 import { FileTree } from '@/modules/file-tree';
@@ -77,25 +80,16 @@ function WorkspaceMain({
   const setPreference = useSetUiPreference();
   const { showRawParameters, showThinking, sendByCtrlEnter } = preferences;
   const [splitEnabled, setSplitEnabled] = useWorkspaceLayoutPreference();
-  // Expanding within the header reserves space so downloads and chat controls stay usable.
+  // Portaled like ActionMenu so opening the panel never shifts the conversation below the header.
   const [displayOptionsOpen, setDisplayOptionsOpen] = useState(false);
-  const displayOptionsTrigger = useRef<HTMLButtonElement>(null);
-  const displayOptionsPanel = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!displayOptionsOpen) return;
-    const closeOnOutside = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (!displayOptionsTrigger.current?.contains(target) && !displayOptionsPanel.current?.contains(target)) setDisplayOptionsOpen(false);
-    };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.preventDefault(); event.stopPropagation();
-      setDisplayOptionsOpen(false); displayOptionsTrigger.current?.focus();
-    };
-    document.addEventListener('pointerdown', closeOnOutside);
-    window.addEventListener('keydown', closeOnEscape, true);
-    return () => { document.removeEventListener('pointerdown', closeOnOutside); window.removeEventListener('keydown', closeOnEscape, true); };
-  }, [displayOptionsOpen]);
+  const closeDisplayOptions = useCallback(() => setDisplayOptionsOpen(false), []);
+  const {
+    triggerRef: displayOptionsTrigger,
+    menuRef: displayOptionsPanel,
+    anchor: displayOptionsAnchor,
+    updateAnchor: updateDisplayOptionsAnchor,
+  } = useViewportMenuAnchor(displayOptionsOpen, closeDisplayOptions, 224, 'below', 'right');
+  const dialogLayer = useDialogLayer();
   const workspaceSplit = useWorkspaceSplit();
   const paletteOps = usePaletteOps();
   // The parent ID prevents a panel belonging to one conversation appearing in another.
@@ -234,9 +228,9 @@ function WorkspaceMain({
         onOpenSideChat={isClaude && selectedSession ? openSelectedSideChat : undefined}
         sideChatOpen={sideChatOpen}
         displayOptions={isClaude&&<Tooltip content={t('ui.displayOptions')} position="bottom" disabled={displayOptionsOpen}>
-          <Button ref={displayOptionsTrigger} variant="ghost" size="compact" type="button" aria-label={t('ui.displayOptions')} aria-expanded={displayOptionsOpen} aria-controls="workspace-display-options" className="workspace-icon-button" onClick={() => setDisplayOptionsOpen(open => !open)}><SlidersHorizontal size={16}/></Button>
+          <Button ref={displayOptionsTrigger} variant="ghost" size="compact" type="button" aria-label={t('ui.displayOptions')} aria-expanded={displayOptionsOpen} aria-controls="workspace-display-options" className="workspace-icon-button" onClick={() => { if (!displayOptionsOpen) updateDisplayOptionsAnchor(); setDisplayOptionsOpen(open => !open); }}><SlidersHorizontal size={16}/></Button>
         </Tooltip>}
-        displayOptionsPanel={isClaude&&displayOptionsOpen&&<div ref={displayOptionsPanel} id="workspace-display-options" role="group" aria-label={t('ui.displayOptions')} className="workspace-view-options ml-auto mt-2 flex w-56 max-w-full flex-col gap-3 rounded-xl border border-border bg-popover p-3 text-xs text-muted-foreground shadow-sm" data-testid="claude-workspace-controls">
+        displayOptionsPanel={isClaude&&displayOptionsOpen&&displayOptionsAnchor&&createPortal(<div ref={displayOptionsPanel} id="workspace-display-options" role="group" aria-label={t('ui.displayOptions')} data-escape-layer style={{ ...displayOptionsAnchor, width: displayOptionsAnchor.maxWidth, zIndex: dialogLayer + 1 }} className="workspace-view-options fixed flex flex-col gap-2.5 overflow-y-auto rounded-xl border border-border bg-popover p-3 text-xs text-muted-foreground shadow-lg" data-testid="claude-workspace-controls">
           {!isMobile && <label className="flex items-center gap-1.5"><UnifiedCheckbox checked={splitEnabled} onChange={event => setSplitEnabled(event.target.checked)} />{t('desktop.sideBySide')}</label>}
           <label className="flex items-center gap-1.5"><UnifiedCheckbox  checked={showThinking} onChange={event => setPreference('showThinking',event.target.checked)} />{t('desktop.showThinking', 'Show thinking')}</label>
           <label className="flex items-center gap-1.5"><UnifiedCheckbox  checked={showRawParameters} onChange={event => setPreference('showRawParameters',event.target.checked)} />{t('desktop.showParameters', 'Show tool parameters')}</label>
@@ -244,7 +238,7 @@ function WorkspaceMain({
             if (editingFile) handleCloseEditor();
             else setActiveTab('chat');
           }}>{t('desktop.closePane', 'Close pane')}</Button>}
-          </div>}
+          </div>, document.body)}
       />
 
       <div className="relative flex min-h-0 flex-1 overflow-hidden">
