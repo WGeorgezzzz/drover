@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 
-import { getConnection, getSessionOwnerId, sessionsDb } from '@/modules/database/index.js';
+import { getConnection, getSessionOwnerId } from '@/modules/database/index.js';
 
 import { AppError } from '@/shared/index.js';
 import type { AnyRecord } from '@/shared/types.js';
 import { alwaysOnEnabled, enqueueInbox, registerInboxHandler } from './inbox.service.js';
 
-/** Websocket and monitor adapters persist a deferred decision before releasing a provider. */
+/** Monitor adapters persist explicit deferred decisions; native tool approvals stay inline. */
 export function deferDecision(userId:number,target:string,requestId:string,question:string,options:unknown,context:unknown):AnyRecord {
   if(getSessionOwnerId(target)!==userId)throw new AppError('会话不可用',{statusCode:403});
   const db=getConnection(),id=randomUUID().replaceAll('-','').slice(0,12);
@@ -40,29 +40,6 @@ export function answerDecision(userId:number,id:string,answer:unknown,via:string
 /** UI and bridge poll persistent decisions; waiting never supplies a default or timeout answer. */
 export function listDecisions(userId:number):AnyRecord[] {
   return getConnection().prepare("SELECT * FROM agent_decisions WHERE user_id=? ORDER BY CASE WHEN status='pending' THEN 0 ELSE 1 END,created_at DESC LIMIT 500").all(userId) as AnyRecord[];
-}
-
-/** Registry captures the original tool payload, then cancels its run without granting tool permission. */
-export function captureDeferredPermission(userId:number,target:string,event:AnyRecord):void {
-  if(!alwaysOnEnabled())return;
-  const input=event.input||{},questions=input.questions;
-  const queue=getConnection().prepare("SELECT run_id FROM message_queue WHERE user_id=? AND session_id=? AND status='running' AND delivery_mode='queued'").get(userId,target) as {run_id:string}|undefined;
-  if(queue)event.queueRunId=queue.run_id;
-  const question=Array.isArray(questions)?questions.map((item:AnyRecord)=>item.question).join('\n'):String(input.question||event.toolName||'请求权限');
-  const row=deferDecision(userId,target,String(event.requestId),question,questions||[{label:'允许'},{label:'拒绝'}],event);
-  event.decisionId=row.id;
-  // Defer abort until permission_request has been persisted and forwarded to the UI.
-  setImmediate(()=>{void (async()=>{
-    const { providerRuntimeService }=await import('@/modules/providers/index.js');
-    const { chatRunRegistry }=await import('@/modules/websocket/index.js');
-    const run=chatRunRegistry.getRun(target);
-    if(!run || !run.events.some(item=>item.requestId===event.requestId))return;
-    const provider=sessionsDb.getSessionById(target)?.provider;
-    if(provider && run.status==='running'){
-      await providerRuntimeService.abort(provider as 'claude'|'codex',target);
-      chatRunRegistry.completeRunIfCurrent(run,{exitCode:0,aborted:true});
-    }
-  })().catch(error=>console.error('[Deferred decision]',row.id,error));});
 }
 
 /** Composition resumes the same provider transcript with explicit user input, through the durable queue. */

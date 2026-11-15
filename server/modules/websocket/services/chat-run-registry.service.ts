@@ -1,5 +1,5 @@
 import { sessionsDb, sessionWorkspaceDb } from '@/modules/database/index.js';
-import { captureDeferredPermission } from '@/modules/always-on/index.js';
+
 import { ChatSessionWriter } from '@/modules/websocket/services/chat-session-writer.service.js';
 import { broadcastSessionUpserted } from '@/modules/websocket/services/session-upsert-broadcast.service.js';
 import type {
@@ -120,9 +120,6 @@ function decorateAndRecordEvent(run: ChatRun, message: NormalizedMessage): Norma
     seq: run.lastSeq,
   };
 
-  if(message.kind==='permission_request' && message.requestId && Number(run.userId)>0) {
-    captureDeferredPermission(Number(run.userId),run.appSessionId,outbound);
-  }
 
   if (message.kind === 'complete') {
     // The provider may report its own id here; the frontend only ever knows
