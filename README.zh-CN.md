@@ -2,7 +2,7 @@
 
 一处驾驭所有 Agent。
 
-一个后端统一管理 Claude Code、Codex、Cursor、OpenCode 和 WorkBuddy，
+一个后端统一管理 Claude Code、Codex、Cursor、OpenCode、WorkBuddy 和 Antigravity，
 在桌面、手机和远程设备上继续工作。
 
 [English](README.md) · [安装包](https://github.com/WGeorgezzzz/drover/releases)
@@ -22,6 +22,13 @@
 - 没有域名也能通过 Dev Tunnels、Tailscale 或 Cloudflare 临时隧道远程访问。
 
 ## 快速开始
+
+### GPT 模型与 Antigravity
+
+- Codex 从当前账号的 `models_cache.json` 或当前配置中转的 `/models` 读取模型，不用等待 Drover 更新硬编码名单。保留目录提供的显示名、可用推理档位及默认档位；不会展示隐藏模型或混入其他中转的名单。
+- Windows 本机安装并登录 `agy` 后，选择 **Antigravity / Gemini**。Drover 读取 `agy models` 的真实模型列表，通过原生 CLI 新建、续聊和停止会话，并保存本轮问答。
+- CLI 在无窗口宿主中通过 ACP 执行，不切换 Gemini 桌面窗口。回复实时流式显示，工具调用和结果保留在历史中；默认模式把原生工具审批转发到聊天界面，支持单次允许、拒绝、断线重连恢复待审批项和停止时撤销。需要支持 `agy acp` 的 CLI；技能和 MCP 仍由 CLI 管理。仅显式选择绕过权限模式时传入跳过审批参数。
+- 该接入仅限本机主账号，沿用现有 `gemini` 会话标识。只有 Gemini 桌面版的安装及旧桌面会话仍保留原桌面桥接行为。
 
 ### 安装包
 

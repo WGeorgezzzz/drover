@@ -1,17 +1,21 @@
-import { readGeminiModels } from './gemini-models.js';
-import { geminiDesktopRuntime,inspectGeminiDesktop } from './gemini-desktop.js';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync, readFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
+
 import Database from 'better-sqlite3';
+
 import { AbstractProvider } from '@/modules/providers/shared/base/abstract.provider.js';
 import { sessionsDb } from '@/modules/database/index.js';
 import { getCurrentUserContext } from '@/modules/auth/index.js';
 import { buildDefaultProviderCurrentActiveModel, createNormalizedMessage, getCloudCliHomeDir, sliceTailPage } from '@/shared/index.js';
 import type { IProviderAuth,IProviderModels,IProviderRuntime,IProviderSessions,IProviderSkills,IProviderMcp } from '@/shared/interfaces.js';
 import type { AnyRecord,FetchHistoryOptions,NormalizedMessage } from '@/shared/types.js';
+
+import { readGeminiModels } from './gemini-models.js';
+import { antigravityRuntime } from './antigravity-cli.js';
+import { geminiDesktopRuntime,inspectGeminiDesktop } from './gemini-desktop.js';
 
 export function geminiInstallation(){
   if(getCurrentUserContext()?.role==='member')return null;
@@ -30,7 +34,7 @@ function nativeSummaries(){
   try{return db.prepare('SELECT conversation_id,title,preview,last_modified_time,last_user_input_time,workspace_uris FROM conversation_summaries ORDER BY last_modified_time DESC LIMIT 10000').all() as {conversation_id:string;title:string;preview:string;last_modified_time:string;last_user_input_time:string;workspace_uris:string}[];}finally{db.close();}
 }
 class GeminiSessions implements IProviderSessions{
-  normalizeMessage(raw:unknown,sessionId:string|null){const row=raw as AnyRecord;if(!row||!['user','assistant','error'].includes(row.role))return [];return [createNormalizedMessage({id:row.id,provider:'gemini',sessionId,kind:row.role==='error'?'error':'text',role:row.role==='error'?'assistant':row.role,content:row.text,timestamp:row.timestamp})];}
+  normalizeMessage(raw:unknown,sessionId:string|null){const row=raw as AnyRecord;if(row?.message && ['tool_use','tool_result'].includes(row.message.kind))return [createNormalizedMessage({...row.message,provider:'gemini',sessionId})];if(!row||!['user','assistant','error'].includes(row.role))return [];return [createNormalizedMessage({id:row.id,provider:'gemini',sessionId,kind:row.role==='error'?'error':'text',role:row.role==='error'?'assistant':row.role,content:row.text,timestamp:row.timestamp})];}
   async fetchHistory(sessionId:string,options:FetchHistoryOptions={}){
     let messages:NormalizedMessage[]=[];
     try{messages=readFileSync(transcript(sessionId),'utf8').split('\n').filter(Boolean).flatMap(line=>{try{return this.normalizeMessage(JSON.parse(line),sessionId);}catch{return [];}});}catch{/* Imported native sessions have no app-owned transcript. */}
@@ -39,14 +43,23 @@ class GeminiSessions implements IProviderSessions{
   }
 }
 
-const runtime=geminiDesktopRuntime;
+const runtime:IProviderRuntime={
+  permissions:antigravityRuntime('').permissions,
+  async run(command,options,writer,context){
+    const cli=geminiInstallation()?.cli;
+    const nativeId=context.resolveProviderSessionId(options.sessionId);
+    if(cli && !/^[a-z0-9]{16}$/i.test(nativeId || ''))return antigravityRuntime(cli).run(command,options,writer,context);
+    return geminiDesktopRuntime.run(command,options,writer,context);
+  },
+  async abort(id){return await antigravityRuntime('').abort(id) || await geminiDesktopRuntime.abort(id);},
+};
 
 export function openGeminiDesktop(){const install=geminiInstallation();if(!install?.desktop)throw new Error('未发现 Gemini 桌面版');const child=spawn(install.desktop,[],{windowsHide:true,detached:true,stdio:'ignore'});child.unref();return {opened:true};}
 
 export class GeminiProvider extends AbstractProvider{
   readonly runtime=runtime;
   readonly sessions=new GeminiSessions();
-  readonly auth:IProviderAuth={async getStatus(){const i=geminiInstallation();if(!i)return {provider:'gemini',installed:false,authenticated:false,email:null,method:'local_desktop'};try{const info=await inspectGeminiDesktop();return {provider:'gemini',installed:true,authenticated:info.authenticated,email:null,method:'local_desktop'};}catch(error){return {provider:'gemini',installed:true,authenticated:false,email:null,method:'local_desktop',error:error instanceof Error?error.message:String(error)};}}};
+  readonly auth:IProviderAuth={async getStatus(){const i=geminiInstallation();if(!i)return {provider:'gemini',installed:false,authenticated:false,email:null,method:'local_desktop'};const method=i.cli?'local_cli':'local_desktop';try{const authenticated=i.cli?(await readGeminiModels(i.cli)).OPTIONS.length>0:(await inspectGeminiDesktop()).authenticated;return {provider:'gemini',installed:true,authenticated,email:null,method};}catch(error){return {provider:'gemini',installed:true,authenticated:false,email:null,method,error:error instanceof Error?error.message:String(error)};}}};
   readonly models:IProviderModels={async getSupportedModels(){return readGeminiModels(geminiInstallation()?.cli);},async getCurrentActiveModel(){return buildDefaultProviderCurrentActiveModel(await readGeminiModels(geminiInstallation()?.cli));}};
   readonly skills:IProviderSkills={listSkills:async()=>[],addSkills:unsupported,removeSkill:unsupported};
   readonly mcp:IProviderMcp={listServers:async()=>({user:[],project:[],local:[]}),listServersForScope:async()=>[],upsertServer:unsupported,removeServer:unsupported};

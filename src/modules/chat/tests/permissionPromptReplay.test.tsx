@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 
 import { renderHook } from '@testing-library/react';
-import { test } from 'vitest';
+import { test, vi } from 'vitest';
 
 import { useChatRealtimeHandlers } from '@/modules/chat/hooks/useChatRealtimeHandlers';
-import type { ServerEvent, ProjectSession, PendingPermissionRequest } from '@/shared/types';
+import type { ServerEvent, ProjectSession, PendingPermissionRequest, LLMProvider } from '@/shared/types';
 import type { SessionStore } from '@/modules/chat/hooks/useSessionStore';
 
 /**
@@ -15,10 +15,11 @@ import type { SessionStore } from '@/modules/chat/hooks/useSessionStore';
  * refresh (and lingered forever in a second tab watching the same run).
  */
 
-const renderHandlers = () => {
+const renderHandlers = (provider: LLMProvider = 'claude') => {
   let listener: ((event: ServerEvent) => void) | null = null;
   let pending: PendingPermissionRequest[] = [];
   const lastSeq = new Map<string, number>();
+  const streams: unknown[][] = [];
 
   renderHook(() => useChatRealtimeHandlers({
     isActive: true,
@@ -26,7 +27,7 @@ const renderHandlers = () => {
       listener = fn;
       return () => { listener = null; };
     },
-    provider: 'claude',
+    provider,
     selectedSession: { id: 'viewed-session' } as ProjectSession,
     currentSessionId: 'viewed-session',
     setTokenBudget: () => {},
@@ -39,11 +40,11 @@ const renderHandlers = () => {
     lastSeqRef: { current: lastSeq },
     statusCheckSentAtRef: { current: new Map() },
     requestLatestMessages: async () => {},
-    sessionStore: { appendRealtime: () => {} } as unknown as SessionStore,
+    sessionStore: { appendRealtime: () => {}, updateStreaming: (...args: unknown[]) => streams.push(args), finalizeStreaming: () => {} } as unknown as SessionStore,
   }));
 
   const dispatch = (event: ServerEvent) => listener?.(event);
-  return { dispatch, getPending: () => pending, lastSeq };
+  return { dispatch, getPending: () => pending, lastSeq, streams };
 };
 
 const requestEvent = (requestId: string, seq: number): ServerEvent => ({
@@ -98,4 +99,22 @@ test('a reconnect ack resets replay progress after a server restart or a new run
   assert.equal(lastSeq.get('viewed-session'),0);
   dispatch(requestEvent('new-run',1));
   assert.equal(lastSeq.get('viewed-session'),1);
+});
+
+test('Antigravity streams incrementally and restores then cancels an unanswered approval', () => {
+  vi.useFakeTimers();
+  try {
+    const { dispatch, getPending, streams } = renderHandlers('gemini');
+    dispatch({ kind: 'stream_delta', provider: 'gemini', sessionId: 'viewed-session', content: 'First' } as ServerEvent);
+    vi.advanceTimersByTime(100);
+    assert.deepEqual(streams.at(-1), ['viewed-session', 'First', 'gemini']);
+    dispatch({ kind: 'stream_delta', provider: 'gemini', sessionId: 'viewed-session', content: ' second' } as ServerEvent);
+    vi.advanceTimersByTime(100);
+    assert.deepEqual(streams.at(-1), ['viewed-session', 'First second', 'gemini']);
+    dispatch({ kind: 'chat_subscribed', sessionId: 'viewed-session', isProcessing: true,
+      pendingPermissions: [{ ...requestEvent('agy-pending', 1), provider: 'gemini', toolName: 'Write file' }] } as ServerEvent);
+    assert.equal(getPending()[0]?.requestId, 'agy-pending');
+    dispatch({ kind: 'permission_cancelled', provider: 'gemini', sessionId: 'viewed-session', requestId: 'agy-pending' } as ServerEvent);
+    assert.deepEqual(getPending(), []);
+  } finally { vi.useRealTimers(); }
 });

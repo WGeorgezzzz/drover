@@ -157,7 +157,10 @@ export class CodexProviderModels implements IProviderModels {
   }
 
   async getSupportedModels(): Promise<ProviderModelsDefinition> {
-    const config = readObjectRecord(TOML.parse(await readFile(path.join(this.configHome, 'config.toml'), 'utf8')));
+    const config = readObjectRecord(TOML.parse(await readFile(path.join(this.configHome, 'config.toml'), 'utf8').catch((error) => {
+      if (error.code === 'ENOENT') return '';
+      throw error;
+    })));
     const selectedProvider = readOptionalString(config?.model_provider);
     const providers = readObjectRecord(config?.model_providers);
     const connection = readObjectRecord(providers?.[selectedProvider ?? '']);
@@ -189,8 +192,9 @@ export class CodexProviderModels implements IProviderModels {
         const value = readOptionalString(readObjectRecord(entry)?.effort);
         return value ? [{ value }] : [];
       });
-      return [{ value, label: value, description: readOptionalString(row.description) ?? undefined,
-        ...(values.length ? { effort: { values } } : {}) }];
+      const defaultEffort = readOptionalString(row.default_reasoning_level);
+      return [{ value, label: readOptionalString(row.display_name) ?? value, description: readOptionalString(row.description) ?? undefined,
+        ...(values.length ? { effort: { values, ...(values.some(entry => entry.value === defaultEffort) ? { default: defaultEffort! } : {}) } } : {}) }];
     });
     if (!options.length) throw new Error('The connected Codex provider returned no models.');
     const configured = readOptionalString(config?.model);
@@ -199,7 +203,7 @@ export class CodexProviderModels implements IProviderModels {
 
   async getCurrentActiveModel(): Promise<ProviderCurrentActiveModel> {
     try {
-      const raw = await readFile(getCodexConfigPath(), 'utf8');
+      const raw = await readFile(path.join(this.configHome, 'config.toml'), 'utf8');
       const parsed = readObjectRecord(TOML.parse(raw));
       const model = readOptionalString(parsed?.model);
       if (!model) {

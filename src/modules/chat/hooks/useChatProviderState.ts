@@ -42,7 +42,7 @@ const providerModelStorageKey = (provider: LLMProvider): string => `${provider}-
  * first paint and when the capabilities request fails.
  */
 const FALLBACK_PERMISSION_MODES: Record<LLMProvider, PermissionMode[]> = {
-  gemini: ['default','plan','bypassPermissions'],
+  gemini: ['default','bypassPermissions'],
   claude: ['default', 'auto', 'acceptEdits', 'bypassPermissions', 'plan'],
   cursor: ['default', 'acceptEdits', 'bypassPermissions', 'plan'],
   codex: ['default', 'acceptEdits', 'bypassPermissions', 'plan'],
@@ -262,7 +262,7 @@ export function useChatProviderState({ selectedSession, selectedProject }: UseCh
     if (capabilityDefault && modes.includes(capabilityDefault)) {
       return capabilityDefault;
     }
-    return modes.includes('bypassPermissions')?'bypassPermissions':modes[0]??'default';
+    return targetProvider === 'gemini' ? 'default' : modes.includes('bypassPermissions')?'bypassPermissions':modes[0]??'default';
   }, [getPermissionModesForProvider, providerCapabilities]);
 
   const getSupportsEffortForProvider = useCallback((targetProvider: LLMProvider): boolean => {

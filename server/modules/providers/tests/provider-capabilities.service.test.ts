@@ -39,3 +39,9 @@ test('capability effort levels cover every level a curated model declares', () =
     assert.deepEqual(missingLevels, [], `${provider}: effortLevels misses curated levels`);
   }
 });
+
+test('Antigravity advertises interactive tool approvals by default', () => {
+  const capabilities = providerCapabilitiesService.getProviderCapabilities('gemini');
+  assert.equal(capabilities.supportsPermissionRequests, true);
+  assert.equal(capabilities.defaultPermissionMode, 'default');
+});

@@ -1,10 +1,29 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import test from 'node:test';
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
-import { CODEX_PREDEFINED_MODELS } from '@/modules/providers/list/codex/codex-models.provider.js';
+import { CODEX_PREDEFINED_MODELS, CodexProviderModels } from '@/modules/providers/list/codex/codex-models.provider.js';
 
 const require = createRequire(import.meta.url);
+
+test('reads newly available account models and their default effort without a config file', async () => {
+  const home = await mkdtemp(path.join(os.tmpdir(), 'drover-codex-models-'));
+  await writeFile(path.join(home, 'models_cache.json'), JSON.stringify({ models: [
+    { slug: 'future-model', display_name: 'Future Model', default_reasoning_level: 'high', supported_reasoning_levels: [{ effort: 'low' }, { effort: 'high' }] },
+    { slug: 'hidden-model', visibility: 'hide' },
+  ] }));
+  const provider = new CodexProviderModels(home);
+  const catalog = await provider.getSupportedModels();
+  assert.equal(catalog.DEFAULT, 'future-model');
+  assert.equal(catalog.OPTIONS.length, 1);
+  assert.equal(catalog.OPTIONS[0].label, 'Future Model');
+  assert.equal(catalog.OPTIONS[0].effort?.default, 'high');
+  await writeFile(path.join(home, 'config.toml'), 'model = "configured-model"\n');
+  assert.equal((await provider.getCurrentActiveModel()).model, 'configured-model');
+});
 
 const findCodexModel = (value: string) =>
   CODEX_PREDEFINED_MODELS.OPTIONS.find((option) => option.value === value);

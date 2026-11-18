@@ -93,7 +93,7 @@ export function createProviderRuntimeService(
       return import('./provider-supervision-controller.service.js').then(module => module.runSupervised(providerName, command, options, writer));
     }
     // Missing choices use the user's new default; explicit modes remain intact.
-    options={...options,permissionMode:options.permissionMode??'bypassPermissions'};
+      options={...options,permissionMode:options.permissionMode??(providerName==='gemini'?'default':'bypassPermissions')};
     const provider = dependencies.resolveProvider(providerName);
     const context=createRuntimeContext(provider);
     const userId=Number(writer.userId);

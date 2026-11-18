@@ -23,6 +23,14 @@ function createRuntime(overrides: Partial<IProviderRuntime> = {}): IProviderRunt
   };
 }
 
+test('Antigravity defaults to interactive permissions and preserves explicit bypass', async () => {
+  const modes: unknown[] = [];
+  const service = createService([createProvider('gemini', createRuntime({ async run(_command, options) { modes.push(options.permissionMode); } }))]);
+  await service.run('gemini', 'hello', {}, { send() {} });
+  await service.run('gemini', 'hello', { permissionMode: 'bypassPermissions' }, { send() {} });
+  assert.deepEqual(modes, ['default', 'bypassPermissions']);
+});
+
 function createProvider(id: LLMProvider, runtime: IProviderRuntime): IProvider {
   return {
     id,
