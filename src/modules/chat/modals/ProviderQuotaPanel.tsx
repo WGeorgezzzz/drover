@@ -8,8 +8,9 @@ type QuotaWindow = { label: string; remainingPercent?: number | null; remaining?
 type QuotaSnapshot = { updatedAt: string | null; nextRunAt?: string; stale: boolean; intervalMinutes: number;
   reporter?: { status: string; summary: string } | null;
   providers: Array<{ provider: string; status: string; checkedAt: string; windows: QuotaWindow[]; sourceUrl?: string; note?: string;
+    models?: Array<{ model: string; label: string; statusLabel: string; checkedAt: string | null }>;
     lastSuccess?: { checkedAt: string; windows: QuotaWindow[] } }> };
-const LABELS: Record<string, string> = { claude: 'Claude', codex: 'Codex', workbuddy: 'WorkBuddy', cursor: 'Cursor', opencode: 'OpenCode' };
+const LABELS: Record<string, string> = { claude: 'Claude', codex: 'Codex', workbuddy: 'WorkBuddy', cursor: 'Cursor', opencode: 'OpenCode', gemini: 'Antigravity / 反重力' };
 const STATUS: Record<string, string> = { login_required: '需要登录', unavailable: '读取未成功', unsupported: '暂无统一额度来源' };
 const dateLabel = (date?: string | null) => date ? new Date(date).toLocaleString() : '—';
 
@@ -63,6 +64,18 @@ export function ProviderQuotaPanel() {
             <td className="py-2 text-muted-foreground">{row.status === 'ok' ? row.windows.map((window, i) => <div key={i}>{window.resetLabel || dateLabel(window.resetsAt)}</div>) : '—'}</td>
           </tr>)}</tbody>
         </table></div>
+        {snapshot.providers.filter(row => row.models?.length).map(row => <details key={row.provider} className="mt-3 border-t border-border pt-2">
+          <summary className="cursor-pointer text-xs font-medium">{LABELS[row.provider] || row.provider} · 按模型区分可用性与额度（{row.models!.length}）</summary>
+          <p className="my-2 text-xs text-muted-foreground">目录可见不等于可调用。以下为本次服务运行期间的调用历史，不是实时额度检测；切换账号后请重新调用验证。</p>
+          <div className="max-h-64 overflow-auto"><table className="w-full text-left text-xs">
+            <thead><tr><th className="p-1">模型 / 推理档位</th><th className="p-1">可用性</th><th className="p-1">剩余额度 / 重置</th></tr></thead>
+            <tbody>{row.models!.map(model => <tr key={model.model} className="border-t border-border/50">
+              <td className="p-1">{model.label}<div className="font-mono text-[10px] text-muted-foreground">{model.model}</div></td>
+              <td className="p-1">{model.statusLabel}{model.checkedAt && <div className="text-muted-foreground">{dateLabel(model.checkedAt)}</div>}</td>
+              <td className="p-1">未提供 / 未提供</td>
+            </tr>)}</tbody>
+          </table></div>
+        </details>)}
       </>}
   </section>;
 }

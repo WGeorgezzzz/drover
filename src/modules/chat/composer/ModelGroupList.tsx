@@ -144,6 +144,7 @@ export default function ModelGroupList({
                       )}
                     </div>
                     {model.unavailableReason&&<p className="break-words text-xs text-muted-foreground">{model.unavailableReason}</p>}
+                    {group.provider === 'gemini' && model.description && <p className="break-words text-xs text-muted-foreground">{model.description}</p>}
                     {model.label !== model.value && (
                       <div className="truncate font-mono text-[10px] text-muted-foreground">
                         {model.value}

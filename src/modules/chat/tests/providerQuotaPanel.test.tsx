@@ -5,6 +5,22 @@ import { api } from '@/shared/api';
 import { ProviderQuotaPanel } from '@/modules/chat/modals/ProviderQuotaPanel';
 
 afterEach(() => vi.restoreAllMocks());
+test('Antigravity separates native model availability from unknown remaining quota', async () => {
+  vi.spyOn(api.providers, 'usageSnapshot').mockResolvedValue(new Response(JSON.stringify({ data: {
+    updatedAt: null, stale: true, intervalMinutes: 30, providers: [
+      { provider: 'gemini', status: 'unsupported', windows: [], note: 'CLI 未提供精确额度', models: [
+        { model: 'gemini-carbon-low', label: 'Carbon Low', statusLabel: '最近调用额度不足', checkedAt: null },
+        { model: 'claude-opus-high', label: 'Opus High', statusLabel: '未验证可用性', checkedAt: null },
+      ] },
+    ],
+  } })));
+  render(<ProviderQuotaPanel />);
+  await screen.findByText('Antigravity / 反重力');
+  assert(screen.getByText('最近调用额度不足'));
+  assert(screen.getByText('未验证可用性'));
+  assert.equal(screen.getAllByText('未提供 / 未提供').length, 2);
+  assert.equal(screen.queryByText('0%'), null);
+});
 test('the model page shows zero remaining as a real result and keeps login failure distinct', async () => {
   vi.spyOn(api.providers, 'usageSnapshot').mockResolvedValue(new Response(JSON.stringify({ data: {
     updatedAt: '2026-10-24T00:00:00Z', stale: false, intervalMinutes: 30, providers: [

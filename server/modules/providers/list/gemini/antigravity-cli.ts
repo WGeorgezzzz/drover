@@ -11,6 +11,7 @@ import type { AnyRecord, NormalizedMessage } from '@/shared/types.js';
 import { connectAntigravity } from './antigravity-acp.js';
 import { AntigravityPermissionBridge } from './antigravity-permissions.js';
 import { stopAntigravity } from './antigravity-process.js';
+import { recordAntigravityModelResult } from './antigravity-model-status.js';
 
 const active = new Map<string, { child?: ChildProcess; cancelled: boolean }>();
 const permissions = new AntigravityPermissionBridge();
@@ -28,7 +29,7 @@ export function antigravityRuntime(cli: string): IProviderRuntime {
       if (!['default', 'bypassPermissions'].includes(mode)) throw new Error('Unsupported Antigravity permission mode');
       const nativeId = context.resolveProviderSessionId(sessionId);
       if (nativeId && !/^[\w-]{1,120}$/.test(nativeId)) throw new Error('Invalid Antigravity conversation');
-      const model = await context.resolveResumeModel(sessionId, options.model);
+      let model = await context.resolveResumeModel(sessionId, options.model);
       if (active.has(sessionId)) throw new Error('Antigravity session is already running');
       const args = ['acp', '--stdio'];
       if (mode === 'bypassPermissions') args.push('--dangerously-skip-permissions');
@@ -99,6 +100,7 @@ export function antigravityRuntime(cli: string): IProviderRuntime {
         if (!conversationId || (session.sessionId && session.sessionId !== conversationId)) throw new Error('Antigravity returned an invalid conversation');
         writer.setSessionId?.(conversationId);
         if (model) await connection.request('session/set_model', { sessionId: conversationId, modelId: model });
+        else model = session.models?.currentModelId || '';
         if (mode === 'default') await connection.request('session/set_mode', { sessionId: conversationId, modeId: 'default' });
         prompting = true;
         const result = await connection.request('session/prompt', { sessionId: conversationId, prompt: [{ type: 'text', text: command }] });
@@ -110,6 +112,7 @@ export function antigravityRuntime(cli: string): IProviderRuntime {
         failure = error instanceof Error ? error : new Error(String(error));
         persist('error', failure.message);
       } finally {
+        if (prompting && !entry.cancelled && model) recordAntigravityModelResult(model, failure?.message);
         prompting = false;
         permissions.cancel(sessionId);
         try { await connection?.close(); } finally { active.delete(sessionId); }

@@ -522,6 +522,7 @@ export default function ModelLibraryPanel({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-medium text-foreground">{option.label}</p>
                       <p className="truncate font-mono text-[10px] text-muted-foreground">{option.value}</p>
+                      {selectedProvider === 'gemini' && <p className="mt-1 text-xs text-muted-foreground">{option.description}</p>}
                     </div>
                   </div>
                 ))}
