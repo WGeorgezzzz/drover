@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -39,7 +39,12 @@ test('live Antigravity catalog, streaming, new conversation and native resume', 
   const runtime = antigravityRuntime(cli);
   let nativeId: string | null = null;
   const messages: AnyRecord[] = [];
-  const writer = { send: (message: unknown) => { messages.push(message as AnyRecord); t.diagnostic(`event: ${(message as AnyRecord).kind}`); }, setSessionId: (value: string) => { nativeId = value; t.diagnostic(`native: ${value}`); } };
+  const activeAtCompletion: Promise<boolean>[] = [];
+  const writer = { send: (message: unknown) => {
+    messages.push(message as AnyRecord);
+    t.diagnostic(`event: ${(message as AnyRecord).kind}`);
+    if ((message as AnyRecord).kind === 'complete') activeAtCompletion.push(Promise.resolve(runtime.abort('drover-agy-live-test')));
+  }, setSessionId: (value: string) => { nativeId = value; t.diagnostic(`native: ${value}`); } };
   const context: ProviderRuntimeContext = {
     resolveProviderSessionId: () => nativeId,
     resolveResumeModel: async () => model,
@@ -51,14 +56,44 @@ test('live Antigravity catalog, streaming, new conversation and native resume', 
   t.after(() => runtime.abort(options.sessionId));
   await runtime.run('Remember the word DROVER_OK. Reply exactly DROVER_OK. Do not use tools or change files.', options, writer, context);
   assert.ok(nativeId);
-  assert.ok(JSON.stringify(messages).includes('DROVER_OK'));
+  assert.ok(messages.some(message => message.kind === 'text' && message.role === 'assistant' && message.content.includes('DROVER_OK')));
   assert.ok(messages.findIndex(message => message.kind === 'stream_delta') < messages.findIndex(message => message.kind === 'complete'));
   assert.ok(messages.some(message => message.kind === 'stream_delta'));
   const firstId = nativeId;
   messages.length = 0;
   await runtime.run('What word did I ask you to remember? Reply with only that word. Do not use tools.', options, writer, context);
   assert.equal(nativeId, firstId);
-  assert.ok(JSON.stringify(messages).includes('DROVER_OK'));
+  assert.ok(messages.some(message => message.kind === 'text' && message.role === 'assistant' && message.content.includes('DROVER_OK')));
+  assert.deepEqual(await Promise.all(activeAtCompletion), [false, false]);
+});
+
+test('ACP completion releases the active turn before notifying clients', async () => {
+  const cwd = mkdtempSync(path.join(os.tmpdir(), 'drover-acp-completion-'));
+  writeFileSync(path.join(cwd, 'acp'), `
+    const send = row => console.log(JSON.stringify({ jsonrpc: '2.0', ...row }));
+    require('readline').createInterface({ input: process.stdin }).on('line', line => {
+      const row = JSON.parse(line);
+      let result = {};
+      if (row.method === 'initialize') result = { agentCapabilities: { loadSession: true } };
+      if (row.method === 'session/new') result = { sessionId: 'native-completion-test' };
+      if (row.method === 'session/prompt') {
+        send({ method: 'session/update', params: { sessionId: 'native-completion-test', update: { sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: 'OK' } } } });
+        result = { stopReason: 'end_turn' };
+      }
+      send({ id: row.id, result });
+    });
+  `);
+  const runtime = antigravityRuntime(process.execPath);
+  const sessionId = 'acp-completion-test';
+  const activeAtCompletion: Promise<boolean>[] = [];
+  const context = { resolveProviderSessionId: () => null, resolveResumeModel: async () => '',
+    getProviderModels: async () => ({ OPTIONS: [], DEFAULT: '' }), normalizeMessage: () => [], isProviderInstalled: async () => true };
+  const writer = { send: (event: unknown) => {
+    if ((event as AnyRecord).kind === 'complete') activeAtCompletion.push(Promise.resolve(runtime.abort(sessionId)));
+  } };
+  await runtime.run('first', { sessionId, cwd }, writer, context);
+  await runtime.run('second', { sessionId, cwd }, writer, context);
+  assert.deepEqual(await Promise.all(activeAtCompletion), [false, false]);
 });
 
 test('ACP transport streams before RPC completion and rejects unknown pending requests on close', async () => {

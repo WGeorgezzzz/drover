@@ -48,6 +48,7 @@ export function antigravityRuntime(cli: string): IProviderRuntime {
       let prompting = false;
       let conversationId = nativeId;
       let text = '';
+      let failure: Error | undefined;
       const tools = new Map<string, AnyRecord>();
       const entry: { child?: ChildProcess; cancelled: boolean } = { cancelled: false };
       active.set(sessionId, entry);
@@ -104,17 +105,17 @@ export function antigravityRuntime(cli: string): IProviderRuntime {
         if (entry.cancelled) throw new Error('Antigravity request cancelled');
         if (result.stopReason !== 'end_turn') throw new Error(`Antigravity stopped: ${result.stopReason || 'unknown'}`);
         flush();
-        writer.send(createCompleteMessage({ provider: 'gemini', sessionId, exitCode: 0 }));
       } catch (error) {
         flush();
-        persist('error', error instanceof Error ? error.message : String(error));
-        writer.send(createCompleteMessage({ provider: 'gemini', sessionId, exitCode: 1 }));
-        throw error;
+        failure = error instanceof Error ? error : new Error(String(error));
+        persist('error', failure.message);
       } finally {
         prompting = false;
         permissions.cancel(sessionId);
         try { await connection?.close(); } finally { active.delete(sessionId); }
       }
+      writer.send(createCompleteMessage({ provider: 'gemini', sessionId, exitCode: failure ? 1 : 0 }));
+      if (failure) throw failure;
     },
     async abort(sessionId) {
       const entry = active.get(sessionId);
