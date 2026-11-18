@@ -57,7 +57,45 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.resetModules();
+});
+
+test('Antigravity migrates a stored native model into separate model and effort selections', async () => {
+  const { api } = await import('@/shared/api');
+  localStorage.setItem('gemini-model', 'gemini-4-hydrogen-xhigh');
+  localStorage.setItem('gemini-effort', 'default');
+  vi.spyOn(api.providers, 'models').mockImplementation(async provider => ({ ok: true, json: async () => ({ success: true,
+    data: provider === 'gemini' ? { models: { DEFAULT: 'gemini-4-hydrogen', OPTIONS: [{ value: 'gemini-4-hydrogen',
+      label: 'Gemini 4 Hydrogen', aliases: ['gemini-4-hydrogen-low', 'gemini-4-hydrogen-xhigh'],
+      effort: { default: 'low', values: [{ value: 'low' }, { value: 'xhigh' }] } }] } } : null }) }) as Response);
+  const { result } = await renderProviderState();
+  act(() => result.current.setProvider('gemini'));
+  await waitFor(() => {
+    assert.equal(result.current.currentProviderModel, 'gemini-4-hydrogen');
+    assert.equal(result.current.currentProviderEffort, 'xhigh');
+  });
+  assert.equal(localStorage.getItem('gemini-model'), 'gemini-4-hydrogen');
+  assert.equal(localStorage.getItem('gemini-effort'), 'xhigh');
+  assert.deepEqual(result.current.currentProviderEffortOptions.map(option => option.value), ['low', 'xhigh']);
+});
+
+test('an existing Antigravity session retains its encoded effort independently of the provider default', async () => {
+  const { api } = await import('@/shared/api');
+  localStorage.setItem('gemini-model', 'gemini-4-hydrogen');
+  localStorage.setItem('gemini-effort', 'low');
+  vi.spyOn(api.providers, 'models').mockImplementation(async provider => ({ ok: true, json: async () => ({ success: true,
+    data: provider === 'gemini' ? { models: { DEFAULT: 'gemini-4-hydrogen', OPTIONS: [{ value: 'gemini-4-hydrogen',
+      label: 'Gemini 4 Hydrogen', aliases: ['gemini-4-hydrogen-low', 'gemini-4-hydrogen-xhigh'],
+      effort: { default: 'low', values: [{ value: 'low' }, { value: 'xhigh' }] } }] } } : null }) }) as Response);
+  vi.spyOn(api.providers, 'sessionActiveModel').mockResolvedValue({ ok: true, json: async () => ({ success: true,
+    data: { provider: 'gemini', sessionId: 'agy-legacy', model: 'gemini-4-hydrogen-xhigh', effort: 'default' } }) } as Response);
+  const { result } = await renderProviderState({ id: 'agy-legacy', __provider: 'gemini' } as ProjectSession);
+  await waitFor(() => {
+    assert.equal(result.current.currentProviderModel, 'gemini-4-hydrogen');
+    assert.equal(result.current.currentProviderEffort, 'xhigh');
+  });
+  assert.equal(localStorage.getItem('gemini-effort'), 'low');
 });
 
 test('each provider gets its own model from its own storage key', async () => {

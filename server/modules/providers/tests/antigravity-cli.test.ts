@@ -35,7 +35,7 @@ test('live Antigravity catalog, streaming, new conversation and native resume', 
   const cli = process.env.DROVER_AGY_LIVE!;
   const catalog = await readGeminiModels(cli);
   assert.ok(catalog.OPTIONS.length > 0);
-  const model = catalog.OPTIONS.find(option => option.value === 'gemini-4-hydrogen-low')?.value ?? catalog.DEFAULT;
+  const model = catalog.OPTIONS.find(option => option.value === 'gemini-4-hydrogen')?.value ?? catalog.DEFAULT;
   const runtime = antigravityRuntime(cli);
   let nativeId: string | null = null;
   const messages: AnyRecord[] = [];
@@ -148,7 +148,7 @@ for (const decision of ['allow', 'deny', 'abort'] as const) {
     const errors: unknown[] = [];
     t.after(() => runtime.abort(sessionId));
     const context = { resolveProviderSessionId: () => null, resolveResumeModel: async () => 'gemini-4-hydrogen-low',
-      getProviderModels: async () => ({ OPTIONS: [], DEFAULT: '' }), normalizeMessage: () => [], isProviderInstalled: async () => true };
+      getProviderModels: async () => readGeminiModels(process.env.DROVER_AGY_LIVE!), normalizeMessage: () => [], isProviderInstalled: async () => true };
     const writer = { send: (event: unknown) => {
       const message = event as AnyRecord; events.push(message);
       if (message.kind !== 'permission_request') return;

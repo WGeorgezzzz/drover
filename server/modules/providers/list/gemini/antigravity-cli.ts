@@ -12,6 +12,7 @@ import { connectAntigravity } from './antigravity-acp.js';
 import { AntigravityPermissionBridge } from './antigravity-permissions.js';
 import { stopAntigravity } from './antigravity-process.js';
 import { recordAntigravityModelResult } from './antigravity-model-status.js';
+import { resolveAntigravityModel } from './gemini-models.js';
 
 const active = new Map<string, { child?: ChildProcess; cancelled: boolean }>();
 const permissions = new AntigravityPermissionBridge();
@@ -60,6 +61,10 @@ export function antigravityRuntime(cli: string): IProviderRuntime {
       };
       try {
         persist('user', command);
+        if (model || (options.effort && options.effort !== 'default')) {
+          const catalog = await context.getProviderModels();
+          model = resolveAntigravityModel(catalog, model || catalog.DEFAULT, options.effort);
+        }
         const cwd = path.resolve(options.cwd || options.projectPath || process.cwd());
         connection = await connectAntigravity(cli, args, cwd, row => {
           if (row.method === 'session/request_permission' && row.id != null) {

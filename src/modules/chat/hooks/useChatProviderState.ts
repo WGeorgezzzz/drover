@@ -24,6 +24,7 @@ const FALLBACK_PROVIDER_EFFORT_VALUES: Partial<Record<LLMProvider, readonly stri
   codex: ['low', 'medium', 'high', 'xhigh', 'max', 'ultra'],
   opencode: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
   workbuddy: ['minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
+  gemini: ['low', 'medium', 'high', 'xhigh'],
 };
 
 const toProviderEffortOptions = (
@@ -358,6 +359,12 @@ export function useChatProviderState({ selectedSession, selectedProject }: UseCh
       const storageKey = providerModelStorageKey(targetProvider);
       const currentModel = providerModels[targetProvider];
       const nextModel = pickStoredOrCurrent(storageKey, currentModel, catalog);
+      if (targetProvider === 'gemini') {
+        const legacyModel = localStorage.getItem(storageKey) || currentModel;
+        const option = catalog.OPTIONS.find(entry => entry.value === nextModel && entry.aliases?.includes(legacyModel));
+        const legacyEffort = option?.effort?.values.find(entry => `${nextModel}-${entry.value}` === legacyModel)?.value;
+        if (legacyEffort) setStoredProviderEffort(targetProvider, legacyEffort);
+      }
 
       if (nextModel !== currentModel) {
         reconciledModels[targetProvider] = nextModel;
@@ -370,7 +377,7 @@ export function useChatProviderState({ selectedSession, selectedProject }: UseCh
     if (Object.keys(reconciledModels).length > 0) {
       setProviderModels((previous) => ({ ...previous, ...reconciledModels }));
     }
-  }, [providerModelCatalog, providerModels]);
+  }, [providerModelCatalog, providerModels, setStoredProviderEffort]);
 
   useEffect(() => {
     const nextEfforts: Partial<Record<LLMProvider, string>> = {};
@@ -710,14 +717,18 @@ export function useChatProviderState({ selectedSession, selectedProject }: UseCh
     return getEffortOptionsForModel(provider, currentProviderModel);
   }, [currentProviderModel, getEffortOptionsForModel, provider]);
   const currentProviderEffort = useMemo(() => {
+    const legacyEffort = provider === 'gemini' && selectedModel !== currentProviderModel
+      ? currentProviderEffortOptions.find(entry => `${currentProviderModel}-${entry.value}` === selectedModel)?.value
+      : undefined;
+    const sessionEffort = activeSessionSelection?.effort;
     return reconcileStoredEffort(
       provider,
       currentProviderModel,
-      activeSessionSelection?.effort
+      (legacyEffort && (!sessionEffort || sessionEffort === DEFAULT_EFFORT_VALUE) ? legacyEffort : sessionEffort)
         ?? providerEfforts[provider]
         ?? DEFAULT_EFFORT_VALUE,
     );
-  }, [activeSessionSelection?.effort, currentProviderModel, provider, providerEfforts, reconcileStoredEffort]);
+  }, [activeSessionSelection?.effort, currentProviderModel, currentProviderEffortOptions, selectedModel, provider, providerEfforts, reconcileStoredEffort]);
   const currentProviderModelOptions = useMemo(
     () => providerModelCatalog[provider]?.OPTIONS ?? [],
     [provider, providerModelCatalog],

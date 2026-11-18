@@ -14,7 +14,7 @@ import type { LLMProvider, ProviderModelsDefinition } from '@/shared/types.js';
  * providers a machine has connected.
  */
 const CURATED_CATALOGS: Record<LLMProvider, ProviderModelsDefinition> = {
-  gemini:{OPTIONS:[{value:'configured',label:'Gemini'}],DEFAULT:'configured'},
+  gemini:{OPTIONS:[{value:'configured',label:'Gemini',effort:{values:['low','medium','high','xhigh'].map(value=>({value}))}}],DEFAULT:'configured'},
   'deepseek-harness': { OPTIONS: [{ value: 'configured', label: 'Harness default',effort:{default:'off',values:[{value:'off'},{value:'high'}]} }], DEFAULT: 'configured' },
   workbuddy: buildWorkBuddyFreeModels({ models: [{ id: 'free-model', credits: 'x0.00', supportsToolCall: true }] }),
   claude: CLAUDE_PREDEFINED_MODELS,

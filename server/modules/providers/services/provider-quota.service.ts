@@ -15,7 +15,8 @@ async function readAntigravityQuota() {
   if (!cli) return { provider: 'gemini', status: 'unavailable', windows: [], note: '未安装 Antigravity CLI。', models: [] };
   try {
     if (!antigravityCatalog || Date.now() - antigravityCatalog.at > 60000) {
-      antigravityCatalog = { at: Date.now(), models: (await readGeminiModels(cli)).OPTIONS };
+      antigravityCatalog = { at: Date.now(), models: (await readGeminiModels(cli)).OPTIONS.flatMap(model =>
+        model.aliases?.length ? model.aliases.map(value => ({ value, label: `${model.label} (${value.slice(model.value.length + 1)})` })) : [model]) };
     }
     return { provider: 'gemini', status: 'unsupported', windows: [], note,
       models: antigravityCatalog.models.map(model => ({ ...antigravityModelStatus(model.value), label: model.label })) };
