@@ -754,7 +754,12 @@ export function useSessionStore() {
       msg.sessionId === sessionId
         ? msg
         : { ...msg, sessionId };
-    let updated = [...slot.realtimeMessages, normalizedMessage];
+    let previous = slot.realtimeMessages;
+    if (msg.provider === 'gemini' && msg.kind === 'text' && msg.role === 'user' && !msg.id.startsWith('local_')) {
+      if (previous.some(row => row.id === msg.id) || slot.serverMessages.some(row => row.id === msg.id)) return;
+      previous = removeOptimisticUserEchoes([normalizedMessage], previous);
+    }
+    let updated = [...previous, normalizedMessage];
     if (updated.length > MAX_REALTIME_MESSAGES) {
       updated = updated.slice(-MAX_REALTIME_MESSAGES);
     }

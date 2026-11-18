@@ -60,6 +60,26 @@ async function loadedStore() {
   return view;
 }
 
+it('shows one Gemini bubble per send across live echo, replay and history', async () => {
+  const { result } = await loadedStore();
+  const user = (id: string): NormalizedMessage => ({ ...row('5', 'same question'), id, provider: 'gemini', role: 'user' });
+  const send = (id: string) => act(() => result.current.appendRealtime('gemini-session', user(id)));
+  const ids = () => result.current.getMessages('gemini-session').map(message => message.id);
+  send('local_first');
+  send('native-first');
+  send('native-first');
+  assert.deepEqual(ids(), ['native-first']);
+  send('local_second');
+  assert.deepEqual(ids(), ['native-first', 'local_second']);
+  send('native-second');
+  assert.deepEqual(ids(), ['native-first', 'native-second']);
+  sessionMessages.mockResolvedValue({ ok: true, json: async () => ({ data: {
+    messages: [user('native-first'), user('native-second')], total: 2, hasMore: false,
+  } }) });
+  await act(async () => { await result.current.fetchFromServer('gemini-session', { limit: 20, offset: 0 }); });
+  assert.deepEqual(ids(), ['native-first', 'native-second']);
+});
+
 describe('truncateAt', () => {
   it('drops the anchored message and everything after it', async () => {
     const { result } = await loadedStore();
